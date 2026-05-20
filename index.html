@@ -3901,14 +3901,12 @@ const Events = {
             if (!row) return;
             if (t.dataset.role === 'prio') {
                 GoalModule.cyclePriority(row);
-                GoalModule.sort();
                 SaveQueue.trigger();
             } else if (t.dataset.role === 'check') {
                 const input = row.querySelector('input[data-role=text]');
                 const container = row.querySelector('.goal-text-container');
                 input.classList.toggle('completed', t.checked);
                 container.classList.toggle('completed', t.checked);
-                GoalModule.sort();
                 GoalModule.updateProgress();
                 SaveQueue.trigger();
             }

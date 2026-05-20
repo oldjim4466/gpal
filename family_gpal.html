@@ -2087,6 +2087,40 @@ const HealthModule = { load(){return{};}, save(){}, syncToCloud(){}, loadFromClo
 
 // ---------- SYNC MODULE ----------
 const Sync = {
+    // 預取 ±3 天資料
+    async prefetchDays(centerDate) {
+        const PREFETCH_KEY = (d) => `gpal_prefetch_${d}`;
+        const addDays = (dateStr, n) => {
+            const d = new Date(dateStr + 'T12:00:00');
+            d.setDate(d.getDate() + n);
+            return `${d.getFullYear()}-${Utils.pad2(d.getMonth()+1)}-${Utils.pad2(d.getDate())}`;
+        };
+        for (const offset of [-3,-2,-1,1,2,3]) {
+            const targetDate = addDays(centerDate, offset);
+            try {
+                const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${targetDate}`, {}, 1);
+                const data = await res.json();
+                localStorage.setItem(PREFETCH_KEY(targetDate), JSON.stringify({ data, ts: Date.now() }));
+            } catch(e) {}
+            await new Promise(r => setTimeout(r, 300));
+        }
+    },
+
+    loadFromCache(date) {
+        try {
+            const raw = localStorage.getItem(`gpal_prefetch_${date}`);
+            if (!raw) return false;
+            const { data, ts } = JSON.parse(raw);
+            if (Date.now() - ts > 86400000) return false;
+            GoalModule.parse(data.goal || '');
+            PlanModule.parse(data.plan || '');
+            TradeModule.loadFromAction(data.action || '');
+            DOM.textLearn.value = data.learn || '';
+            Utils.adjustHeight(DOM.textLearn);
+            return true;
+        } catch(e) { return false; }
+    },
+
     async fetchData() {
         const token = ++State.fetchToken;
         Utils.setStatus('>> SYNCING...', 'warn');
@@ -2096,6 +2130,9 @@ const Sync = {
 
         const date = DOM.datePicker.value;
         Utils.updateDateLabel(date);
+
+        // 先從緩存即時顯示
+        Sync.loadFromCache(date);
 
         try {
             const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${date}`);
@@ -2144,11 +2181,13 @@ const Sync = {
             Utils.setConnState('online');
             State.isOnline = true;
 
-            // 若本地有暫存且時間比雲端新，提示使用者
             const backup = Utils.loadLocalBackup(date);
             if (backup && backup.payload) {
                 Utils.setStatus('LOCAL_BACKUP_FOUND', 'warn');
             }
+
+            // 背景預取 ±3 天
+            Sync.prefetchDays(date);
         } catch (e) {
             if (token !== State.fetchToken) return;
             Utils.setStatus('LINK_FAILURE — using local', 'error');
@@ -2172,7 +2211,7 @@ const Sync = {
         } finally {
             const syncBtn = document.getElementById('btn-nav-sync');
             if (syncBtn) syncBtn.classList.remove('spinning');
-        }
+            }
     },
 
     async save(mode = 'MANUAL') {

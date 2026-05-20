@@ -1472,7 +1472,6 @@ const DOM = {
     textAction: $('textAction'),
     textLearn: $('textLearn'),
     progressDisplay: $('progress-display'),
-    portfolioDisplay: $('portfolio-display'),
     connDot: $('conn-dot'),
     connText: $('conn-text'),
     get syncBtn() { return document.querySelector('[data-action="sync"]'); },
@@ -2040,6 +2039,7 @@ const TradeModule = {
 
     render() {
         const list = document.getElementById('trade-list');
+        if (!list) return;
         list.replaceChildren();
         TradeModule.trades.forEach((t, i) => {
             const total = (t.shares * t.price).toFixed(2);
@@ -2059,6 +2059,7 @@ const TradeModule = {
 
     renderSummary() {
         const summary = document.getElementById('trade-summary');
+        if (!summary) return;
         if (TradeModule.trades.length === 0) {
             summary.replaceChildren();
             return;
@@ -2076,50 +2077,7 @@ const TradeModule = {
     },
 
     init() {
-        const tickerInput = document.getElementById('trade-ticker');
-        const sharesInput = document.getElementById('trade-shares');
-        const priceInput  = document.getElementById('trade-price');
-
-        // BUY/SELL 切換
-        document.querySelectorAll('.trade-type-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                TradeModule.currentType = btn.dataset.type;
-                document.querySelectorAll('.trade-type-btn').forEach(b =>
-                    b.classList.toggle('active', b === btn));
-            });
-        });
-
-        // 新增交易
-        const addTrade = () => {
-            const t = tickerInput.value.trim();
-            const s = sharesInput.value.trim();
-            const p = priceInput.value.trim();
-            if (!t || !s || !p) {
-                if (!t) tickerInput.focus();
-                else if (!s) sharesInput.focus();
-                else priceInput.focus();
-                return;
-            }
-            if (parseFloat(s) <= 0 || parseFloat(p) <= 0) return;
-            TradeModule.add(TradeModule.currentType, t, s, p);
-            tickerInput.value = '';
-            sharesInput.value = '';
-            priceInput.value = '';
-            tickerInput.focus();
-        };
-        document.getElementById('trade-add-btn').addEventListener('click', addTrade);
-        [tickerInput, sharesInput, priceInput].forEach(inp => {
-            inp.addEventListener('keydown', e => {
-                if (e.key === 'Enter') { e.preventDefault(); addTrade(); }
-            });
-        });
-
-        // 刪除按鈕（事件委派）
-        document.getElementById('trade-list').addEventListener('click', e => {
-            if (e.target.classList.contains('trade-del')) {
-                TradeModule.remove(parseInt(e.target.dataset.idx));
-            }
-        });
+        // Family version: no trade UI, skip DOM binding
     },
 };
 
@@ -2440,91 +2398,7 @@ const Sync = {
     },
 
     async refreshPortfolio() {
-        try {
-            const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=portfolio`, {}, 1);
-            const data = await res.json();
-            if (!data.summary) return;
-            const s = data.summary;
-            const plColor  = s.total_pl >= 0 ? 'var(--stark-cyan)' : 'var(--stark-red)';
-            const plSign   = s.total_pl >= 0 ? '+' : '';
-            const newValue = Number(s.total_value);
-            const newPl    = Number(s.total_pl);
-            const prevValue = DOM.portfolioDisplay._lastValue ?? null;
-            const prevPl    = DOM.portfolioDisplay._lastPl    ?? null;
-            DOM.portfolioDisplay._lastValue = newValue;
-            DOM.portfolioDisplay._lastPl    = newPl;
-
-            // 首次建立 DOM 結構
-            if (!DOM.portfolioDisplay.querySelector('.coin-icon')) {
-                DOM.portfolioDisplay.replaceChildren();
-
-                const coin = document.createElement('span');
-                coin.className = 'coin-icon';
-                coin.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                  <!-- 銀行柱子屋頂 -->
-                  <polygon points="10,1 19,6 1,6" fill="#a0c8e0" opacity="0.9"/>
-                  <rect x="2.5" y="6" width="15" height="1.2" fill="#c8e0f0" opacity="0.85"/>
-                  <!-- 三根柱子 -->
-                  <rect x="3.5" y="7.2" width="2" height="7" fill="#7ab0cc" opacity="0.9"/>
-                  <rect x="9" y="7.2" width="2" height="7" fill="#7ab0cc" opacity="0.9"/>
-                  <rect x="14.5" y="7.2" width="2" height="7" fill="#7ab0cc" opacity="0.9"/>
-                  <!-- 底座 -->
-                  <rect x="1.5" y="14.2" width="17" height="1.5" fill="#c8e0f0" opacity="0.85"/>
-                  <rect x="0.5" y="15.7" width="19" height="1.8" fill="#a0c8e0" opacity="0.9"/>
-                </svg>`;
-
-                // NET 區塊
-                const netGroup = document.createElement('span');
-                netGroup.style.cssText = 'display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1.1;';
-                const netLabel = document.createElement('span');
-                netLabel.className = 'pf-label';
-                netLabel.textContent = 'NET WORTH';
-                const netVal = document.createElement('span');
-                netVal.id = '_pf-val';
-                netVal.className = 'pf-value';
-                netVal.style.color = 'white';
-                netGroup.append(netLabel, netVal);
-
-                // 分隔線
-                const div1 = document.createElement('span');
-                div1.className = 'pf-divider';
-
-                // P/L 區塊
-                const plGroup = document.createElement('span');
-                plGroup.style.cssText = 'display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1.1;';
-                const plLabel = document.createElement('span');
-                plLabel.className = 'pf-label';
-                plLabel.textContent = 'P / L';
-                const plVal = document.createElement('span');
-                plVal.id = '_pf-pl';
-                plVal.className = 'pf-value';
-                plGroup.append(plLabel, plVal);
-
-                DOM.portfolioDisplay.append(coin, netGroup, div1, plGroup);
-            }
-
-            const valEl = document.getElementById('_pf-val');
-            const plEl  = document.getElementById('_pf-pl');
-
-            // 數值有變化時加 flash
-            function flashUpdate(el, newText, color) {
-                el.textContent = newText;
-                el.style.color = color;
-                el.style.textShadow = `0 0 12px ${color}`;
-                el.classList.remove('flash');
-                void el.offsetWidth; // reflow 觸發重新動畫
-                el.classList.add('flash');
-            }
-
-            const valChanged = prevValue !== null && newValue !== prevValue;
-            const plChanged  = prevPl    !== null && newPl    !== prevPl;
-
-            flashUpdate(valEl, `$${newValue.toLocaleString()}`,          'white');
-            flashUpdate(plEl,  `${plSign}$${newPl.toLocaleString()}`,    plColor);
-
-        } catch (e) {
-            // 靜默失敗
-        }
+        // Portfolio HUD removed in Family version
     },
 };
 
@@ -2995,12 +2869,9 @@ window.addEventListener('DOMContentLoaded', () => {
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
     Events.init();
-    TradeModule.init();
     Sync.fetchData();
-    Sync.refreshPortfolio();
 
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
-    setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 });
 </script>
 </body>

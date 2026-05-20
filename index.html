@@ -3675,6 +3675,45 @@ const HealthModule = {
 
 // ---------- SYNC MODULE ----------
 const Sync = {
+    // 預取 ±3 天資料存入 localStorage
+    async prefetchDays(centerDate) {
+        const PREFETCH_KEY = (d) => `gpal_prefetch_${d}`;
+        const addDays = (dateStr, n) => {
+            const d = new Date(dateStr + 'T12:00:00');
+            d.setDate(d.getDate() + n);
+            return `${d.getFullYear()}-${Utils.pad2(d.getMonth()+1)}-${Utils.pad2(d.getDate())}`;
+        };
+        const offsets = [-3, -2, -1, 1, 2, 3];
+        for (const offset of offsets) {
+            const targetDate = addDays(centerDate, offset);
+            try {
+                const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${targetDate}`, {}, 1);
+                const data = await res.json();
+                localStorage.setItem(PREFETCH_KEY(targetDate), JSON.stringify({ data, ts: Date.now() }));
+            } catch(e) { /* 靜默失敗 */ }
+            // 每次請求之間間隔 300ms，避免同時大量請求
+            await new Promise(r => setTimeout(r, 300));
+        }
+    },
+
+    // 從緩存載入（切日期時即時顯示）
+    loadFromCache(date) {
+        const PREFETCH_KEY = `gpal_prefetch_${date}`;
+        try {
+            const raw = localStorage.getItem(PREFETCH_KEY);
+            if (!raw) return false;
+            const { data, ts } = JSON.parse(raw);
+            // 緩存超過 24 小時則忽略
+            if (Date.now() - ts > 86400000) return false;
+            GoalModule.parse(data.goal || '');
+            PlanModule.parse(data.plan || '');
+            TradeModule.loadFromAction(data.action || '');
+            DOM.textLearn.value = data.learn || '';
+            Utils.adjustHeight(DOM.textLearn);
+            return true;
+        } catch(e) { return false; }
+    },
+
     async fetchData() {
         const token = ++State.fetchToken;
         Utils.setStatus('>> SYNCING...', 'warn');
@@ -3684,6 +3723,9 @@ const Sync = {
 
         const date = DOM.datePicker.value;
         Utils.updateDateLabel(date);
+
+        // 先從緩存即時顯示（避免 lag）
+        Sync.loadFromCache(date);
 
         try {
             const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${date}`);
@@ -3737,6 +3779,9 @@ const Sync = {
             if (backup && backup.payload) {
                 Utils.setStatus('LOCAL_BACKUP_FOUND', 'warn');
             }
+
+            // 背景預取 ±3 天資料存入 localStorage
+            Sync.prefetchDays(date);
         } catch (e) {
             if (token !== State.fetchToken) return;
             Utils.setStatus('LINK_FAILURE — using local', 'error');
@@ -3760,7 +3805,7 @@ const Sync = {
         } finally {
             const syncBtn = document.getElementById('btn-nav-sync');
             if (syncBtn) syncBtn.classList.remove('spinning');
-        }
+            }
     },
 
     async save(mode = 'MANUAL') {

@@ -2135,27 +2135,27 @@ const Sync = {
         Sync.loadFromCache(date);
 
         try {
-            const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${date}`);
+            const yesterday = new Date(date + 'T12:00:00');
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yDate = `${yesterday.getFullYear()}-${Utils.pad2(yesterday.getMonth()+1)}-${Utils.pad2(yesterday.getDate())}`;
+            const isToday = date === Utils.todayISO();
+
+            const [res, yRes] = await Promise.all([
+                Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${date}`),
+                isToday ? Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${yDate}`, {}, 1) : Promise.resolve(null),
+            ]);
+
             const data = await res.json();
-
-            if (token !== State.fetchToken) return; // 已被新請求取代
-
+            if (token !== State.fetchToken) return;
             State.currentData = data;
 
-            // Rollover：若是今天，且今天 goal 為空，把昨天未完成的 goal 帶過來
             let goalRaw = data.goal || '';
-            const isToday = date === Utils.todayISO();
-            if (isToday) {
-                const yesterday = new Date(date + 'T12:00:00');
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yDate = `${yesterday.getFullYear()}-${Utils.pad2(yesterday.getMonth()+1)}-${Utils.pad2(yesterday.getDate())}`;
+            if (isToday && yRes) {
                 try {
-                    const yRes  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${yDate}`, {}, 1);
                     const yData = await yRes.json();
                     if (yData.goal) {
                         const incomplete = yData.goal.split('\n').filter(l => l.trim() && l.startsWith('[ ]'));
                         if (incomplete.length > 0) {
-                            // 合併：今天已有的項目不重複加入
                             const todayTexts = new Set(
                                 goalRaw.split('\n').map(l => l.replace(/^\[[ x]\]\s*\((P[1-3]|NONE)\)\s*/, '').replace(/^\[[ x]\]\s*/, '').trim())
                             );
@@ -2168,7 +2168,7 @@ const Sync = {
                             }
                         }
                     }
-                } catch (e) { /* 昨天資料抓不到就算了 */ }
+                } catch(e) {}
             }
 
             GoalModule.parse(goalRaw);

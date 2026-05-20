@@ -2,6 +2,10 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="version" content="202605201632">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GPAL MK-VII // OPTIMIZED</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -150,6 +154,23 @@
             position: relative;
             z-index: 1;
         }
+
+        .btn-update-now {
+            background: rgba(255,204,0,0.15);
+            border: 1px solid var(--stark-gold);
+            color: var(--stark-gold);
+            font-family: 'Orbitron';
+            font-size: 0.48rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            animation: pulse-glow 1.5s ease-in-out infinite;
+            touch-action: manipulation;
+        }
+        .btn-update-now:hover { background: rgba(255,204,0,0.3); }
+
         .btn-nav-sync {
             background: transparent;
             border: 1px solid rgba(0,242,255,0.3);
@@ -2437,6 +2458,7 @@
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
+        <button class="btn-update-now" id="btn-update-now" onclick="location.reload(true)" style="display:none;">UPDATE</button>
         <button class="btn-nav-sync" id="btn-nav-sync" onclick="Sync.fetchData()" title="Sync now">↺</button>
     </div>
 </nav>
@@ -5367,6 +5389,22 @@ window.addEventListener('DOMContentLoaded', () => {
 
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
+
+    // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
+    const CURRENT_VERSION = '202605201634';
+    async function checkVersion() {
+        try {
+            const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });
+            const html = await res.text();
+            const match = html.match(/name="version" content="([^"]+)"/);
+            if (match && match[1] !== CURRENT_VERSION) {
+                const ub = document.getElementById('btn-update-now'); if(ub) ub.style.display='inline-flex';
+            }
+        } catch(e) {}
+    }
+    setTimeout(checkVersion, 60000); // 1分鐘後首次檢查
+    setInterval(checkVersion, 600000); // 之後每10分鐘
+
 });
 </script>
 </body>

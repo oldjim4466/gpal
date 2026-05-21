@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605201645">
+    <meta name="version" content="202605201730">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.00</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.01</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2454,7 +2454,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.00</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.01</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3746,8 +3746,9 @@ const Sync = {
         const date = DOM.datePicker.value;
         Utils.updateDateLabel(date);
 
-        // 先從緩存即時顯示（避免 lag）
-        Sync.loadFromCache(date);
+        // 先從緩存即時顯示（避免 lag），記錄緩存快照供後續比對
+        const cacheHit = Sync.loadFromCache(date);
+        const cacheSnapshot = cacheHit ? localStorage.getItem(`gpal_prefetch_${date}`) : null;
 
         try {
             // 今天和昨天並行請求（節省一個 round-trip 時間）
@@ -3787,11 +3788,22 @@ const Sync = {
                 } catch(e) { /* 昨天資料抓不到就算了 */ }
             }
 
-            GoalModule.parse(goalRaw);
-            PlanModule.parse(data.plan);
-            TradeModule.loadFromAction(data.action || '');
-            DOM.textLearn.value = data.learn || '';
-            Utils.adjustHeight(DOM.textLearn);
+            // 若緩存命中且雲端資料與緩存一致，跳過重渲染（避免閃爍）
+            const cloudSnapshot = JSON.stringify(data);
+            const cacheData = cacheSnapshot ? JSON.parse(cacheSnapshot).data : null;
+            const dataChanged = !cacheData ||
+                cacheData.goal  !== data.goal  ||
+                cacheData.plan  !== data.plan  ||
+                cacheData.learn !== data.learn ||
+                cacheData.action !== data.action;
+
+            if (dataChanged || !cacheHit) {
+                GoalModule.parse(goalRaw);
+                PlanModule.parse(data.plan);
+                TradeModule.loadFromAction(data.action || '');
+                DOM.textLearn.value = data.learn || '';
+                Utils.adjustHeight(DOM.textLearn);
+            }
 
             Utils.setStatus('STARK_OS_ONLINE', 'success');
             Utils.setConnState('online');
@@ -3802,6 +3814,11 @@ const Sync = {
             if (backup && backup.payload) {
                 Utils.setStatus('LOCAL_BACKUP_FOUND', 'warn');
             }
+
+            // 將當天資料存入 prefetch cache（下次切回此日即時顯示）
+            try {
+                localStorage.setItem(`gpal_prefetch_${date}`, JSON.stringify({ data, ts: Date.now() }));
+            } catch(e) {}
 
             // 背景預取 ±3 天資料存入 localStorage
             Sync.prefetchDays(date);

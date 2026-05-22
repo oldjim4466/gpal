@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605211100">
+    <meta name="version" content="202605211130">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.06</title>
+    <title>GPAL FAMILY v1.07</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1382,7 +1382,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.06</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.07</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2694,6 +2694,31 @@ const Events = {
             });
         });
 
+        // UPLOAD TO CLOUD 按鈕
+        document.querySelector('[data-action="sync"]').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.textContent = 'UPLOADING...';
+            try {
+                await Sync.save('MANUAL');
+                btn.textContent = 'UPLOAD DONE ✓';
+                btn.style.borderColor = 'var(--stark-green)';
+                btn.style.color = 'var(--stark-green)';
+            } catch {
+                btn.textContent = 'UPLOAD FAILED';
+                btn.style.borderColor = 'var(--stark-red)';
+                btn.style.color = 'var(--stark-red)';
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = 'UPLOAD TO CLOUD';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2500);
+            }
+        });
+
         // 導覽
         document.querySelector('[data-action="prev-day"]').addEventListener('click', () => Events.changeDate(-1));
         document.querySelector('[data-action="next-day"]').addEventListener('click', () => Events.changeDate(1));
@@ -2828,7 +2853,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605211100';
+    const CURRENT_VERSION = '202605211130';
     async function checkVersion() {
         try {
             const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });

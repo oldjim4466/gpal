@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605211400">
+    <meta name="version" content="202605211500">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.10</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.11</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2507,7 +2507,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.10</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.11</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3057,11 +3057,16 @@ const GoalModule = {
     // 把當前 goal-list DOM 序列化到 allData[memberIdx]
     saveCurrent() {
         GoalModule.allData[State.memberIdx] = GoalModule.serializeCurrent();
+        GoalModule._lastRendered = ''; // 下次 renderCurrent 強制重建
     },
 
-    // 渲染 allData[memberIdx] 到 goal-list DOM
+    // 渲染 allData[memberIdx] 到 goal-list DOM（資料相同則跳過重建）
+    _lastRendered: '',
     renderCurrent() {
-        GoalModule.parseSingle(GoalModule.allData[State.memberIdx] || '');
+        const raw = GoalModule.allData[State.memberIdx] || '';
+        if (raw === GoalModule._lastRendered) return;
+        GoalModule._lastRendered = raw;
+        GoalModule.parseSingle(raw);
     },
 
     // 只序列化 goal-list DOM → 純字串（不含 JSON）
@@ -3966,20 +3971,18 @@ const MemberMgr = {
 
 // 全局人員切換
 function switchMember(idx) {
-    // 儲存當前成員最新狀態
+    if (idx === State.memberIdx) return; // 相同成員不重渲染
     GoalModule.saveCurrent();
     PlanModule.saveCurrent();
     ActionModule.saveCurrent();
     LearnModule.saveCurrent();
-    // 切換
     State.memberIdx = idx;
     MemberMgr.renderSwitcher();
-    // 渲染新成員
     GoalModule.renderCurrent();
     PlanModule.renderCurrent();
     ActionModule.renderCurrent();
     LearnModule.renderCurrent();
-    SaveQueue.trigger();
+    // 不觸發 SaveQueue：切換成員只是 UI 切換，資料沒有改變
 }
 
 // ---------- SYNC MODULE ----------
@@ -5745,7 +5748,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605211400';
+    const CURRENT_VERSION = '202605211500';
     async function checkVersion() {
         try {
             const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });

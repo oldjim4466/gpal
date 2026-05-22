@@ -1,0 +1,2585 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="version" content="202605201945">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GPAL FAMILY v1.04</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --stark-cyan: #00f2ff;
+            --stark-glow: rgba(0, 242, 255, 0.8);
+            --stark-glow-soft: rgba(0, 242, 255, 0.3);
+            --stark-dark: #061623;
+            --stark-darker: #03101a;
+            --stark-panel: rgba(10, 31, 50, 0.85);
+            --stark-border: rgba(0, 242, 255, 0.3);
+            --stark-gold: #ffcc00;
+            --stark-red: #ff3e3e;
+            --stark-green: #00ff88;
+            --easing-cyber: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --easing-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* 桌面版放大基礎字體，所有 rem 單位自動等比放大 */
+        @media (min-width: 768px) {
+            html { font-size: 20px; }
+        }
+        @media (min-width: 1200px) {
+            html { font-size: 22px; }
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            background: var(--stark-dark);
+            color: var(--stark-cyan);
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(0, 242, 255, 0.08), transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 204, 0, 0.04), transparent 50%),
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+            background-size: 100% 100%, 100% 100%, 100% 3px;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 全域 HUD 網格 */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,242,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,242,255,0.025) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+            animation: grid-drift 30s linear infinite;
+        }
+        @keyframes grid-drift {
+            from { background-position: 0 0, 0 0; }
+            to   { background-position: 40px 40px, 40px 40px; }
+        }
+        nav, .header-section, main, footer { position: relative; z-index: 1; }
+
+        /* === 全域動畫 === */
+        @keyframes scan-line {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px var(--stark-glow-soft); }
+            50% { box-shadow: 0 0 15px var(--stark-glow); }
+        }
+        @keyframes cyber-jump {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-4px); text-shadow: 0 0 12px var(--stark-cyan); }
+            60% { transform: translateY(-2px); text-shadow: 0 0 6px var(--stark-cyan); }
+        }
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes boot-flash {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+
+        /* 掃描線特效 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--stark-glow), transparent);
+            opacity: 0.4;
+            animation: scan-line 8s linear infinite;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        nav {
+            padding: 0.6rem;
+            border-bottom: 2px solid var(--stark-cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(6, 22, 35, 0.9);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+        @media (min-width: 768px) {
+            nav { padding: 0.8rem 1.5rem; }
+        }
+        nav::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: -50%;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--stark-cyan), transparent);
+            box-shadow: 0 0 10px var(--stark-cyan);
+            animation: nav-scan 5s linear infinite;
+        }
+        @keyframes nav-scan {
+            to { left: 150%; }
+        }
+        .brand-bold {
+            font-family: 'Orbitron';
+            font-weight: 900;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--stark-glow);
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-update-now {
+            background: rgba(255,204,0,0.15);
+            border: 1px solid var(--stark-gold);
+            color: var(--stark-gold);
+            font-family: 'Orbitron';
+            font-size: 0.48rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            animation: pulse-glow 1.5s ease-in-out infinite;
+            touch-action: manipulation;
+        }
+        .btn-update-now:hover { background: rgba(255,204,0,0.3); }
+
+        .btn-nav-sync {
+            background: transparent;
+            border: 1px solid rgba(0,242,255,0.3);
+            color: rgba(0,242,255,0.6);
+            font-size: 0.8rem;
+            width: 22px; height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s var(--easing-cyber);
+            padding: 0;
+            line-height: 1;
+            border-radius: 2px;
+        }
+        .btn-nav-sync:hover {
+            color: var(--stark-cyan);
+            border-color: var(--stark-cyan);
+            box-shadow: 0 0 8px var(--stark-glow-soft);
+        }
+        .btn-nav-sync:active { transform: rotate(180deg); }
+        .btn-nav-sync.spinning {
+            animation: spin 0.6s linear infinite;
+            color: var(--stark-gold);
+            border-color: var(--stark-gold);
+        }
+        .conn-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Orbitron';
+            font-size: 0.55rem;
+            letter-spacing: 1px;
+        }
+        .conn-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--stark-green);
+            box-shadow: 0 0 8px var(--stark-green);
+            position: relative;
+        }
+        .conn-dot::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 1px solid currentColor;
+            color: var(--stark-green);
+            animation: radar-ping 2s ease-out infinite;
+        }
+        @keyframes radar-ping {
+            0%   { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+        .conn-dot.offline { background: var(--stark-red); box-shadow: 0 0 8px var(--stark-red); }
+        .conn-dot.offline::before { color: var(--stark-red); }
+        .conn-dot.syncing { background: var(--stark-gold); box-shadow: 0 0 8px var(--stark-gold); }
+        .conn-dot.syncing::before { color: var(--stark-gold); animation-duration: 1s; }
+
+        .header-section {
+            padding: 1.2rem 1rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+        }
+        .date-nav-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .nav-btn {
+            background: transparent;
+            border: 1px solid rgba(0, 242, 255, 0.4);
+            color: var(--stark-cyan);
+            width: 32px; height: 32px;
+            cursor: pointer;
+            transition: 0.2s var(--easing-cyber);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--stark-glow-soft);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .nav-btn:hover::before { opacity: 1; }
+        .nav-btn:hover { border-color: var(--stark-cyan); box-shadow: 0 0 14px var(--stark-glow); }
+        .nav-btn:active { transform: scale(0.88); }
+
+        .date-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+        input[type="date"] {
+            background: transparent;
+            border: none;
+            color: var(--stark-cyan);
+            font-family: 'Orbitron';
+            font-size: 1rem;
+            outline: none;
+            color-scheme: dark;
+            letter-spacing: 2px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .clock-weather-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .weather-display {
+            font-family: 'Orbitron';
+            font-size: 0.52rem;
+            color: rgba(0,242,255,0.6);
+            letter-spacing: 1px;
+            white-space: nowrap;
+            min-height: 0.75rem;
+            text-align: right;
+        }
+        .weather-display .w-temp { color: var(--stark-gold); font-weight: 900; }
+        .weather-display .w-icon { margin-right: 2px; }
+        @media (max-width: 480px) {
+            .weather-display { font-size: 0.6rem; }
+            .weather-display .w-temp { font-size: 0.65rem; }
+        }
+        .live-clock {
+            font-family: 'Orbitron';
+            font-size: 0.85rem;
+            letter-spacing: 0;
+            color: var(--stark-gold);
+            border-left: 1px solid rgba(255, 204, 0, 0.3);
+            padding-left: 12px;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            font-variant-numeric: tabular-nums;
+        }
+        .clock-digit {
+            display: inline-block;
+            width: 1.1ch;
+            text-align: center;
+        }
+        .clock-colon {
+            display: inline-block;
+            width: 0.5ch;
+            text-align: center;
+            opacity: 0.6;
+        }
+        .clock-sec-group {
+            opacity: 0.5;
+            font-size: 0.7rem;
+        }
+        .date-label {
+            font-family: 'Orbitron';
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            color: var(--stark-gold);
+            height: 14px;
+            transition: opacity 0.3s, transform 0.3s;
+            text-transform: uppercase;
+        }
+        .date-label.hidden { opacity: 0; transform: translateY(-4px); }
+        .date-underline {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--stark-cyan), transparent);
+            opacity: 0.5;
+        }
+
+        .main-container {
+            flex: 1;
+            max-width: 750px;
+            margin: 0 auto;
+            padding: 0.5rem;
+            width: 100%;
+            padding-bottom: 60px;
+        }
+        @media (min-width: 768px) {
+            .main-container {
+                max-width: 860px;
+                padding: 0.8rem 1.2rem;
+                padding-bottom: 300px;
+            }
+        }
+        .gpal-card {
+            background: var(--stark-panel);
+            border: 1px solid var(--stark-border);
+            padding: 0.8rem;
+            margin-bottom: 0.6rem;
+            position: relative;
+            clip-path: polygon(0 0, 97% 0, 100% 3%, 100% 100%, 3% 100%, 0 97%);
+            animation: fade-in 0.4s var(--easing-smooth) both;
+            transition: border-color 0.3s, transform 0.3s var(--easing-smooth), box-shadow 0.3s;
+        }
+        .gpal-card:hover {
+            border-color: rgba(0,242,255,0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 18px rgba(0,242,255,0.08);
+        }
+        .gpal-card:nth-child(1) { animation-delay: 0.05s; }
+        .gpal-card:nth-child(2) { animation-delay: 0.1s; }
+        .gpal-card:nth-child(3) { animation-delay: 0.15s; }
+        .gpal-card:nth-child(4) { animation-delay: 0.2s; }
+
+        /* 卡片角邊裝飾 */
+        .gpal-card::before,
+        .gpal-card::after,
+        .intel-card::before,
+        .intel-card::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 1px solid var(--stark-cyan);
+            opacity: 0.6;
+            transition: opacity 0.3s, width 0.3s, height 0.3s;
+            pointer-events: none;
+        }
+        .gpal-card::before {
+            top: -1px; left: -1px;
+            border-right: none;
+            border-bottom: none;
+        }
+        .gpal-card::after {
+            bottom: -1px; right: -1px;
+            border-left: none;
+            border-top: none;
+        }
+        .gpal-card:hover::before,
+        .gpal-card:hover::after {
+            width: 16px;
+            height: 16px;
+            opacity: 1;
+        }
+        .intel-card::before {
+            top: -1px; left: -1px;
+            border-right: none;
+            border-bottom: none;
+            border-color: var(--stark-gold);
+        }
+        .intel-card::after {
+            bottom: -1px; right: -1px;
+            border-left: none;
+            border-top: none;
+            border-color: var(--stark-gold);
+        }
+
+        .card-header {
+            border-left: 3px solid var(--stark-cyan);
+            padding-left: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            position: relative;
+        }
+        .card-header::before {
+            content: '';
+            position: absolute;
+            left: -3px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--stark-cyan);
+            box-shadow: 0 0 10px var(--stark-glow);
+            animation: header-pulse 3s ease-in-out infinite;
+        }
+        @keyframes header-pulse {
+            0%, 100% { opacity: 0.7; box-shadow: 0 0 6px var(--stark-glow-soft); }
+            50%      { opacity: 1;   box-shadow: 0 0 14px var(--stark-glow); }
+        }
+        .card-header h2 {
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            font-family: 'Orbitron';
+            margin: 0;
+            text-shadow: 0 0 12px rgba(0,242,255,0.3);
+        }
+        .progress-stats {
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            color: var(--stark-gold);
+            font-weight: 900;
+            transition: 0.3s;
+            margin-left: auto;
+            padding-left: 24px;
+        }
+
+        textarea.auto-height {
+            width: 100%;
+            min-height: 25px;
+            border: none;
+            background: transparent;
+            font-family: 'Rajdhani';
+            font-size: 1.1rem;
+            color: #fff;
+            resize: none;
+            outline: none;
+            line-height: 1.3;
+            overflow: hidden;
+            word-break: break-word;
+        }
+        @media (min-width: 768px) {
+            textarea.auto-height { font-size: 1.25rem; line-height: 1.5; min-height: 35px; }
+        }
+
+        /* === MISSION GOAL === */
+        .goal-list { display: flex; flex-direction: column; gap: 8px; }
+        .goal-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.4s var(--easing-smooth);
+            animation: slide-in 0.3s var(--easing-smooth) both;
+        }
+
+        .prio-tag {
+            width: 28px; height: 18px;
+            font-family: 'Orbitron';
+            font-size: 0.6rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid transparent;
+            cursor: pointer;
+            clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%);
+            transition: 0.25s var(--easing-cyber);
+        }
+        .prio-tag:active { transform: scale(0.9); }
+        .prio-none { color: #555; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); }
+        .prio-p1 { color: #fff; background: var(--stark-red); box-shadow: 0 0 8px var(--stark-red); }
+        .prio-p2 { color: var(--stark-dark); background: var(--stark-gold); box-shadow: 0 0 8px var(--stark-gold); }
+        .prio-p3 { color: var(--stark-dark); background: var(--stark-cyan); box-shadow: 0 0 8px var(--stark-cyan); }
+
+        .stark-checkbox {
+            appearance: none;
+            width: 20px; height: 20px;
+            border: 1.5px solid var(--stark-cyan);
+            background: transparent;
+            cursor: pointer;
+            flex-shrink: 0;
+            position: relative;
+            transition: 0.3s var(--easing-cyber);
+        }
+        .stark-checkbox:hover {
+            box-shadow: 0 0 8px var(--stark-glow);
+            transform: scale(1.05);
+        }
+        .stark-checkbox:checked {
+            background: var(--stark-cyan);
+            box-shadow: 0 0 12px var(--stark-glow);
+            border-color: transparent;
+            animation: check-burst 0.4s var(--easing-cyber);
+        }
+        @keyframes check-burst {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.25); box-shadow: 0 0 24px var(--stark-cyan), 0 0 40px var(--stark-cyan); }
+            100% { transform: scale(1); box-shadow: 0 0 12px var(--stark-glow); }
+        }
+        .stark-checkbox:checked::after {
+            content: '✓';
+            color: var(--stark-dark);
+            position: absolute;
+            font-size: 14px;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 900;
+            animation: check-pop 0.3s var(--easing-cyber);
+        }
+        @keyframes check-pop {
+            0%   { transform: translate(-50%, -50%) scale(0) rotate(-45deg); opacity: 0; }
+            60%  { transform: translate(-50%, -50%) scale(1.3) rotate(10deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .goal-text-container {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            transition: all 0.4s var(--easing-smooth);
+            min-width: 0;
+            border-radius: 3px;
+        }
+        .goal-text-container.completed {
+            padding-left: 54px;
+            background: linear-gradient(90deg, rgba(0, 242, 255, 0.15) 0%, transparent 80%);
+        }
+        .goal-text-container::before {
+            content: '100%';
+            position: absolute;
+            left: 2px; top: 50%;
+            transform: translateY(-50%) scale(0.3);
+            font-family: 'Orbitron';
+            font-weight: 900;
+            font-size: 0.55rem;
+            color: var(--stark-dark);
+            background: var(--stark-cyan);
+            padding: 1px 6px;
+            opacity: 0;
+            transition: 0.4s var(--easing-cyber);
+            pointer-events: none;
+            z-index: 2;
+            box-shadow: 0 0 10px var(--stark-glow);
+            white-space: nowrap;
+        }
+        .goal-text-container.completed::before { opacity: 1; transform: translateY(-50%) scale(1); }
+
+        .goal-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Rajdhani';
+            font-size: 1.05rem;
+            outline: none;
+            padding: 2px 0;
+            text-overflow: ellipsis;
+            transition: 0.3s;
+        }
+        .goal-input.completed { color: #fff; text-shadow: 0 0 8px var(--stark-glow); opacity: 0.9; }
+        .goal-input::placeholder { color: rgba(255,255,255,0.25); }
+
+        /* === STRATEGIC PLAN === */
+        .plan-list { display: flex; flex-direction: column; gap: 3px; }
+        .plan-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 4px;
+            border-left: 2px solid transparent;
+            transition: 0.3s var(--easing-smooth);
+            animation: slide-in 0.3s var(--easing-smooth) both;
+        }
+        .plan-row.active-now {
+            background: rgba(255, 204, 0, 0.08);
+            border-left: 3px solid var(--stark-gold);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .plan-row.active-now::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,204,0,0.15), transparent);
+            animation: row-sweep 3s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes row-sweep {
+            to { left: 200%; }
+        }
+        .plan-row.active-now::after {
+            display: none;
+        }
+        .plan-row.past {
+            opacity: 0.45;
+        }
+
+        .time-select-row {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .time-sel {
+            background: transparent;
+            color: var(--stark-cyan);
+            border: 1px solid var(--stark-border);
+            font-family: 'Orbitron';
+            font-size: 0.55rem;
+            outline: none;
+            padding: 1px;
+            cursor: pointer;
+        }
+        .time-sel:focus { border-color: var(--stark-cyan); box-shadow: 0 0 5px var(--stark-glow-soft); }
+        .time-dash { font-size: 0.6rem; opacity: 0.5; color: var(--stark-cyan); }
+
+        .plan-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #fff;
+            font-family: 'Rajdhani';
+            font-size: 1.05rem;
+            outline: none;
+            padding: 1px 0;
+            min-width: 0;
+            text-overflow: ellipsis;
+            transition: border-color 0.2s;
+        }
+        .plan-input:focus { border-bottom-color: var(--stark-cyan); }
+        .plan-input::placeholder { color: rgba(255,255,255,0.25); }
+
+        .plan-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .loc-add-btn {
+            font-family: 'Orbitron';
+            font-size: 0.5rem;
+            color: var(--stark-gold);
+            cursor: pointer;
+            opacity: 0.5;
+            border: 1px dashed var(--stark-gold);
+            padding: 1px 4px;
+            transition: 0.2s;
+        }
+        .loc-add-btn:hover { opacity: 1; }
+        .loc-edit {
+            display: none;
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid var(--stark-cyan);
+            color: white;
+            font-family: 'Rajdhani';
+            font-size: 0.8rem;
+            padding: 1px 5px;
+            outline: none;
+            width: 80px;
+        }
+
+        .loc-tag-group {
+            display: none;
+            align-items: stretch;
+            gap: 3px;
+        }
+        .loc-badge,
+        .loc-copy-btn {
+            font-family: 'Orbitron';
+            font-size: 0.55rem;
+            font-weight: 900;
+            padding: 3px 7px;
+            cursor: pointer;
+            white-space: nowrap;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+        }
+        .loc-badge {
+            background: rgba(0, 242, 255, 0.15);
+            color: var(--stark-cyan);
+            border: 1px solid var(--stark-cyan);
+            max-width: 90px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .loc-copy-btn {
+            background: rgba(255, 204, 0, 0.15);
+            color: var(--stark-gold);
+            border: 1px solid var(--stark-gold);
+            transition: background 0.2s, color 0.2s;
+        }
+        .loc-copy-btn:hover { background: var(--stark-gold); color: var(--stark-dark); }
+        .loc-copy-btn.copied { background: var(--stark-green); border-color: var(--stark-green); color: var(--stark-dark); }
+        .del-btn {
+            color: var(--stark-red);
+            border: 1px solid var(--stark-red);
+            font-family: 'Orbitron';
+            font-size: 0.5rem;
+            padding: 1px 4px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: 0.2s;
+        }
+        .del-btn:hover { opacity: 1; background: var(--stark-red); color: white; }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(8, 26, 41, 0.95);
+            border-top: 2px solid var(--stark-cyan);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+        }
+        .action-area {
+            padding: 0.5rem;
+            display: flex;
+            justify-content: center;
+        }
+        .btn-sync {
+            background: transparent;
+            border: 1px solid var(--stark-cyan);
+            color: var(--stark-cyan);
+            padding: 0.35rem 1.5rem;
+            font-family: 'Orbitron';
+            font-weight: 900;
+            cursor: pointer;
+            letter-spacing: 2px;
+            font-size: 0.65rem;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+            transition: 0.2s var(--easing-cyber);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-sync::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,242,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        .btn-sync:hover::before { left: 200%; }
+        .btn-sync:hover { background: var(--stark-glow-soft); box-shadow: 0 0 15px var(--stark-glow); }
+        .btn-sync:active { transform: scale(0.95); }
+        .btn-sync:disabled { opacity: 0.4; cursor: wait; }
+        .hud-row {
+            padding: 0;
+            text-align: center;
+            background: transparent;
+            font-family: 'Orbitron';
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+        .portfolio-hud {
+            position: relative;
+            padding: 10px 16px 8px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(10,31,50,0.8) 100%);
+            border-bottom: 1px solid rgba(0,242,255,0.1);
+            overflow: hidden;
+        }
+        .portfolio-hud::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 150%, rgba(255,204,0,0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .portfolio-hud::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--stark-gold), transparent);
+            animation: sweep-line 4s ease-in-out infinite;
+        }
+        @keyframes sweep-line {
+            0%   { left: -60%; opacity: 0; }
+            20%  { opacity: 1; }
+            80%  { opacity: 1; }
+            100% { left: 160%; opacity: 0; }
+        }
+        #portfolio-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+        }
+        .coin-icon {
+            display: inline-flex;
+            align-items: center;
+            filter: drop-shadow(0 0 6px rgba(180,200,220,0.8));
+        }
+        .pf-divider {
+            width: 1px;
+            height: 18px;
+            background: linear-gradient(180deg, transparent, rgba(255,204,0,0.4), transparent);
+            margin: 0 4px;
+        }
+        .pf-label {
+            font-size: 0.5rem;
+            letter-spacing: 2px;
+            opacity: 0.45;
+        }
+        .pf-value {
+            font-size: 0.95rem;
+            font-weight: 900;
+            transition: text-shadow 0.4s;
+        }
+        .pf-value.flash {
+            animation: val-flash 0.5s ease-out;
+        }
+        @keyframes val-flash {
+            0%   { opacity: 0.3; transform: scale(0.95); }
+            50%  { opacity: 1;   transform: scale(1.04); }
+            100% { opacity: 1;   transform: scale(1); }
+        }
+        .ticker-val { display: inline; }
+        #portfolio-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            letter-spacing: 0.5px;
+        }
+        .coin-icon {
+            display: inline-flex;
+            align-items: center;
+            filter: drop-shadow(0 0 4px rgba(180,200,220,0.6));
+        }
+        .ticker-val { display: inline; }
+
+        /* 載入骨架屏 */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(0,242,255,0.05), rgba(0,242,255,0.15), rgba(0,242,255,0.05));
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s infinite;
+            border-radius: 2px;
+        }
+        @keyframes skeleton-shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* === HEALTH TRACKER === */
+        .health-row {
+            padding: 6px 8px 5px;
+            background: rgba(0,0,0,0.5);
+            border-bottom: 1px solid rgba(0,242,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+        }
+        /* 桌面：兩個 row div 都是 flex，攤平成單行 */
+        .health-row-top,
+        .health-row-bottom {
+            display: contents; /* 讓子元素直接參與父層 flex，透明包裝 */
+        }
+        .health-section {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0 10px;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .health-section + .health-section::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 15%; height: 70%;
+            width: 1px;
+            background: linear-gradient(180deg, transparent, rgba(0,242,255,0.25), transparent);
+        }
+        .health-label {
+            font-family: 'Orbitron';
+            font-size: 0.46rem;
+            letter-spacing: 1.2px;
+            color: rgba(0,242,255,0.5);
+            text-transform: uppercase;
+            white-space: nowrap;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+        .health-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .health-count {
+            font-family: 'Orbitron';
+            font-size: 0.52rem;
+            font-weight: 900;
+            color: var(--stark-gold);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        /* 水杯圖示 */
+        .cups-row {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+        .cup-icon {
+            cursor: pointer;
+            transition: transform 0.15s var(--easing-cyber), filter 0.2s;
+            display: flex;
+            touch-action: manipulation;
+        }
+        .cup-icon:hover { transform: scale(1.2); }
+        .cup-icon:active { transform: scale(0.9); }
+        /* 睡眠/運動分段條 */
+        .seg-row {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+        .seg {
+            width: 13px; height: 20px;
+            border: 1px solid rgba(0,242,255,0.25);
+            cursor: pointer;
+            transition: 0.2s var(--easing-cyber);
+            position: relative;
+            overflow: hidden;
+            touch-action: manipulation;
+            flex-shrink: 0;
+        }
+        .seg.filled { border-color: transparent; }
+        .seg:hover { transform: scaleY(1.1); }
+        .seg.sleep-seg:not(.filled):hover { background: rgba(123,111,255,0.15); }
+        .seg.exer-seg:not(.filled):hover  { background: rgba(0,255,136,0.1); }
+
+        /* === 手機 RWD === */
+        @media (max-width: 600px) {
+            .health-row {
+                flex-direction: column;
+                gap: 4px;
+                padding: 5px 8px 4px;
+                align-items: stretch;
+            }
+            .health-row-top,
+            .health-row-bottom {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .health-section {
+                padding: 0 8px;
+                gap: 4px;
+            }
+            .health-section + .health-section::before {
+                top: 10%; height: 80%;
+            }
+            /* 杯子縮小 */
+            .cup-icon svg { width: 11px; height: 14px; }
+            /* 格子縮小 */
+            .seg { width: 11px; height: 17px; }
+            .health-label { font-size: 0.42rem; letter-spacing: 0.8px; }
+            .health-count { font-size: 0.48rem; }
+        }
+        @media (max-width: 380px) {
+            .health-section { padding: 0 5px; gap: 3px; }
+            .cup-icon svg { width: 10px; height: 13px; }
+            .seg { width: 10px; height: 15px; }
+        }
+        @media (max-width: 480px) {
+            .brand-bold { font-size: 0.75rem; letter-spacing: 1px; }
+            .goal-input, .plan-input { font-size: 1rem; }
+            .time-sel { font-size: 0.5rem; }
+        }
+
+        
+        /* Edit Modal */
+        .edit-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .edit-modal-overlay.open { display: flex; }
+        .edit-modal {
+            background: var(--stark-panel);
+            border: 1px solid var(--stark-cyan);
+            padding: 1rem;
+            width: 90%;
+            max-width: 420px;
+            clip-path: polygon(0 0, 97% 0, 100% 2%, 100% 100%, 3% 100%, 0 98%);
+            box-shadow: 0 0 30px rgba(0,242,255,0.2);
+            animation: fade-in 0.2s var(--easing-smooth);
+        }
+        .edit-modal-title {
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            color: var(--stark-cyan);
+            margin-bottom: 12px;
+            border-left: 3px solid var(--stark-cyan);
+            padding-left: 8px;
+        }
+        .edit-modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .edit-field { display: flex; flex-direction: column; gap: 3px; }
+        .edit-field.full { grid-column: 1 / -1; }
+        .edit-field-label {
+            font-family: 'Orbitron';
+            font-size: 0.42rem;
+            letter-spacing: 1px;
+            color: rgba(0,242,255,0.5);
+        }
+        .edit-input {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(0,242,255,0.25);
+            color: white;
+            font-family: 'Rajdhani';
+            font-size: 0.95rem;
+            padding: 4px 8px;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .edit-input:focus { border-color: var(--stark-cyan); }
+        .edit-dir-toggle { display: flex; gap: 3px; }
+        .edit-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+        .btn-modal {
+            font-family: 'Orbitron';
+            font-size: 0.55rem;
+            letter-spacing: 1px;
+            padding: 5px 14px;
+            border: 1px solid;
+            cursor: pointer;
+            transition: 0.2s;
+            background: transparent;
+        }
+        .btn-modal.cancel { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.5); }
+        .btn-modal.cancel:hover { background: rgba(255,255,255,0.08); }
+        .btn-modal.confirm { border-color: var(--stark-cyan); color: var(--stark-cyan); }
+        .btn-modal.confirm:hover { background: var(--stark-cyan); color: var(--stark-dark); }
+        .btn-modal:disabled { opacity: 0.35; cursor: wait; }
+        .finance-account-row {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .btn-account {
+            background: transparent;
+            border: 1px solid rgba(0,255,136,0.2);
+            color: rgba(0,255,136,0.5);
+            font-family: 'Orbitron';
+            font-size: 0.46rem;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: 0.2s var(--easing-cyber);
+            white-space: nowrap;
+        }
+        .btn-account:hover { border-color: rgba(0,255,136,0.5); color: var(--stark-green); }
+        .btn-account.active {
+            background: rgba(0,255,136,0.15);
+            border-color: var(--stark-green);
+            color: var(--stark-green);
+            box-shadow: 0 0 8px rgba(0,255,136,0.2);
+        }
+
+        /* 月份切換 */
+        .finance-month-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .btn-month {
+            background: transparent;
+            border: 1px solid rgba(0,255,136,0.35);
+            color: var(--stark-green);
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            font-weight: 900;
+            padding: 4px 10px;
+            cursor: pointer;
+            transition: 0.2s var(--easing-cyber);
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+            touch-action: manipulation;
+        }
+        .btn-month:hover { background: rgba(0,255,136,0.12); box-shadow: 0 0 8px rgba(0,255,136,0.3); }
+        .btn-month:active { transform: scale(0.92); }
+        .finance-month-label {
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            font-weight: 900;
+            color: var(--stark-green);
+            letter-spacing: 2px;
+            flex: 1;
+            text-align: center;
+        }
+        .btn-refresh-finance {
+            background: transparent;
+            border: 1px solid rgba(0,255,136,0.3);
+            color: rgba(0,255,136,0.6);
+            font-family: 'Orbitron';
+            font-size: 0.5rem;
+            padding: 2px 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 1px;
+        }
+        .btn-refresh-finance:hover { color: var(--stark-green); border-color: var(--stark-green); }
+
+        /* 三欄數字 */
+        .finance-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .finance-stat {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid transparent;
+            padding: 12px 8px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .finance-stat.income  { border-color: rgba(0,255,136,0.25); }
+        .finance-stat.expense { border-color: rgba(255,62,62,0.25); }
+        .finance-stat.net.positive { border-color: rgba(0,242,255,0.25); }
+        .finance-stat.net.negative { border-color: rgba(255,62,62,0.35); }
+        .finance-stat-label {
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+        }
+        .finance-stat.income  .finance-stat-label { color: rgba(0,255,136,0.7); }
+        .finance-stat.expense .finance-stat-label { color: rgba(255,62,62,0.7); }
+        .finance-stat.net     .finance-stat-label { color: rgba(0,242,255,0.7); }
+        .finance-stat-value {
+            font-family: 'Orbitron';
+            font-weight: 900;
+            font-size: 1.25rem;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+        .finance-stat.income  .finance-stat-value { color: var(--stark-green); }
+        .finance-stat.expense .finance-stat-value { color: var(--stark-red); }
+        .finance-stat.net.positive .finance-stat-value { color: var(--stark-cyan); }
+        .finance-stat.net.negative .finance-stat-value { color: var(--stark-red); }
+        .finance-stat-value.updated {
+            animation: val-flash 0.5s var(--easing-cyber);
+        }
+
+        /* 類別支出條 */
+        .finance-cat-title {
+            font-family: 'Orbitron';
+            font-size: 0.48rem;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.35);
+            margin-bottom: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+            transition: color 0.2s;
+        }
+        .finance-cat-title:hover { color: rgba(255,255,255,0.6); }
+        .finance-cat-arrow {
+            display: inline-block;
+            transition: transform 0.25s var(--easing-cyber);
+            font-style: normal;
+        }
+        .finance-cat-title.open .finance-cat-arrow { transform: rotate(90deg); }
+        .finance-cats {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.35s var(--easing-smooth), opacity 0.3s;
+            opacity: 0;
+        }
+        .finance-cats.open {
+            max-height: 300px;
+            opacity: 1;
+        }
+        .finance-cat-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .finance-cat-name {
+            font-family: 'Rajdhani';
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            min-width: 70px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .finance-cat-bar-wrap {
+            flex: 1;
+            height: 5px;
+            background: rgba(255,255,255,0.06);
+            position: relative;
+            overflow: hidden;
+        }
+        .finance-cat-bar {
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,62,62,0.6), rgba(255,100,62,0.8));
+            transition: width 0.8s var(--easing-smooth);
+            width: 0%;
+        }
+        .finance-cat-amt {
+            font-family: 'Orbitron';
+            font-size: 0.55rem;
+            color: rgba(255,255,255,0.5);
+            min-width: 55px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .finance-loading {
+            font-family: 'Orbitron';
+            font-size: 0.55rem;
+            color: rgba(0,255,136,0.4);
+            letter-spacing: 1px;
+            text-align: center;
+            padding: 12px 0;
+        }
+        .finance-error {
+            font-family: 'Orbitron';
+            font-size: 0.55rem;
+            color: var(--stark-red);
+            padding: 6px 0;
+        }
+
+        @media (max-width: 480px) {
+            .finance-stats { grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+            .finance-stat { padding: 10px 4px; }
+            .finance-stat-label { font-size: 0.58rem; }
+            .finance-stat-value { font-size: 1rem; letter-spacing: 1px; }
+            .finance-cat-name { min-width: 55px; font-size: 0.75rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.04</span></div>
+    <div class="conn-indicator">
+        <span class="conn-dot" id="conn-dot"></span>
+        <span id="conn-text">ONLINE</span>
+        <button class="btn-update-now" id="btn-update-now" onclick="location.replace(location.pathname + '?v=' + Date.now())" style="display:none;">UPDATE</button>
+        <button class="btn-nav-sync" id="btn-nav-sync" onclick="Sync.fetchData()" title="Sync now">↺</button>
+    </div>
+</nav>
+
+<div class="header-section">
+    <div class="date-nav-row">
+        <button class="nav-btn" data-action="prev-day" aria-label="前一天">❮</button>
+        <div class="date-display">
+            <div id="date-label" class="date-label hidden">TODAY</div>
+            <input type="date" id="datePicker" aria-label="選擇日期">
+            <div class="date-underline"></div>
+        </div>
+        <button class="nav-btn" data-action="next-day" aria-label="後一天">❯</button>
+        <div class="clock-weather-wrap">
+            <div class="weather-display" id="weather-display"></div>
+            <div class="live-clock" id="liveClock">00:00:00</div>
+        </div>
+    </div>
+</div>
+
+<main class="main-container">
+    <section class="gpal-card">
+        <div class="card-header">
+            <h2>[ 01 ] MISSION_GOAL</h2>
+            <div id="progress-display" class="progress-stats">[ 0% ]</div>
+        </div>
+        <div id="goal-list" class="goal-list"></div>
+    </section>
+    <section class="gpal-card">
+        <div class="card-header"><h2>[ 02 ] STRATEGIC_PLAN</h2></div>
+        <div id="plan-list" class="plan-list"></div>
+    </section>
+    <section class="gpal-card">
+        <div class="card-header"><h2>[ 03 ] FIELD_ACTION</h2></div>
+        <textarea class="auto-height" id="textAction" placeholder="NOTES..." aria-label="行動紀錄"></textarea>
+    </section>
+    <section class="gpal-card">
+        <div class="card-header"><h2>[ 04 ] SYSTEM_LEARN</h2></div>
+        <textarea class="auto-height" id="textLearn" placeholder="ANALYSIS..." aria-label="學習紀錄"></textarea>
+    </section>
+
+
+    <!-- Finance Edit Modal -->
+    <div class="edit-modal-overlay" id="edit-modal-overlay">
+        <div class="edit-modal">
+            <div class="edit-modal-title">✎ EDIT RECORD</div>
+            <div class="edit-modal-grid">
+                <div class="edit-field">
+                    <span class="edit-field-label">收入 / 支出</span>
+                    <div class="edit-dir-toggle">
+                        <button class="btn-dir active" data-dir="expense" id="edit-dir-expense">支出</button>
+                        <button class="btn-dir" data-dir="income" id="edit-dir-income">收入</button>
+                    </div>
+                </div>
+                <div class="edit-field">
+                    <span class="edit-field-label">金額</span>
+                    <input class="edit-input" type="number" id="edit-amount" step="0.01" min="0">
+                </div>
+                <div class="edit-field">
+                    <span class="edit-field-label">類別</span>
+                    <select class="edit-input" id="edit-category">
+                        <optgroup label="── 支出 ──">
+                            <option value="Housing">Housing</option>
+                            <option value="Education">Education</option>
+                            <option value="Food & Dining">Food &amp; Dining</option>
+                            <option value="Debt & Insurance">Debt &amp; Insurance</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Auto & Transport">Auto &amp; Transport</option>
+                            <option value="Home Maintenance">Home Maintenance</option>
+                            <option value="Others">Others</option>
+                        </optgroup>
+                        <optgroup label="── 收入 ──">
+                            <option value="#Salary">#Salary</option>
+                            <option value="#CapitalGain">#CapitalGain</option>
+                            <option value="#Project">#Project</option>
+                            <option value="#Donation">#Donation</option>
+                            <option value="#Refund">#Refund</option>
+                            <option value="#Bonus">#Bonus</option>
+                            <option value="#Reimbursement">#Reimbursement</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="edit-field">
+                    <span class="edit-field-label">帳戶</span>
+                    <select class="edit-input" id="edit-account">
+                        <option value="RH">RH</option>
+                        <option value="CitiBank">CitiBank</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div class="edit-field full">
+                    <span class="edit-field-label">日期</span>
+                    <input class="edit-input" type="date" id="edit-date">
+                </div>
+                <div class="edit-field full">
+                    <span class="edit-field-label">備注</span>
+                    <input class="edit-input" type="text" id="edit-note">
+                </div>
+            </div>
+            <div class="edit-modal-actions">
+                <button class="btn-modal cancel" id="edit-cancel" onclick="document.getElementById('edit-modal-overlay').classList.remove('open')">CANCEL</button>
+                <button class="btn-modal confirm" id="edit-confirm" onclick="FinanceModule.saveEdit()">SAVE</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <div class="action-area">
+        <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
+    </div>
+</footer>
+
+<script>
+'use strict';
+
+/* ============================================================
+ * GPAL MK-VII — OPTIMIZED CORE
+ * 模組化結構：CONFIG → STATE → API → UTILS → MODULES → INIT
+ * ============================================================ */
+
+// ---------- CONFIG ----------
+const CONFIG = Object.freeze({
+    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxvUGV-N41f4c7q9M8C6-LmSl_kAH1zgXiVt4QsIADXZvm1GLnwqyXpabjZFvhNVgMVYA/exec",
+    AUTO_SAVE_DELAY: 1500,
+    PORTFOLIO_REFRESH: 60_000,
+    TIME_CHECK_INTERVAL: 60_000,
+    FETCH_TIMEOUT: 15_000,
+    MAX_RETRIES: 2,
+    PRIO_LEVELS: ['NONE', 'P1', 'P2', 'P3'],
+    PRIO_ORDER: { P1: 1, P2: 2, P3: 3, NONE: 4 },
+    DURATION_OPTIONS: [
+        { l: '15m', v: 15 }, { l: '30m', v: 30 }, { l: '45m', v: 45 },
+        { l: '1h', v: 60 },  { l: '1.5h', v: 90 }, { l: '2h', v: 120 },
+        { l: '3h', v: 180 }, { l: '4h', v: 240 }
+    ],
+    LS_PREFIX: 'gpal_backup_',
+});
+
+// ---------- STATE ----------
+const State = {
+    autoSaveTimer: null,
+    fetchToken: 0,        // 防止 race condition
+    isSyncing: false,
+    isOnline: navigator.onLine,
+    currentData: null,
+    dirty: false,
+};
+
+// ---------- DOM CACHE ----------
+const $ = (id) => document.getElementById(id);
+const DOM = {
+    datePicker: $('datePicker'),
+    goalList: $('goal-list'),
+    planList: $('plan-list'),
+    textAction: $('textAction'),
+    textLearn: $('textLearn'),
+    progressDisplay: $('progress-display'),
+    connDot: $('conn-dot'),
+    connText: $('conn-text'),
+    get syncBtn() { return document.querySelector('[data-action="sync"]'); },
+};
+
+// ---------- UTILS ----------
+const Utils = {
+    debounce(fn, wait) {
+        let t;
+        return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+    },
+
+    pad2(n) { return String(n).padStart(2, '0'); },
+
+    timeToMins(t) {
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+    },
+
+    minsToTime(mins) {
+        const clamped = Math.max(0, Math.min(mins, 24 * 60));
+        return `${Utils.pad2(Math.floor(clamped / 60))}:${Utils.pad2(clamped % 60)}`;
+    },
+
+    getOffsetTime(timeStr, offsetMins) {
+        return Utils.minsToTime(Utils.timeToMins(timeStr) + offsetMins);
+    },
+
+    getDurationMins(start, end) {
+        if (!start || !end) return 30;
+        return Math.max(0, Utils.timeToMins(end) - Utils.timeToMins(start));
+    },
+
+    nowTimeStr() {
+        const d = new Date();
+        return `${Utils.pad2(d.getHours())}:${Utils.pad2(d.getMinutes())}`;
+    },
+
+    todayISO() {
+        const d = new Date();
+        return `${d.getFullYear()}-${Utils.pad2(d.getMonth() + 1)}-${Utils.pad2(d.getDate())}`;
+    },
+
+    updateDateLabel(dateStr) {
+        const label = document.getElementById('date-label');
+        if (!label) return;
+        const days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+        // 用 T12:00:00 避免時區偏移導致日期跑掉
+        const d = new Date(dateStr + 'T12:00:00');
+        label.textContent = days[d.getDay()];
+        label.classList.remove('hidden');
+    },
+
+    setStatus(msg, type = 'normal') {
+        // status bar removed — log only
+        if (type === 'error') console.warn('[GPAL]', msg);
+    },
+
+    setConnState(state) {
+        // state: 'online' | 'offline' | 'syncing'
+        DOM.connDot.className = `conn-dot ${state === 'online' ? '' : state}`;
+        DOM.connText.textContent = state.toUpperCase();
+    },
+
+    // 安全 fetch：超時 + 重試 + AbortController
+    async safeFetch(url, options = {}, retries = CONFIG.MAX_RETRIES) {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), CONFIG.FETCH_TIMEOUT);
+            try {
+                const res = await fetch(url, { ...options, signal: ctrl.signal });
+                clearTimeout(timer);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res;
+            } catch (e) {
+                clearTimeout(timer);
+                if (attempt === retries) throw e;
+                // 指數退避
+                await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+            }
+        }
+    },
+
+    // 本地備份（網路失敗保險）
+    backupToLocal(date, payload) {
+        try {
+            localStorage.setItem(CONFIG.LS_PREFIX + date, JSON.stringify({
+                ts: Date.now(), payload
+            }));
+        } catch (e) { /* 配額已滿等錯誤可忽略 */ }
+    },
+
+    loadLocalBackup(date) {
+        try {
+            const raw = localStorage.getItem(CONFIG.LS_PREFIX + date);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    },
+
+    clearLocalBackup(date) {
+        try { localStorage.removeItem(CONFIG.LS_PREFIX + date); } catch (e) {}
+    },
+
+    // 安全 HTML 處理（防 XSS）
+    escapeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    },
+
+    adjustHeight(el) {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+    },
+};
+
+// ---------- SAVE QUEUE（防抖 + 狀態提示） ----------
+const SaveQueue = {
+    trigger() {
+        State.dirty = true;
+        clearTimeout(State.autoSaveTimer);
+        Utils.setStatus('>> RECORDING...', 'warn');
+        State.autoSaveTimer = setTimeout(() => Sync.save('AUTO'), CONFIG.AUTO_SAVE_DELAY);
+    },
+    flushImmediate() {
+        clearTimeout(State.autoSaveTimer);
+        if (State.dirty) return Sync.save('AUTO');
+    }
+};
+
+// ---------- GOAL MODULE ----------
+const GoalModule = {
+    create(text = '', checked = false, priority = 'NONE', parent = DOM.goalList) {
+        const row = document.createElement('div');
+        row.className = 'goal-row';
+        row.dataset.priority = priority;
+
+        const prioBtn = document.createElement('div');
+        prioBtn.className = `prio-tag prio-${priority.toLowerCase()}`;
+        prioBtn.textContent = priority === 'NONE' ? '-' : priority;
+        prioBtn.dataset.role = 'prio';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'stark-checkbox';
+        cb.checked = checked;
+        cb.dataset.role = 'check';
+
+        const textContainer = document.createElement('div');
+        textContainer.className = 'goal-text-container' + (checked ? ' completed' : '');
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'goal-input' + (checked ? ' completed' : '');
+        input.value = text;
+        input.placeholder = 'Mission...';
+        input.dataset.role = 'text';
+
+        textContainer.appendChild(input);
+        row.append(prioBtn, cb, textContainer);
+        parent.appendChild(row);
+        return row;
+    },
+
+    ensureTrailingEmpty() {
+        const rows = DOM.goalList.querySelectorAll('.goal-row');
+        const last = rows[rows.length - 1];
+        if (!last || last.querySelector('input[type=text]').value.trim() !== '') {
+            GoalModule.create();
+        }
+    },
+
+    cyclePriority(row) {
+        const cur = row.dataset.priority;
+        const next = CONFIG.PRIO_LEVELS[(CONFIG.PRIO_LEVELS.indexOf(cur) + 1) % CONFIG.PRIO_LEVELS.length];
+        row.dataset.priority = next;
+        const btn = row.querySelector('[data-role=prio]');
+        btn.textContent = next === 'NONE' ? '-' : next;
+        btn.className = `prio-tag prio-${next.toLowerCase()}`;
+    },
+
+    sort() {
+        const rows = Array.from(DOM.goalList.querySelectorAll('.goal-row'));
+        // 保留最後一個空白行不動，避免使用者輸入時跳行
+        const last = rows.length > 1 && rows[rows.length - 1].querySelector('input[type=text]').value === ''
+            ? rows.pop() : null;
+
+        rows.sort((a, b) => {
+            const aDone = a.querySelector('[data-role=check]').checked;
+            const bDone = b.querySelector('[data-role=check]').checked;
+            if (aDone !== bDone) return aDone ? 1 : -1;
+            return CONFIG.PRIO_ORDER[a.dataset.priority] - CONFIG.PRIO_ORDER[b.dataset.priority];
+        });
+
+        // DocumentFragment 一次性 reflow
+        const frag = document.createDocumentFragment();
+        rows.forEach(r => frag.appendChild(r));
+        if (last) frag.appendChild(last);
+        DOM.goalList.appendChild(frag);
+    },
+
+    updateProgress() {
+        const rows = Array.from(DOM.goalList.querySelectorAll('.goal-row'))
+            .filter(r => r.querySelector('input[type=text]').value.trim() !== '');
+        const done = rows.filter(r => r.querySelector('[data-role=check]').checked).length;
+        const pct = rows.length === 0 ? 0 : Math.round((done / rows.length) * 100);
+        DOM.progressDisplay.textContent = `[ ${pct}% ]`;
+        // 進度顏色聯動
+        DOM.progressDisplay.style.color = pct === 100 ? 'var(--stark-green)'
+            : pct >= 50 ? 'var(--stark-gold)' : 'var(--stark-cyan)';
+    },
+
+    parse(raw) {
+        DOM.goalList.replaceChildren();
+        if (!raw) {
+            GoalModule.create();
+            GoalModule.updateProgress();
+            return;
+        }
+        const frag = document.createDocumentFragment();
+        raw.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            const isDone = line.startsWith('[x]');
+            const prioMatch = line.match(/\((P[1-3]|NONE)\)/);
+            const text = line
+                .replace(/^\[[ x]\]\s*\((P[1-3]|NONE)\)\s*/, '')
+                .replace(/^\[[ x]\]\s*/, '');
+            GoalModule.create(text, isDone, prioMatch ? prioMatch[1] : 'NONE', frag);
+        });
+        GoalModule.create('', false, 'NONE', frag); // 結尾空白行
+        DOM.goalList.appendChild(frag);
+        GoalModule.sort();
+        GoalModule.updateProgress();
+    },
+
+    serialize() {
+        return Array.from(DOM.goalList.querySelectorAll('.goal-row'))
+            .map(row => {
+                const txt = row.querySelector('input[type=text]').value.trim();
+                if (!txt) return null;
+                const checked = row.querySelector('[data-role=check]').checked ? '[x]' : '[ ]';
+                return `${checked} (${row.dataset.priority}) ${txt}`;
+            })
+            .filter(Boolean)
+            .join('\n');
+    },
+};
+
+// ---------- PLAN MODULE ----------
+const PlanModule = {
+    createTimeSelect(val) {
+        const sel = document.createElement('select');
+        sel.className = 'time-sel';
+        sel.dataset.role = 'start';
+        const frag = document.createDocumentFragment();
+        for (let h = 5; h <= 24; h++) {
+            for (const m of ['00', '30']) {
+                const t = `${Utils.pad2(h)}:${m}`;
+                const opt = new Option(t, t);
+                if (t === val) opt.selected = true;
+                frag.appendChild(opt);
+            }
+        }
+        sel.appendChild(frag);
+        return sel;
+    },
+
+    createDurationSelect(mins) {
+        const sel = document.createElement('select');
+        sel.className = 'time-sel';
+        sel.dataset.role = 'duration';
+        const frag = document.createDocumentFragment();
+        CONFIG.DURATION_OPTIONS.forEach(o => {
+            const opt = new Option(o.l, o.v);
+            if (o.v === mins) opt.selected = true;
+            frag.appendChild(opt);
+        });
+        sel.appendChild(frag);
+        return sel;
+    },
+
+    create(start = '08:00', end = '08:30', text = '', location = '', parent = DOM.planList) {
+        const row = document.createElement('div');
+        row.className = 'plan-row';
+        row.dataset.start = start;
+        row.dataset.end = end;
+
+        // 時間選擇器
+        const timeRow = document.createElement('div');
+        timeRow.className = 'time-select-row';
+        const startSel = PlanModule.createTimeSelect(start);
+        const durationSel = PlanModule.createDurationSelect(Utils.getDurationMins(start, end));
+        const dash = document.createElement('span');
+        dash.className = 'time-dash';
+        dash.textContent = '+';
+        timeRow.append(startSel, dash, durationSel);
+
+        // 內容輸入
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'plan-input';
+        input.value = text;
+        input.placeholder = 'Task...';
+        input.dataset.role = 'text';
+
+        // 動作區
+        const actions = document.createElement('div');
+        actions.className = 'plan-actions';
+
+        const addBtn = document.createElement('div');
+        addBtn.className = 'loc-add-btn';
+        addBtn.textContent = '[+]';
+        addBtn.dataset.role = 'loc-add';
+
+        const locEdit = document.createElement('input');
+        locEdit.className = 'loc-edit';
+        locEdit.value = location;
+        locEdit.placeholder = 'Location';
+        locEdit.dataset.role = 'loc-edit';
+
+        const locTagGroup = document.createElement('div');
+        locTagGroup.className = 'loc-tag-group';
+        const locBadge = document.createElement('div');
+        locBadge.className = 'loc-badge';
+        locBadge.dataset.role = 'loc-badge';
+
+        const navBtn = document.createElement('div');
+        navBtn.className = 'loc-copy-btn';
+        navBtn.textContent = 'COPY';
+        navBtn.dataset.role = 'loc-copy';
+
+        locTagGroup.append(locBadge, navBtn);
+
+        const delBtn = document.createElement('div');
+        delBtn.className = 'del-btn';
+        delBtn.textContent = 'X';
+        delBtn.dataset.role = 'del';
+
+        if (location) {
+            locBadge.textContent = `📍 ${location}`;
+            locTagGroup.style.display = 'flex';
+            addBtn.style.display = 'none';
+        }
+
+        actions.append(addBtn, locEdit, locTagGroup, delBtn);
+        row.append(timeRow, input, actions);
+        parent.appendChild(row);
+        return row;
+    },
+
+    ensureTrailingEmpty() {
+        const rows = DOM.planList.querySelectorAll('.plan-row');
+        const last = rows[rows.length - 1];
+        if (!last || last.querySelector('input[data-role=text]').value.trim() !== '') {
+            const endTime = last ? last.dataset.end : '08:00';
+            PlanModule.create(endTime, Utils.getOffsetTime(endTime, 30));
+        }
+    },
+
+    updateRowTime(row, newStart, newDurationMins) {
+        row.dataset.start = newStart;
+        row.dataset.end = Utils.getOffsetTime(newStart, newDurationMins);
+    },
+
+    sort() {
+        const rows = Array.from(DOM.planList.querySelectorAll('.plan-row'));
+        rows.sort((a, b) => a.dataset.start.localeCompare(b.dataset.start));
+        const frag = document.createDocumentFragment();
+        rows.forEach(r => frag.appendChild(r));
+        DOM.planList.appendChild(frag);
+    },
+
+    checkTimeHighlight() {
+        const cur = Utils.nowTimeStr();
+        const today = Utils.todayISO();
+        const isToday = DOM.datePicker.value === today;
+
+        DOM.planList.querySelectorAll('.plan-row').forEach(row => {
+            row.classList.remove('active-now', 'past');
+            if (!isToday) return;
+
+            if (cur >= row.dataset.start && cur < row.dataset.end) {
+                row.classList.add('active-now');
+            } else if (cur >= row.dataset.end) {
+                row.classList.add('past');
+            }
+        });
+    },
+
+    parse(raw) {
+        DOM.planList.replaceChildren();
+        if (!raw) {
+            PlanModule.create();
+            PlanModule.checkTimeHighlight();
+            return;
+        }
+        const frag = document.createDocumentFragment();
+        raw.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            const parts = line.split('|');
+            if (parts.length < 2) return;
+            const times = parts[0].split('-');
+            if (times.length !== 2) return;
+            PlanModule.create(times[0], times[1], parts[1], parts[2] || '', frag);
+        });
+        PlanModule.create('08:00', '08:30', '', '', frag);
+        DOM.planList.appendChild(frag);
+        PlanModule.sort();
+        PlanModule.checkTimeHighlight();
+    },
+
+    serialize() {
+        return Array.from(DOM.planList.querySelectorAll('.plan-row'))
+            .map(row => {
+                const txt = row.querySelector('input[data-role=text]').value.trim();
+                if (!txt) return null;
+                const loc = row.querySelector('[data-role=loc-edit]').value.trim();
+                return `${row.dataset.start}-${row.dataset.end}|${txt}|${loc}`;
+            })
+            .filter(Boolean)
+            .join('\n');
+    },
+};
+
+// ---------- TRADE LOG MODULE ----------
+const TradeModule = {
+    trades: [],
+    currentType: 'BUY',
+
+    // 解析 action 文字：取出交易記錄與一般筆記
+    parse(text) {
+        if (!text) return { trades: [], notes: '' };
+        const re = /^\[(BUY|SELL)\]\s+(\d{1,2}:\d{2})\s+(\S+)\s+([\d.]+)\s+@\s+\$?([\d.]+)/i;
+        const lines = text.split('\n');
+        const trades = [];
+        const notesLines = [];
+        let inNotes = false;
+        for (const line of lines) {
+            if (line.trim() === '---') { inNotes = true; continue; }
+            const m = line.match(re);
+            if (m && !inNotes) {
+                trades.push({
+                    type: m[1].toUpperCase(),
+                    time: m[2],
+                    ticker: m[3].toUpperCase(),
+                    shares: parseFloat(m[4]),
+                    price: parseFloat(m[5]),
+                });
+            } else {
+                notesLines.push(line);
+            }
+        }
+        return { trades, notes: notesLines.join('\n').replace(/^\n+|\n+$/g, '') };
+    },
+
+    // 把目前 trades + textarea 內的筆記組合回 action 字串
+    serialize() {
+        const tradeText = TradeModule.trades.map(t =>
+            `[${t.type}] ${t.time} ${t.ticker} ${t.shares} @ $${t.price.toFixed(2)}`
+        ).join('\n');
+        const notes = DOM.textAction.value.trim();
+        if (tradeText && notes) return `${tradeText}\n---\n${notes}`;
+        if (tradeText) return tradeText;
+        return notes;
+    },
+
+    // 從 fetchData 回來時呼叫
+    loadFromAction(text) {
+        const { trades, notes } = TradeModule.parse(text);
+        TradeModule.trades = trades;
+        DOM.textAction.value = notes;
+        Utils.adjustHeight(DOM.textAction);
+        TradeModule.render();
+    },
+
+    add(type, ticker, shares, price) {
+        const now = new Date();
+        const trade = {
+            type: type,
+            time: `${Utils.pad2(now.getHours())}:${Utils.pad2(now.getMinutes())}`,
+            ticker: ticker.toUpperCase(),
+            shares: parseFloat(shares),
+            price: parseFloat(price),
+        };
+        TradeModule.trades.push(trade);
+        TradeModule.render();
+        SaveQueue.trigger();
+        TradeModule.syncToPortfolio(trade); // 同步到 Portfolio 分頁
+    },
+
+    // 推送交易到 Portfolio 分頁
+    async syncToPortfolio(trade) {
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    type: 'trade',
+                    action: trade.type,
+                    ticker: trade.ticker,
+                    shares: trade.shares,
+                    price: trade.price,
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                // 同步成功後刷新 Portfolio HUD
+                Sync.refreshPortfolio();
+                TradeModule._flashLastRow('ok');
+            } else {
+                TradeModule._flashLastRow('err', data.error);
+            }
+        } catch (e) {
+            TradeModule._flashLastRow('err', 'NETWORK');
+        }
+    },
+
+    _flashLastRow(state, msg) {
+        const list = document.getElementById('trade-list'); if (!list) return;
+        const last = list.lastElementChild;
+        if (!last) return;
+        if (state === 'ok') {
+            last.style.boxShadow = '0 0 12px rgba(0,255,136,0.5)';
+            setTimeout(() => { last.style.boxShadow = ''; }, 800);
+        } else {
+            last.style.boxShadow = '0 0 12px rgba(255,62,62,0.7)';
+            last.title = `同步失敗: ${msg || ''}`;
+        }
+    },
+
+    async remove(idx) {
+        const trade = TradeModule.trades[idx];
+        if (!trade) return;
+        if (!confirm(`確定刪除 ${trade.type} ${trade.ticker} ${trade.shares} @ $${trade.price.toFixed(2)} ？\n（會反向更新到 Portfolio 雲端）`)) return;
+
+        // 視覺：先把該行標為處理中
+        const list = document.getElementById('trade-list'); if (!list) return;
+        const row  = list.children[idx];
+        if (row) row.style.opacity = '0.4';
+
+        try {
+            const res = await fetch(CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    type: 'trade',
+                    action: trade.type === 'BUY' ? 'UNDO_BUY' : 'UNDO_SELL',
+                    ticker: trade.ticker,
+                    shares: trade.shares,
+                    price: trade.price,
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                TradeModule.trades.splice(idx, 1);
+                TradeModule.render();
+                SaveQueue.trigger();
+                Sync.refreshPortfolio();
+            } else {
+                if (row) row.style.opacity = '1';
+                alert(`刪除失敗：${data.error || '未知錯誤'}`);
+            }
+        } catch (e) {
+            if (row) row.style.opacity = '1';
+            alert(`網路錯誤，未能同步刪除：${e.message}`);
+        }
+    },
+
+    render() {
+        const list = document.getElementById('trade-list');
+        if (!list) return;
+        list.replaceChildren();
+        TradeModule.trades.forEach((t, i) => {
+            const total = (t.shares * t.price).toFixed(2);
+            const row = document.createElement('div');
+            row.className = `trade-row trade-${t.type.toLowerCase()}`;
+            row.innerHTML = `
+                <span class="trade-time">${t.time}</span>
+                <span class="trade-type-badge">${t.type}</span>
+                <span class="trade-ticker">${t.ticker}</span>
+                <span class="trade-detail">${t.shares} × $${t.price.toFixed(2)} = <strong>$${Number(total).toLocaleString()}</strong></span>
+                <button class="trade-del" data-idx="${i}" aria-label="刪除">×</button>
+            `;
+            list.appendChild(row);
+        });
+        TradeModule.renderSummary();
+    },
+
+    renderSummary() {
+        const summary = document.getElementById('trade-summary');
+        if (!summary) return;
+        if (!summary) return;
+        if (TradeModule.trades.length === 0) {
+            summary.replaceChildren();
+            return;
+        }
+        const buyTotal  = TradeModule.trades.filter(t => t.type === 'BUY').reduce((a, t) => a + t.shares * t.price, 0);
+        const sellTotal = TradeModule.trades.filter(t => t.type === 'SELL').reduce((a, t) => a + t.shares * t.price, 0);
+        const net = sellTotal - buyTotal; // 賣出 - 買入 = 當日現金流
+        const fmt = n => n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+        summary.innerHTML = `
+            <span class="sum-label">${TradeModule.trades.length} 筆交易</span>
+            <span class="sum-buy">BUY: $${fmt(buyTotal)}</span>
+            <span class="sum-sell">SELL: $${fmt(sellTotal)}</span>
+            <span class="sum-net">NET: ${net >= 0 ? '+' : '-'}$${fmt(Math.abs(net))}</span>
+        `;
+    },
+
+    init() {
+        // Family version: no trade UI, skip DOM binding
+    },
+};
+
+// ---------- HEALTH MODULE ----------
+const HealthModule = { load(){return{};}, save(){}, syncToCloud(){}, loadFromCloud(){}, render(){}, bindEvents(){} };
+
+// ---------- SYNC MODULE ----------
+const Sync = {
+    // 預取 ±3 天資料
+    async prefetchDays(centerDate) {
+        const PREFETCH_KEY = (d) => `gpal_prefetch_${d}`;
+        const addDays = (dateStr, n) => {
+            const d = new Date(dateStr + 'T12:00:00');
+            d.setDate(d.getDate() + n);
+            return `${d.getFullYear()}-${Utils.pad2(d.getMonth()+1)}-${Utils.pad2(d.getDate())}`;
+        };
+        for (const offset of [-3,-2,-1,1,2,3]) {
+            const targetDate = addDays(centerDate, offset);
+            try {
+                const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${targetDate}`, {}, 1);
+                const data = await res.json();
+                localStorage.setItem(PREFETCH_KEY(targetDate), JSON.stringify({ data, ts: Date.now() }));
+            } catch(e) {}
+            await new Promise(r => setTimeout(r, 300));
+        }
+    },
+
+    loadFromCache(date) {
+        try {
+            const raw = localStorage.getItem(`gpal_prefetch_${date}`);
+            if (!raw) return false;
+            const { data, ts } = JSON.parse(raw);
+            if (Date.now() - ts > 86400000) return false;
+            GoalModule.parse(data.goal || '');
+            PlanModule.parse(data.plan || '');
+            TradeModule.loadFromAction(data.action || '');
+            DOM.textLearn.value = data.learn || '';
+            Utils.adjustHeight(DOM.textLearn);
+            return true;
+        } catch(e) { return false; }
+    },
+
+    async fetchData() {
+        const token = ++State.fetchToken;
+        Utils.setStatus('>> SYNCING...', 'warn');
+        Utils.setConnState('syncing');
+        const syncBtn = document.getElementById('btn-nav-sync');
+        if (syncBtn) syncBtn.classList.add('spinning');
+
+        const date = DOM.datePicker.value;
+        Utils.updateDateLabel(date);
+
+        // 先從緩存即時顯示，記錄快照供後續比對
+        const cacheHit = Sync.loadFromCache(date);
+        const cacheSnapshot = cacheHit ? localStorage.getItem(`gpal_prefetch_${date}`) : null;
+
+        try {
+            const yesterday = new Date(date + 'T12:00:00');
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yDate = `${yesterday.getFullYear()}-${Utils.pad2(yesterday.getMonth()+1)}-${Utils.pad2(yesterday.getDate())}`;
+            const isToday = date === Utils.todayISO();
+
+            const [res, yRes] = await Promise.all([
+                Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${date}`),
+                isToday ? Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${yDate}`, {}, 1) : Promise.resolve(null),
+            ]);
+
+            const data = await res.json();
+            if (token !== State.fetchToken) return;
+            State.currentData = data;
+
+            let goalRaw = data.goal || '';
+            if (isToday && yRes) {
+                try {
+                    const yData = await yRes.json();
+                    if (yData.goal) {
+                        const incomplete = yData.goal.split('\n').filter(l => l.trim() && l.startsWith('[ ]'));
+                        if (incomplete.length > 0) {
+                            const todayTexts = new Set(
+                                goalRaw.split('\n').map(l => l.replace(/^\[[ x]\]\s*\((P[1-3]|NONE)\)\s*/, '').replace(/^\[[ x]\]\s*/, '').trim())
+                            );
+                            const toAdd = incomplete.filter(l => {
+                                const txt = l.replace(/^\[ \]\s*\((P[1-3]|NONE)\)\s*/, '').replace(/^\[ \]\s*/, '').trim();
+                                return txt && !todayTexts.has(txt);
+                            });
+                            if (toAdd.length > 0) {
+                                goalRaw = goalRaw ? goalRaw + '\n' + toAdd.join('\n') : toAdd.join('\n');
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // 若緩存命中且資料無變化，跳過重渲染
+            const cacheData = cacheSnapshot ? JSON.parse(cacheSnapshot).data : null;
+            const dataChanged = !cacheData ||
+                cacheData.goal  !== data.goal  ||
+                cacheData.plan  !== data.plan  ||
+                cacheData.learn !== data.learn ||
+                cacheData.action !== data.action;
+
+            if (dataChanged || !cacheHit) {
+                GoalModule.parse(goalRaw);
+                PlanModule.parse(data.plan);
+                TradeModule.loadFromAction(data.action || '');
+                DOM.textLearn.value = data.learn || '';
+                Utils.adjustHeight(DOM.textLearn);
+            }
+
+            Utils.setStatus('STARK_OS_ONLINE', 'success');
+            Utils.setConnState('online');
+            State.isOnline = true;
+
+            const backup = Utils.loadLocalBackup(date);
+            if (backup && backup.payload) {
+                Utils.setStatus('LOCAL_BACKUP_FOUND', 'warn');
+            }
+
+            // 將當天資料存入 prefetch cache（下次切回即時顯示）
+            try {
+                localStorage.setItem(`gpal_prefetch_${date}`, JSON.stringify({ data, ts: Date.now() }));
+            } catch(e) {}
+
+            // 背景預取 ±3 天
+            Sync.prefetchDays(date);
+        } catch (e) {
+            if (token !== State.fetchToken) return;
+            Utils.setStatus('LINK_FAILURE — using local', 'error');
+            Utils.setConnState('offline');
+            State.isOnline = false;
+
+            // 嘗試載入本地備份
+            const backup = Utils.loadLocalBackup(date);
+            if (backup && backup.payload) {
+                const p = backup.payload;
+                GoalModule.parse(p.goal);
+                PlanModule.parse(p.plan);
+                TradeModule.loadFromAction(p.action || '');
+                DOM.textLearn.value = p.learn || '';
+                Utils.adjustHeight(DOM.textLearn);
+            } else {
+                GoalModule.parse('');
+                PlanModule.parse('');
+                TradeModule.loadFromAction('');
+            }
+        } finally {
+            const syncBtn = document.getElementById('btn-nav-sync');
+            if (syncBtn) syncBtn.classList.remove('spinning');
+            }
+    },
+
+    async save(mode = 'MANUAL') {
+        if (State.isSyncing) return;
+        State.isSyncing = true;
+
+        const payload = {
+            date: DOM.datePicker.value,
+            goal: GoalModule.serialize(),
+            plan: PlanModule.serialize(),
+            action: TradeModule.serialize(),
+            learn: DOM.textLearn.value,
+        };
+
+        // 先寫本地備份，再嘗試雲端
+        Utils.backupToLocal(payload.date, payload);
+
+        try {
+            Utils.setStatus('>> UPLOADING...', 'warn');
+            Utils.setConnState('syncing');
+
+            await Utils.safeFetch(CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload),
+            });
+
+            Utils.setStatus(`ARCHIVE_SYNCED · ${mode}`, 'success');
+            Utils.setConnState('online');
+            State.isOnline = true;
+            State.dirty = false;
+            Utils.clearLocalBackup(payload.date);
+        } catch (e) {
+            Utils.setStatus('UPLOAD_ERROR · LOCAL_SAVED', 'error');
+            Utils.setConnState('offline');
+            State.isOnline = false;
+        } finally {
+            State.isSyncing = false;
+        }
+    },
+
+    async refreshPortfolio() {
+        // Portfolio HUD removed in Family version
+    },
+};
+
+// ---------- EVENT DELEGATION ----------
+const Events = {
+    init() {
+        // 全域事件委派 — Goal List
+        DOM.goalList.addEventListener('click', (e) => {
+            const t = e.target;
+            const row = t.closest('.goal-row');
+            if (!row) return;
+            if (t.dataset.role === 'prio') {
+                GoalModule.cyclePriority(row);
+                SaveQueue.trigger();
+            } else if (t.dataset.role === 'check') {
+                const input = row.querySelector('input[data-role=text]');
+                const container = row.querySelector('.goal-text-container');
+                input.classList.toggle('completed', t.checked);
+                container.classList.toggle('completed', t.checked);
+                GoalModule.updateProgress();
+                SaveQueue.trigger();
+            }
+        });
+
+        DOM.goalList.addEventListener('input', (e) => {
+            if (e.target.dataset.role !== 'text') return;
+            GoalModule.updateProgress();
+            GoalModule.ensureTrailingEmpty();
+            SaveQueue.trigger();
+        });
+
+        DOM.goalList.addEventListener('keydown', (e) => {
+            if (e.target.dataset.role !== 'text') return;
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const row = e.target.closest('.goal-row');
+                const next = row.nextElementSibling;
+                if (next) next.querySelector('input[data-role=text]').focus();
+                else { GoalModule.create(); GoalModule.ensureTrailingEmpty(); 
+                       row.nextElementSibling?.querySelector('input[data-role=text]').focus(); }
+            }
+        });
+
+        // Plan List 事件委派
+        DOM.planList.addEventListener('click', (e) => {
+            const t = e.target;
+            const row = t.closest('.plan-row');
+            if (!row) return;
+            const role = t.dataset.role;
+
+            if (role === 'loc-add') {
+                t.style.display = 'none';
+                const editor = row.querySelector('[data-role=loc-edit]');
+                editor.style.display = 'block';
+                editor.focus();
+            } else if (role === 'loc-badge') {
+                row.querySelector('.loc-tag-group').style.display = 'none';
+                const editor = row.querySelector('[data-role=loc-edit]');
+                editor.style.display = 'block';
+                editor.focus();
+            } else if (role === 'loc-copy') {
+                const loc = row.querySelector('[data-role=loc-edit]').value.trim();
+                if (loc) {
+                    navigator.clipboard.writeText(loc).then(() => {
+                        t.textContent = 'OK!';
+                        t.classList.add('copied');
+                        setTimeout(() => { t.textContent = 'COPY'; t.classList.remove('copied'); }, 1500);
+                    }).catch(() => {
+                        t.textContent = 'ERR';
+                        setTimeout(() => { t.textContent = 'COPY'; }, 1500);
+                    });
+                }
+            } else if (role === 'del') {
+                if (confirm('DELETE THIS TASK?')) {
+                    row.style.transition = 'opacity 0.2s, transform 0.2s';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        row.remove();
+                        PlanModule.ensureTrailingEmpty();
+                        SaveQueue.trigger();
+                    }, 200);
+                }
+            }
+        });
+
+        DOM.planList.addEventListener('blur', (e) => {
+            if (e.target.dataset.role !== 'loc-edit') return;
+            const row = e.target.closest('.plan-row');
+            const val = e.target.value.trim();
+            const badge = row.querySelector('[data-role=loc-badge]');
+            const group = row.querySelector('.loc-tag-group');
+            const addBtn = row.querySelector('[data-role=loc-add]');
+            if (val) {
+                badge.textContent = `📍 ${val}`;
+                group.style.display = 'flex';
+                e.target.style.display = 'none';
+                addBtn.style.display = 'none';
+            } else {
+                addBtn.style.display = 'block';
+                e.target.style.display = 'none';
+                group.style.display = 'none';
+            }
+            SaveQueue.trigger();
+        }, true);
+
+        DOM.planList.addEventListener('change', (e) => {
+            const t = e.target;
+            const row = t.closest('.plan-row');
+            if (!row) return;
+            if (t.dataset.role === 'start' || t.dataset.role === 'duration') {
+                const startSel = row.querySelector('[data-role=start]');
+                const durSel = row.querySelector('[data-role=duration]');
+                PlanModule.updateRowTime(row, startSel.value, parseInt(durSel.value));
+                if (t.dataset.role === 'start') PlanModule.sort();
+                PlanModule.checkTimeHighlight();
+                SaveQueue.trigger();
+            }
+        });
+
+        DOM.planList.addEventListener('input', (e) => {
+            const role = e.target.dataset.role;
+            if (role === 'text') {
+                PlanModule.ensureTrailingEmpty();
+                SaveQueue.trigger();
+            }
+        });
+
+        // 文字區
+        [DOM.textAction, DOM.textLearn].forEach(el => {
+            el.addEventListener('input', () => {
+                Utils.adjustHeight(el);
+                SaveQueue.trigger();
+            });
+        });
+
+        // 導覽
+        document.querySelector('[data-action="prev-day"]').addEventListener('click', () => Events.changeDate(-1));
+        document.querySelector('[data-action="next-day"]').addEventListener('click', () => Events.changeDate(1));
+
+        // 手機滑動換日：左滑→下一天，右滑→上一天
+        let touchStartX = 0;
+        let touchStartY = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            // 水平位移 > 60px 且水平幅度大於垂直（避免誤觸滾動）
+            if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+            Events.changeDate(dx < 0 ? -1 : 1);
+        }, { passive: true });
+        DOM.datePicker.addEventListener('change', async () => {
+            Utils.updateDateLabel(DOM.datePicker.value);
+                            await SaveQueue.flushImmediate();
+            Sync.fetchData();
+        });
+
+        // 網路狀態
+        window.addEventListener('online', () => {
+            State.isOnline = true;
+            Utils.setConnState('online');
+            Utils.setStatus('NETWORK_RESTORED', 'success');
+            // 自動推上本地暫存
+            if (State.dirty) Sync.save('AUTO');
+        });
+        window.addEventListener('offline', () => {
+            State.isOnline = false;
+            Utils.setConnState('offline');
+            Utils.setStatus('OFFLINE — saving locally', 'warn');
+        });
+
+        // 離頁前確保儲存
+        window.addEventListener('beforeunload', (e) => {
+            if (State.dirty) {
+                SaveQueue.flushImmediate();
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // 頁面回到前景時刷新時間 highlight
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) PlanModule.checkTimeHighlight();
+        });
+    },
+
+    async changeDate(days) {
+        await SaveQueue.flushImmediate();
+        const d = new Date(DOM.datePicker.value + 'T12:00:00');
+        d.setDate(d.getDate() + days);
+        DOM.datePicker.value = `${d.getFullYear()}-${Utils.pad2(d.getMonth() + 1)}-${Utils.pad2(d.getDate())}`;
+        Utils.updateDateLabel(DOM.datePicker.value);
+            Sync.fetchData();
+    },
+};
+
+// ---------- FINANCIAL INTEL MODULE ----------
+const IntelModule = { loadCache(){return null;}, saveCache(){}, render(){}, showError(){}, clearError(){}, analyse(){}, init(){} };
+
+// ---------- INIT ----------
+window.addEventListener('DOMContentLoaded', () => {
+    DOM.datePicker.value = Utils.todayISO();
+    Utils.updateDateLabel(DOM.datePicker.value);
+
+    // 即時時鐘
+    const clockEl = document.getElementById('liveClock');
+    function d(ch) { return `<span class="clock-digit">${ch}</span>`; }
+    function colon(cls = '') { return `<span class="clock-colon${cls}">:</span>`; }
+    function tickClock() {
+        const n = new Date();
+        const H = Utils.pad2(n.getHours());
+        const M = Utils.pad2(n.getMinutes());
+        const S = Utils.pad2(n.getSeconds());
+        clockEl.innerHTML =
+            `${d(H[0])}${d(H[1])}${colon()}${d(M[0])}${d(M[1])}<span class="clock-sec-group">${colon()}${d(S[0])}${d(S[1])}</span>`;
+    }
+    tickClock();
+    setInterval(tickClock, 1000);
+
+    // 天氣（先嘗試 Apps Script 代理，失敗則直接呼叫 Open-Meteo）
+    async function fetchWeather() {
+        const el = document.getElementById('weather-display');
+        if (!el) return;
+        try {
+            // 方法1：Apps Script 代理
+            const res  = await fetch(`${CONFIG.WEB_APP_URL}?type=weather`);
+            const data = await res.json();
+            if (data.temp != null) {
+                el.innerHTML = `<span class="w-icon">${weatherIcon(data.code)}</span><span class="w-temp">${data.temp}°C</span>`;
+                return;
+            }
+        } catch(e) { /* fallback */ }
+
+        try {
+            // 方法2：直接 Open-Meteo（Oakland 座標作預設）
+            const wRes  = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.8&longitude=-122.3&current=temperature_2m,weather_code&temperature_unit=celsius&timezone=auto');
+            const wData = await wRes.json();
+            const cur   = wData.current;
+            el.innerHTML = `<span class="w-icon">${weatherIcon(cur.weather_code)}</span><span class="w-temp">${Math.round(cur.temperature_2m)}°C</span>`;
+        } catch(e) {
+            el.textContent = '';
+        }
+    }
+
+    function weatherIcon(code) {
+        if (code === 0)  return '☀️';
+        if (code <= 2)   return '🌤️';
+        if (code <= 3)   return '☁️';
+        if (code <= 49)  return '🌫️';
+        if (code <= 67)  return '🌧️';
+        if (code <= 77)  return '❄️';
+        if (code <= 82)  return '🌦️';
+        if (code <= 99)  return '⛈️';
+        return '🌡️';
+    }
+
+    fetchWeather();
+    setInterval(fetchWeather, 15 * 60 * 1000);
+    Utils.setConnState(navigator.onLine ? 'online' : 'offline');
+
+    Events.init();
+    Sync.fetchData();
+
+    setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
+
+    // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
+    const CURRENT_VERSION = '202605201945';
+    async function checkVersion() {
+        try {
+            const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });
+            const html = await res.text();
+            const match = html.match(/name="version" content="([^"]+)"/);
+            if (match && match[1] !== CURRENT_VERSION) {
+                const ub = document.getElementById('btn-update-now'); if(ub) ub.style.display='inline-flex';
+            }
+        } catch(e) {}
+    }
+    setTimeout(checkVersion, 60000); // 1分鐘後首次檢查
+    setInterval(checkVersion, 600000); // 之後每10分鐘
+
+});
+</script>
+</body>
+</html>

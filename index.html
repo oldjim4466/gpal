@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605201945">
+    <meta name="version" content="202605212000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.04</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.05</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -613,6 +613,34 @@
         .goal-input::placeholder { color: rgba(255,255,255,0.25); }
 
         /* === STRATEGIC PLAN === */
+        .plan-tabs { display: flex; gap: 4px; }
+        .plan-tab {
+            background: transparent;
+            border: 1px solid rgba(0,242,255,0.2);
+            color: rgba(0,242,255,0.35);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.5rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            padding: 2px 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            outline: none;
+            white-space: nowrap;
+            min-width: 36px;
+        }
+        .plan-tab.active {
+            background: rgba(0,242,255,0.1);
+            border-color: var(--stark-cyan);
+            color: var(--stark-cyan);
+            box-shadow: 0 0 8px rgba(0,242,255,0.25);
+        }
+        .tab-name-input {
+            background: transparent; border: none;
+            color: var(--stark-cyan); font-family: 'Orbitron', sans-serif;
+            font-size: 0.5rem; font-weight: 900; letter-spacing: 1px;
+            outline: none; text-align: center; width: 48px;
+        }
         .plan-list { display: flex; flex-direction: column; gap: 3px; }
         .plan-row {
             display: flex;
@@ -2454,7 +2482,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.04</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.05</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2488,8 +2516,15 @@
         <div id="goal-list" class="goal-list"></div>
     </section>
     <section class="gpal-card">
-        <div class="card-header"><h2>[ 02 ] STRATEGIC_PLAN</h2></div>
-        <div id="plan-list" class="plan-list"></div>
+        <div class="card-header">
+            <h2>[ 02 ] STRATEGIC_PLAN</h2>
+            <div id="plan-tabs" class="plan-tabs"></div>
+        </div>
+        <div id="plan-container">
+            <div id="plan-list-0" class="plan-list"></div>
+            <div id="plan-list-1" class="plan-list" style="display:none;"></div>
+            <div id="plan-list-2" class="plan-list" style="display:none;"></div>
+        </div>
     </section>
     <section class="gpal-card">
         <div class="card-header"><h2>[ 03 ] FIELD_ACTION</h2></div>
@@ -2853,7 +2888,8 @@ const $ = (id) => document.getElementById(id);
 const DOM = {
     datePicker: $('datePicker'),
     goalList: $('goal-list'),
-    planList: $('plan-list'),
+    planContainer: $('plan-container'),
+    get planList() { return document.getElementById('plan-list-' + PlanModule.currentIdx); },
     textAction: $('textAction'),
     textLearn: $('textLearn'),
     progressDisplay: $('progress-display'),
@@ -3109,6 +3145,134 @@ const GoalModule = {
 
 // ---------- PLAN MODULE ----------
 const PlanModule = {
+    currentIdx: 0,
+    members: ['A', 'B', 'C'],
+    MEMBERS_KEY: 'gpal_plan_members',
+
+    // 讀取 localStorage 的成員名稱，渲染 tab bar
+    init() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(PlanModule.MEMBERS_KEY));
+            if (Array.isArray(saved) && saved.length === 3) PlanModule.members = saved;
+        } catch {}
+        PlanModule.renderTabs();
+    },
+
+    renderTabs() {
+        const container = document.getElementById('plan-tabs');
+        if (!container) return;
+        container.innerHTML = '';
+        PlanModule.members.forEach((name, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'plan-tab' + (idx === PlanModule.currentIdx ? ' active' : '');
+            btn.dataset.idx = idx;
+            btn.onclick = (e) => { if (!e.target.classList.contains('tab-name-input')) PlanModule.switchTab(idx); };
+            const span = document.createElement('span');
+            span.textContent = name;
+            // 雙擊重命名
+            span.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+                const inp = document.createElement('input');
+                inp.className = 'tab-name-input';
+                inp.value = name;
+                span.replaceWith(inp);
+                inp.focus(); inp.select();
+                const confirm = () => {
+                    const newName = inp.value.trim() || name;
+                    PlanModule.members[idx] = newName;
+                    try { localStorage.setItem(PlanModule.MEMBERS_KEY, JSON.stringify(PlanModule.members)); } catch {}
+                    PlanModule.renderTabs();
+                };
+                inp.addEventListener('blur', confirm);
+                inp.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') inp.blur();
+                    if (e.key === 'Escape') PlanModule.renderTabs();
+                });
+            });
+            btn.appendChild(span);
+            container.appendChild(btn);
+        });
+    },
+
+    switchTab(idx) {
+        PlanModule.currentIdx = idx;
+        document.querySelectorAll('.plan-tab').forEach((b, i) => b.classList.toggle('active', i === idx));
+        for (let i = 0; i < 3; i++) {
+            const el = document.getElementById('plan-list-' + i);
+            if (el) el.style.display = i === idx ? 'flex' : 'none';
+        }
+        PlanModule.checkTimeHighlight();
+    },
+
+    // 解析單個成員的 plan 字串到指定 listEl
+    parseSingle(raw, listEl) {
+        listEl.replaceChildren();
+        const frag = document.createDocumentFragment();
+        if (raw) {
+            raw.split('\n').forEach(line => {
+                if (!line.trim()) return;
+                const parts = line.split('|');
+                if (parts.length < 2) return;
+                const times = parts[0].split('-');
+                if (times.length !== 2) return;
+                PlanModule.create(times[0], times[1], parts[1], parts[2] || '', frag);
+            });
+        }
+        PlanModule.create('08:00', '08:30', '', '', frag);
+        listEl.appendChild(frag);
+        // 排序此 list
+        const rows = Array.from(listEl.querySelectorAll('.plan-row'));
+        rows.sort((a, b) => a.dataset.start.localeCompare(b.dataset.start));
+        const sf = document.createDocumentFragment();
+        rows.forEach(r => sf.appendChild(r));
+        listEl.appendChild(sf);
+    },
+
+    // 收集指定 listEl 的 plan 字串
+    serializeSingle(listEl) {
+        return Array.from(listEl.querySelectorAll('.plan-row'))
+            .map(row => {
+                const txt = row.querySelector('input[data-role=text]').value.trim();
+                if (!txt) return null;
+                const loc = row.querySelector('[data-role=loc-edit]').value.trim();
+                return `${row.dataset.start}-${row.dataset.end}|${txt}|${loc}`;
+            }).filter(Boolean).join('\n');
+    },
+
+    // 解析全部三人（向後相容舊格式）
+    parseAll(raw) {
+        let planObj = null;
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.v === 2 && parsed.p) planObj = parsed;
+            } catch {}
+        }
+        for (let i = 0; i < 3; i++) {
+            const listEl = document.getElementById('plan-list-' + i);
+            if (!listEl) continue;
+            let memberPlan = '';
+            if (planObj) {
+                memberPlan = planObj.p[PlanModule.members[i]] || '';
+            } else if (i === 0) {
+                // 舊格式：純字串，遷移到第一個成員
+                memberPlan = raw || '';
+            }
+            PlanModule.parseSingle(memberPlan, listEl);
+        }
+        PlanModule.checkTimeHighlight();
+    },
+
+    // 收集全部三人，組成 JSON 存雲端
+    serializeAll() {
+        const p = {};
+        for (let i = 0; i < 3; i++) {
+            const listEl = document.getElementById('plan-list-' + i);
+            p[PlanModule.members[i]] = listEl ? PlanModule.serializeSingle(listEl) : '';
+        }
+        return JSON.stringify({ v: 2, p });
+    },
+
     createTimeSelect(val) {
         const sel = document.createElement('select');
         sel.className = 'time-sel';
@@ -3235,52 +3399,23 @@ const PlanModule = {
         const cur = Utils.nowTimeStr();
         const today = Utils.todayISO();
         const isToday = DOM.datePicker.value === today;
-
-        DOM.planList.querySelectorAll('.plan-row').forEach(row => {
-            row.classList.remove('active-now', 'past');
-            if (!isToday) return;
-
-            if (cur >= row.dataset.start && cur < row.dataset.end) {
-                row.classList.add('active-now');
-            } else if (cur >= row.dataset.end) {
-                row.classList.add('past');
-            }
-        });
-    },
-
-    parse(raw) {
-        DOM.planList.replaceChildren();
-        if (!raw) {
-            PlanModule.create();
-            PlanModule.checkTimeHighlight();
-            return;
+        for (let i = 0; i < 3; i++) {
+            const listEl = document.getElementById('plan-list-' + i);
+            if (!listEl) continue;
+            listEl.querySelectorAll('.plan-row').forEach(row => {
+                row.classList.remove('active-now', 'past');
+                if (!isToday) return;
+                if (cur >= row.dataset.start && cur < row.dataset.end) {
+                    row.classList.add('active-now');
+                } else if (cur >= row.dataset.end) {
+                    row.classList.add('past');
+                }
+            });
         }
-        const frag = document.createDocumentFragment();
-        raw.split('\n').forEach(line => {
-            if (!line.trim()) return;
-            const parts = line.split('|');
-            if (parts.length < 2) return;
-            const times = parts[0].split('-');
-            if (times.length !== 2) return;
-            PlanModule.create(times[0], times[1], parts[1], parts[2] || '', frag);
-        });
-        PlanModule.create('08:00', '08:30', '', '', frag);
-        DOM.planList.appendChild(frag);
-        PlanModule.sort();
-        PlanModule.checkTimeHighlight();
     },
 
-    serialize() {
-        return Array.from(DOM.planList.querySelectorAll('.plan-row'))
-            .map(row => {
-                const txt = row.querySelector('input[data-role=text]').value.trim();
-                if (!txt) return null;
-                const loc = row.querySelector('[data-role=loc-edit]').value.trim();
-                return `${row.dataset.start}-${row.dataset.end}|${txt}|${loc}`;
-            })
-            .filter(Boolean)
-            .join('\n');
-    },
+    parse(raw) { PlanModule.parseAll(raw); },
+    serialize() { return PlanModule.serializeAll(); },
 };
 
 // ---------- TRADE LOG MODULE ----------
@@ -4036,7 +4171,7 @@ const Events = {
         });
 
         // Plan List 事件委派
-        DOM.planList.addEventListener('click', (e) => {
+        DOM.planContainer.addEventListener('click', (e) => {
             const t = e.target;
             const row = t.closest('.plan-row');
             if (!row) return;
@@ -4078,7 +4213,7 @@ const Events = {
             }
         });
 
-        DOM.planList.addEventListener('blur', (e) => {
+        DOM.planContainer.addEventListener('blur', (e) => {
             if (e.target.dataset.role !== 'loc-edit') return;
             const row = e.target.closest('.plan-row');
             const val = e.target.value.trim();
@@ -4098,7 +4233,7 @@ const Events = {
             SaveQueue.trigger();
         }, true);
 
-        DOM.planList.addEventListener('change', (e) => {
+        DOM.planContainer.addEventListener('change', (e) => {
             const t = e.target;
             const row = t.closest('.plan-row');
             if (!row) return;
@@ -4112,7 +4247,7 @@ const Events = {
             }
         });
 
-        DOM.planList.addEventListener('input', (e) => {
+        DOM.planContainer.addEventListener('input', (e) => {
             const role = e.target.dataset.role;
             if (role === 'text') {
                 PlanModule.ensureTrailingEmpty();
@@ -5412,6 +5547,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchWeather, 15 * 60 * 1000);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
+    PlanModule.init();
     Events.init();
     HealthModule.bindEvents();
     HealthModule.render(DOM.datePicker.value);
@@ -5427,7 +5563,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605201945';
+    const CURRENT_VERSION = '202605212000';
     async function checkVersion() {
         try {
             const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });

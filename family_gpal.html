@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605221330">
+    <meta name="version" content="202605221400">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.37</title>
+    <title>GPAL FAMILY v1.38</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1455,7 +1455,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.37</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.38</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2482,6 +2482,7 @@ const LongTermModule = {
     data: {},
     _saveTimer: null,
     _lastRenderedKey: null,
+    _dataVersion: 0,
 
     currentGoals() {
         const name = MemberMgr.names[State.memberIdx];
@@ -2501,7 +2502,7 @@ const LongTermModule = {
             if (json.goals && typeof json.goals === 'object') {
                 if (json.found !== false) {
                     LongTermModule.data = json.goals;
-                    LongTermModule._lastRenderedKey = null;
+                    LongTermModule._dataVersion++;
                     try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
                     LongTermModule.render();
                 }
@@ -2510,6 +2511,7 @@ const LongTermModule = {
     },
 
     triggerSave() {
+        LongTermModule._dataVersion++;
         try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
         if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
         LongTermModule._saveTimer = setTimeout(async () => {
@@ -2539,7 +2541,7 @@ const LongTermModule = {
             LongTermModule.triggerSave();
         }
 
-        const cacheKey = State.memberIdx + '|' + JSON.stringify(goals);
+        const cacheKey = `${State.memberIdx}|${LongTermModule._dataVersion}`;
         if (cacheKey === LongTermModule._lastRenderedKey) return;
         LongTermModule._lastRenderedKey = cacheKey;
 
@@ -2649,7 +2651,6 @@ const LongTermModule = {
                     else                { daysEl.textContent = `${mmdd} · ${diff}d`; }
                 } else { daysEl.textContent = ''; }
             }
-            LongTermModule._lastRenderedKey = null;
         }
         LongTermModule.triggerSave();
     },
@@ -3178,7 +3179,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = '202605221330';
+    const CURRENT_VERSION = '202605221400';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

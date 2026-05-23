@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605220700">
+    <meta name="version" content="202605220900">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.28</title>
+    <title>GPAL FAMILY v1.30</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1452,7 +1452,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.28</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.30</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2506,12 +2506,16 @@ const LongTermModule = {
         if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
         LongTermModule._saveTimer = setTimeout(async () => {
             try {
-                await Utils.safeFetch(CONFIG.WEB_APP_URL, {
+                const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ type: 'longterm', data: LongTermModule.data })
                 });
-            } catch {}
+                const json = await res.json();
+                if (!json.success) throw new Error('save failed');
+            } catch(e) {
+                Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error');
+            }
         }, 3000);
     },
 
@@ -3145,7 +3149,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605220700';
+    const CURRENT_VERSION = '202605220900';
     async function checkVersion() {
         try {
             const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605220900">
+    <meta name="version" content="202605221000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.30</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.31</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -36,10 +36,13 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        html { overflow-x: hidden; max-width: 100%; }
         
         body {
             font-family: 'Rajdhani', sans-serif;
             margin: 0;
+            max-width: 100%;
             background: var(--stark-dark);
             color: var(--stark-cyan);
             background-image:
@@ -583,7 +586,7 @@
         .lt-days {
             font-family: 'Orbitron', sans-serif; font-size: 0.45rem;
             font-weight: 700; letter-spacing: 1px;
-            color: rgba(255,204,0,0.6); white-space: nowrap; min-width: 40px;
+            color: rgba(255,204,0,0.6); white-space: nowrap;
         }
         .lt-days.lt-overdue { color: var(--stark-red); animation: lt-pulse 1.5s ease-in-out infinite; }
         .lt-days.lt-today { color: var(--stark-gold); }
@@ -726,12 +729,11 @@
             font-size: 0.55rem;
             font-weight: 900;
             letter-spacing: 2px;
-            padding: 4px 20px;
+            padding: 4px 12px;
             cursor: pointer;
             transition: 0.2s;
             outline: none;
             white-space: nowrap;
-            min-width: 70px;
         }
         .member-tab.active {
             background: rgba(0,242,255,0.1);
@@ -2610,7 +2612,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.30</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.31</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -6126,7 +6128,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605220900';
+    const CURRENT_VERSION = '202605221000';
     async function checkVersion() {
         try {
             const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });

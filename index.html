@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605212100">
+    <meta name="version" content="202605212330">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.13</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.16</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -465,6 +465,38 @@
             margin: 0;
             text-shadow: 0 0 12px rgba(0,242,255,0.3);
         }
+        .btn-copy-plan {
+            margin-left: auto;
+            background: transparent;
+            border: 1px solid rgba(0,242,255,0.25);
+            color: rgba(0,242,255,0.5);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.42rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 2px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+            white-space: nowrap;
+        }
+        .btn-copy-plan:hover { border-color: var(--stark-cyan); color: var(--stark-cyan); }
+        .btn-copy-plan.copied { border-color: var(--stark-green); color: var(--stark-green); }
+        .copy-item-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.38rem;
+            font-weight: 700;
+            color: rgba(0,242,255,0.35);
+            cursor: pointer;
+            padding: 1px 5px;
+            border: 1px solid rgba(0,242,255,0.15);
+            background: transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .copy-item-btn:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
+        .copy-item-btn.copied { color: var(--stark-green); border-color: var(--stark-green); }
         .progress-stats {
             font-family: 'Orbitron';
             font-size: 0.7rem;
@@ -2507,7 +2539,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.13</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.16</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3401,7 +3433,13 @@ const PlanModule = {
             addBtn.style.display = 'none';
         }
 
-        actions.append(addBtn, locEdit, locTagGroup, delBtn);
+        const copyBtn = document.createElement('div');
+        copyBtn.className = 'copy-item-btn';
+        copyBtn.textContent = '⎘';
+        copyBtn.dataset.role = 'copy-item';
+        copyBtn.title = 'Copy this item';
+
+        actions.append(addBtn, locEdit, locTagGroup, copyBtn, delBtn);
         row.append(timeRow, input, actions);
         parent.appendChild(row);
         return row;
@@ -4386,6 +4424,27 @@ const Events = {
                         setTimeout(() => { t.textContent = 'COPY'; }, 1500);
                     });
                 }
+            } else if (role === 'copy-item') {
+                const txt = row.querySelector('input[data-role=text]').value.trim();
+                if (!txt) return;
+                const text = txt;
+                const doFeedback = () => {
+                    t.textContent = '✓';
+                    t.classList.add('copied');
+                    setTimeout(() => { t.textContent = '⎘'; t.classList.remove('copied'); }, 1500);
+                };
+                navigator.clipboard.writeText(text)
+                    .then(doFeedback)
+                    .catch(() => {
+                        const ta = document.createElement('textarea');
+                        ta.value = text;
+                        ta.style.cssText = 'position:fixed;opacity:0';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        doFeedback();
+                    });
             } else if (role === 'del') {
                 if (confirm('DELETE THIS TASK?')) {
                     row.style.transition = 'opacity 0.2s, transform 0.2s';
@@ -4449,6 +4508,8 @@ const Events = {
                 SaveQueue.trigger();
             });
         });
+
+        // COPY PLAN 按鈕（已移至每行，此區塊保留以防舊版引用）
 
         // UPLOAD TO CLOUD 按鈕
         document.querySelector('[data-action="sync"]').addEventListener('click', async (e) => {
@@ -5775,7 +5836,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605212100';
+    const CURRENT_VERSION = '202605212330';
     async function checkVersion() {
         try {
             const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });

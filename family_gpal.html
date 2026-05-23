@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605211530">
+    <meta name="version" content="202605212100">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.12</title>
+    <title>GPAL FAMILY v1.13</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1354,7 +1354,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.12</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.13</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -1806,8 +1806,28 @@ const GoalModule = {
 
 // ---------- PLAN MODULE ----------
 const PlanModule = {
-    saveCurrent() {},
+    _rawData: null,
+    _rendered: [false, false, false],
+
+    saveCurrent() {
+        if (PlanModule._rendered && PlanModule._rendered[State.memberIdx]) {
+            const listEl = document.getElementById('plan-list-' + State.memberIdx);
+            if (listEl && PlanModule._rawData) {
+                PlanModule._rawData[State.memberIdx] = PlanModule.serializeSingle(listEl);
+            }
+        }
+    },
+
+    _renderOne(idx) {
+        if (PlanModule._rendered && PlanModule._rendered[idx]) return;
+        const listEl = document.getElementById('plan-list-' + idx);
+        if (!listEl || !PlanModule._rawData) return;
+        PlanModule.parseSingle(PlanModule._rawData[idx] || '', listEl);
+        if (PlanModule._rendered) PlanModule._rendered[idx] = true;
+    },
+
     renderCurrent() {
+        PlanModule._renderOne(State.memberIdx);
         for (let i = 0; i < 3; i++) {
             const el = document.getElementById('plan-list-' + i);
             if (el) el.style.display = i === State.memberIdx ? 'flex' : 'none';
@@ -1855,26 +1875,24 @@ const PlanModule = {
                 if (parsed && parsed.v === 2 && parsed.p) planObj = parsed;
             } catch {}
         }
-        for (let i = 0; i < 3; i++) {
-            const listEl = document.getElementById('plan-list-' + i);
-            if (!listEl) continue;
-            let memberPlan = '';
-            if (planObj) {
-                memberPlan = planObj.p[MemberMgr.names[i]] || '';
-            } else if (i === 0) {
-                memberPlan = raw || '';
-            }
-            PlanModule.parseSingle(memberPlan, listEl);
-        }
+        PlanModule._rawData = MemberMgr.names.map((name, i) =>
+            planObj ? (planObj.p[name] || '') : (i === 0 ? raw || '' : '')
+        );
+        PlanModule._rendered = [false, false, false];
         PlanModule.renderCurrent();
     },
 
     serializeAll() {
+        PlanModule.saveCurrent();
         const p = {};
-        for (let i = 0; i < 3; i++) {
-            const listEl = document.getElementById('plan-list-' + i);
-            p[MemberMgr.names[i]] = listEl ? PlanModule.serializeSingle(listEl) : '';
-        }
+        MemberMgr.names.forEach((name, i) => {
+            if (PlanModule._rawData && !PlanModule._rendered[i]) {
+                p[name] = PlanModule._rawData[i] || '';
+            } else {
+                const listEl = document.getElementById('plan-list-' + i);
+                p[name] = listEl ? PlanModule.serializeSingle(listEl) : '';
+            }
+        });
         return JSON.stringify({ v: 2, p });
     },
 
@@ -2215,8 +2233,18 @@ const TradeModule = {
 // ---------- ACTION MODULE（多人）----------
 const ActionModule = {
     allData: ['', '', ''],
-    saveCurrent() { ActionModule.allData[State.memberIdx] = TradeModule.serialize(); },
-    renderCurrent() { TradeModule.loadFromAction(ActionModule.allData[State.memberIdx] || ''); },
+    _lastRendered: null,
+
+    saveCurrent() {
+        ActionModule.allData[State.memberIdx] = TradeModule.serialize();
+        ActionModule._lastRendered = null;
+    },
+    renderCurrent() {
+        const raw = ActionModule.allData[State.memberIdx] || '';
+        if (raw === ActionModule._lastRendered) return;
+        ActionModule._lastRendered = raw;
+        TradeModule.loadFromAction(raw);
+    },
     parseAll(raw) {
         let planObj = null;
         if (raw) { try { const p = JSON.parse(raw); if (p && p.v === 2 && p.p) planObj = p; } catch {} }
@@ -2823,7 +2851,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605211530';
+    const CURRENT_VERSION = '202605212100';
     async function checkVersion() {
         try {
             const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });

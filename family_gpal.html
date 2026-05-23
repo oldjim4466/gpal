@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605221000">
+    <meta name="version" content="202605221100">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.31</title>
+    <title>GPAL FAMILY v1.32</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1454,7 +1454,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.31</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.32</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2479,6 +2479,7 @@ const LongTermModule = {
     LS_KEY: 'gpal_longterm',
     data: {},
     _saveTimer: null,
+    _lastRenderedKey: null,
 
     currentGoals() {
         const name = MemberMgr.names[State.memberIdx];
@@ -2496,9 +2497,12 @@ const LongTermModule = {
             const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=longterm`);
             const json = await res.json();
             if (json.goals && typeof json.goals === 'object') {
-                LongTermModule.data = json.goals;
-                try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
-                LongTermModule.render();
+                if (json.found !== false) {
+                    LongTermModule.data = json.goals;
+                    LongTermModule._lastRenderedKey = null;
+                    try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
+                    LongTermModule.render();
+                }
             }
         } catch {}
     },
@@ -2526,11 +2530,16 @@ const LongTermModule = {
         if (!listEl) return;
         const goals = LongTermModule.currentGoals();
         const today = Utils.todayISO();
-        let autoChanged = false;
-        goals.forEach(g => {
-            if (!g.done && g.deadline && g.deadline <= today) { g.done = true; autoChanged = true; }
-        });
-        if (autoChanged) LongTermModule.triggerSave();
+
+        const autoChanged = goals.some(g => !g.done && g.deadline && g.deadline <= today);
+        if (autoChanged) {
+            goals.forEach(g => { if (!g.done && g.deadline && g.deadline <= today) g.done = true; });
+            LongTermModule.triggerSave();
+        }
+
+        const cacheKey = State.memberIdx + '|' + JSON.stringify(goals);
+        if (cacheKey === LongTermModule._lastRenderedKey) return;
+        LongTermModule._lastRenderedKey = cacheKey;
 
         listEl.replaceChildren();
         if (!goals.length) return;
@@ -2622,8 +2631,24 @@ const LongTermModule = {
         if (!row) return;
         const goal = LongTermModule.currentGoals().find(g => g.id === row.dataset.ltId);
         if (!goal) return;
-        if (e.target.dataset.role === 'lt-text')     goal.text = e.target.value;
-        if (e.target.dataset.role === 'lt-deadline') { goal.deadline = e.target.value; LongTermModule.render(); }
+        if (e.target.dataset.role === 'lt-text') { goal.text = e.target.value; }
+        if (e.target.dataset.role === 'lt-deadline') {
+            goal.deadline = e.target.value;
+            const daysEl = row.querySelector('.lt-days');
+            if (daysEl) {
+                daysEl.className = 'lt-days';
+                if (goal.done) { daysEl.textContent = '✓ DONE'; daysEl.classList.add('lt-complete'); }
+                else if (goal.deadline) {
+                    const today = Utils.todayISO();
+                    const mmdd = goal.deadline.slice(5);
+                    const diff = Math.ceil((new Date(goal.deadline + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000);
+                    if (diff < 0)       { daysEl.textContent = `${mmdd} · ${Math.abs(diff)}d OVR`; daysEl.classList.add('lt-overdue'); }
+                    else if (diff === 0){ daysEl.textContent = `${mmdd} · TODAY`; daysEl.classList.add('lt-today'); }
+                    else                { daysEl.textContent = `${mmdd} · ${diff}d`; }
+                } else { daysEl.textContent = ''; }
+            }
+            LongTermModule._lastRenderedKey = null;
+        }
         LongTermModule.triggerSave();
     },
 };
@@ -3151,7 +3176,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605221000';
+    const CURRENT_VERSION = '202605221100';
     async function checkVersion() {
         try {
             const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });

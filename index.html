@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605212330">
+    <meta name="version" content="202605220600">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.16</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.27</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -527,6 +527,74 @@
 
         /* === MISSION GOAL === */
         .goal-list { display: flex; flex-direction: column; gap: 8px; }
+
+        /* === LONGTERM GOAL === */
+        .lt-card { border-left-color: var(--stark-gold) !important; }
+        .lt-card .card-header::before { background: var(--stark-gold); box-shadow: 0 0 10px rgba(255,204,0,0.5); }
+        .lt-card .card-header h2 { color: var(--stark-gold); text-shadow: 0 0 12px rgba(255,204,0,0.3); }
+        .lt-goal-list { display: flex; flex-direction: column; gap: 6px; }
+        .lt-goal-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 4px 4px; border-left: 2px solid transparent;
+            transition: border-color 0.2s;
+            animation: slide-in 0.3s var(--easing-smooth) both;
+        }
+        .lt-goal-row:hover { border-left-color: rgba(255,204,0,0.4); }
+        .lt-text-container {
+            flex: 1; position: relative; display: flex; align-items: center;
+            transition: all 0.4s var(--easing-smooth); min-width: 0; border-radius: 3px;
+        }
+        .lt-text-container.completed {
+            padding-left: 54px;
+            background: linear-gradient(90deg, rgba(255,204,0,0.15) 0%, transparent 80%);
+        }
+        .lt-text-container::before {
+            content: '100%'; position: absolute; left: 2px; top: 50%;
+            transform: translateY(-50%) scale(0.3);
+            font-family: 'Orbitron'; font-weight: 900; font-size: 0.55rem;
+            color: var(--stark-dark); background: var(--stark-gold);
+            padding: 1px 6px; opacity: 0;
+            transition: 0.4s var(--easing-cyber); pointer-events: none; z-index: 2;
+            box-shadow: 0 0 10px rgba(255,204,0,0.6); white-space: nowrap;
+        }
+        .lt-text-container.completed::before { opacity: 1; transform: translateY(-50%) scale(1); }
+        .lt-goal-input {
+            width: 100%; background: transparent; border: none;
+            color: #fff; font-size: 1.2rem; font-family: 'Rajdhani'; outline: none;
+            padding: 2px 0; text-overflow: ellipsis; transition: 0.3s;
+        }
+        .lt-goal-input.completed { color: #fff; text-shadow: 0 0 8px rgba(255,204,0,0.8); opacity: 0.9; }
+        .lt-goal-input::placeholder { color: rgba(255,255,255,0.25); }
+        .lt-deadline-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+        .lt-deadline-input {
+            position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+        }
+        .lt-date-icon {
+            cursor: pointer; font-family: 'Orbitron', sans-serif;
+            font-size: 0.42rem; font-weight: 700; letter-spacing: 0.5px;
+            color: rgba(255,204,0,0.55); border: 1px solid rgba(255,204,0,0.25);
+            padding: 1px 5px; transition: all 0.2s; flex-shrink: 0;
+            user-select: none;
+        }
+        .lt-date-icon:hover { color: var(--stark-gold); border-color: var(--stark-gold); box-shadow: 0 0 6px rgba(255,204,0,0.3); }
+        .lt-days {
+            font-family: 'Orbitron', sans-serif; font-size: 0.45rem;
+            font-weight: 700; letter-spacing: 1px;
+            color: rgba(255,204,0,0.6); white-space: nowrap; min-width: 40px;
+        }
+        .lt-days.lt-overdue { color: var(--stark-red); animation: lt-pulse 1.5s ease-in-out infinite; }
+        .lt-days.lt-today { color: var(--stark-gold); }
+        .lt-days.lt-complete { color: var(--stark-green); }
+        @keyframes lt-pulse { 0%,100%{opacity:0.7} 50%{opacity:1} }
+        .btn-lt-add {
+            margin-left: auto; background: transparent;
+            border: 1px solid rgba(255,204,0,0.25);
+            color: rgba(255,204,0,0.5);
+            font-family: 'Orbitron', sans-serif; font-size: 0.42rem;
+            font-weight: 700; letter-spacing: 1px; padding: 2px 8px;
+            cursor: pointer; transition: all 0.2s; outline: none;
+        }
+        .btn-lt-add:hover { border-color: var(--stark-gold); color: var(--stark-gold); }
         .goal-row {
             display: flex;
             align-items: center;
@@ -2539,7 +2607,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.16</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.27</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2568,6 +2636,13 @@
     <div class="member-bar">
         <div id="member-switcher" class="member-switcher"></div>
     </div>
+    <section class="gpal-card lt-card">
+        <div class="card-header">
+            <h2>[ 01L ] LONGTERM_GOAL</h2>
+            <button class="btn-lt-add" id="btn-lt-add">+ ADD</button>
+        </div>
+        <div id="lt-goal-list" class="lt-goal-list"></div>
+    </section>
     <section class="gpal-card">
         <div class="card-header">
             <h2>[ 01 ] MISSION_GOAL</h2>
@@ -4047,8 +4122,208 @@ function switchMember(idx) {
     PlanModule.renderCurrent();
     ActionModule.renderCurrent();
     LearnModule.renderCurrent();
+    LongTermModule.render();
     // 不觸發 SaveQueue：切換成員只是 UI 切換，資料沒有改變
 }
+
+// ---------- LONGTERM GOAL MODULE ----------
+const LongTermModule = {
+    LS_KEY: 'gpal_longterm',
+    data: {},      // { memberName: [{id,text,deadline,done},...] }
+    _saveTimer: null,
+
+    // 取當前成員的 goals 陣列（自動初始化）
+    currentGoals() {
+        const name = MemberMgr.names[State.memberIdx];
+        if (!Array.isArray(LongTermModule.data[name])) LongTermModule.data[name] = [];
+        return LongTermModule.data[name];
+    },
+
+    // 從 localStorage 快取即時顯示，再從雲端補更新
+    async init() {
+        try {
+            const cached = JSON.parse(localStorage.getItem(LongTermModule.LS_KEY) || 'null');
+            if (cached && typeof cached === 'object') LongTermModule.data = cached;
+        } catch {}
+        LongTermModule.render();
+
+        try {
+            const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=longterm`);
+            const json = await res.json();
+            if (json.goals && typeof json.goals === 'object') {
+                LongTermModule.data = json.goals;
+                try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
+                LongTermModule.render();
+            }
+        } catch {}
+    },
+
+    // Debounce 存雲端
+    triggerSave() {
+        try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
+        if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
+        LongTermModule._saveTimer = setTimeout(async () => {
+            try {
+                await Utils.safeFetch(CONFIG.WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'longterm', data: LongTermModule.data })
+                });
+            } catch {}
+        }, 3000);
+    },
+
+    // 渲染當前成員的 LT goals
+    render() {
+        const listEl = document.getElementById('lt-goal-list');
+        if (!listEl) return;
+
+        const goals = LongTermModule.currentGoals();
+        const today = Utils.todayISO();
+        let autoChanged = false;
+
+        // 達標日期到了 → 自動完成
+        goals.forEach(g => {
+            if (!g.done && g.deadline && g.deadline <= today) {
+                g.done = true;
+                autoChanged = true;
+            }
+        });
+        if (autoChanged) LongTermModule.triggerSave();
+
+        listEl.replaceChildren();
+        if (!goals.length) return;
+
+        const frag = document.createDocumentFragment();
+        goals.forEach(g => {
+            const row = document.createElement('div');
+            row.className = 'lt-goal-row' + (g.done ? ' lt-done' : '');
+            row.dataset.ltId = g.id;
+
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'stark-checkbox';
+            cb.checked = g.done;
+            cb.dataset.role = 'lt-check';
+
+            const textContainer = document.createElement('div');
+            textContainer.className = 'lt-text-container' + (g.done ? ' completed' : '');
+
+            const textEl = document.createElement('input');
+            textEl.type = 'text';
+            textEl.className = 'lt-goal-input' + (g.done ? ' completed' : '');
+            textEl.value = g.text;
+            textEl.placeholder = 'Long term goal...';
+            textEl.dataset.role = 'lt-text';
+            textContainer.appendChild(textEl);
+
+            const deadlineWrap = document.createElement('div');
+            deadlineWrap.className = 'lt-deadline-wrap';
+
+            const dateEl = document.createElement('input');
+            dateEl.type = 'date';
+            dateEl.className = 'lt-deadline-input';
+            dateEl.value = g.deadline || '';
+            dateEl.dataset.role = 'lt-deadline';
+
+            const dateIcon = document.createElement('span');
+            dateIcon.className = 'lt-date-icon';
+            dateIcon.textContent = 'DEADLINE';
+            dateIcon.title = g.deadline ? g.deadline : 'Set deadline';
+            dateIcon.addEventListener('click', () => {
+                try { dateEl.showPicker(); } catch { dateEl.click(); }
+            });
+
+            const daysEl = document.createElement('span');
+            daysEl.className = 'lt-days';
+            if (g.done) {
+                daysEl.textContent = '✓ DONE';
+                daysEl.classList.add('lt-complete');
+            } else if (g.deadline) {
+                const mmdd = g.deadline.slice(5); // MM-DD
+                const diff = Math.ceil((new Date(g.deadline + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000);
+                if (diff < 0)       { daysEl.textContent = `${mmdd} · ${Math.abs(diff)}d OVR`; daysEl.classList.add('lt-overdue'); }
+                else if (diff === 0){ daysEl.textContent = `${mmdd} · TODAY`; daysEl.classList.add('lt-today'); }
+                else                { daysEl.textContent = `${mmdd} · ${diff}d`; }
+            }
+
+            const delBtn = document.createElement('div');
+            delBtn.className = 'del-btn';
+            delBtn.textContent = 'X';
+            delBtn.dataset.role = 'lt-del';
+
+            deadlineWrap.append(dateEl, dateIcon, daysEl);
+            row.append(cb, textContainer, deadlineWrap, delBtn);
+            frag.appendChild(row);
+        });
+        listEl.appendChild(frag);
+    },
+
+    // 新增一個空 LT goal
+    add() {
+        const goals = LongTermModule.currentGoals();
+        const newGoal = { id: 'lt_' + Date.now(), text: '', deadline: '', done: false };
+        goals.push(newGoal);
+        LongTermModule.render();
+        const listEl = document.getElementById('lt-goal-list');
+        const lastInput = listEl?.lastElementChild?.querySelector('[data-role=lt-text]');
+        if (lastInput) lastInput.focus();
+        LongTermModule.triggerSave();
+    },
+
+    // 事件處理（由 Events.init 委托）
+    handleClick(e) {
+        const row = e.target.closest('.lt-goal-row');
+        if (!row) return;
+        const id = row.dataset.ltId;
+        const goals = LongTermModule.currentGoals();
+        const idx = goals.findIndex(g => g.id === id);
+        if (idx < 0) return;
+        const role = e.target.dataset.role;
+
+        if (role === 'lt-check') {
+            goals[idx].done = e.target.checked;
+            // 直接切換 class（不重建 DOM），讓 CSS transition 動畫流暢
+            const textContainer = row.querySelector('.lt-text-container');
+            const textInput     = row.querySelector('[data-role=lt-text]');
+            const daysEl        = row.querySelector('.lt-days');
+            if (textContainer) textContainer.classList.toggle('completed', goals[idx].done);
+            if (textInput)     textInput.classList.toggle('completed', goals[idx].done);
+            // 更新 days 顯示
+            if (daysEl) {
+                daysEl.className = 'lt-days';
+                if (goals[idx].done) {
+                    daysEl.textContent = '✓ DONE';
+                    daysEl.classList.add('lt-complete');
+                } else if (goals[idx].deadline) {
+                    const today = Utils.todayISO();
+                    const mmdd = goals[idx].deadline.slice(5);
+                    const diff = Math.ceil((new Date(goals[idx].deadline + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000);
+                    if (diff < 0)       { daysEl.textContent = `${mmdd} · ${Math.abs(diff)}d OVR`; daysEl.classList.add('lt-overdue'); }
+                    else if (diff === 0){ daysEl.textContent = `${mmdd} · TODAY`; daysEl.classList.add('lt-today'); }
+                    else                { daysEl.textContent = `${mmdd} · ${diff}d`; }
+                } else { daysEl.textContent = ''; }
+            }
+            LongTermModule.triggerSave();
+        } else if (role === 'lt-del') {
+            goals.splice(idx, 1);
+            LongTermModule.render();
+            LongTermModule.triggerSave();
+        }
+    },
+    handleInput(e) {
+        const row = e.target.closest('.lt-goal-row');
+        if (!row) return;
+        const id = row.dataset.ltId;
+        const goals = LongTermModule.currentGoals();
+        const goal = goals.find(g => g.id === id);
+        if (!goal) return;
+        const role = e.target.dataset.role;
+        if (role === 'lt-text')     goal.text = e.target.value;
+        if (role === 'lt-deadline') { goal.deadline = e.target.value; LongTermModule.render(); }
+        LongTermModule.triggerSave();
+    },
+};
 
 // ---------- SYNC MODULE ----------
 const Sync = {
@@ -4508,6 +4783,16 @@ const Events = {
                 SaveQueue.trigger();
             });
         });
+
+        // LONGTERM GOAL 事件
+        const ltList = document.getElementById('lt-goal-list');
+        if (ltList) {
+            ltList.addEventListener('click', LongTermModule.handleClick);
+            ltList.addEventListener('input', LongTermModule.handleInput);
+            ltList.addEventListener('change', LongTermModule.handleInput);
+        }
+        const btnLtAdd = document.getElementById('btn-lt-add');
+        if (btnLtAdd) btnLtAdd.addEventListener('click', () => LongTermModule.add());
 
         // COPY PLAN 按鈕（已移至每行，此區塊保留以防舊版引用）
 
@@ -5821,6 +6106,7 @@ window.addEventListener('DOMContentLoaded', () => {
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
     MemberMgr.init();
+    LongTermModule.init(); // 從快取即時顯示，背景從雲端更新
     Events.init();
     HealthModule.bindEvents();
     HealthModule.render(DOM.datePicker.value);
@@ -5836,7 +6122,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605212330';
+    const CURRENT_VERSION = '202605220600';
     async function checkVersion() {
         try {
             const res = await fetch(location.href + '?v=' + Date.now(), { cache: 'no-store' });

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605222200">
+    <meta name="version" content="202605230100">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.50</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.54</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -118,21 +118,29 @@
             z-index: 9999;
         }
 
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(6, 22, 35, 0.9);
+            backdrop-filter: blur(10px);
+        }
         nav {
             padding: 0.6rem;
             border-bottom: 2px solid var(--stark-cyan);
             display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+        .nav-row {
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(6, 22, 35, 0.9);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-            overflow: hidden;
+            width: 100%;
         }
         @media (min-width: 768px) {
             nav { padding: 0.8rem 1.5rem; }
+            #spotify-bar { padding: 5px 1.5rem; }
         }
         nav::after {
             content: '';
@@ -580,6 +588,53 @@
         .streak-display.cold { color: rgba(255,255,255,0.25); }
         .streak-milestone { animation: streak-burst 0.5s ease-out; }
         @keyframes streak-burst { 0%{transform:scale(1.6)} 100%{transform:scale(1)} }
+
+        /* === SPOTIFY BAR === */
+        #spotify-bar {
+            background: rgba(0,0,0,0.4);
+            border-bottom: 1px solid rgba(29,185,84,0.2);
+            padding: 5px 12px;
+            min-height: 36px;
+            display: flex; align-items: center;
+        }
+        .sp-connect-row { display: flex; align-items: center; gap: 8px; width: 100%; }
+        .sp-label {
+            font-family: 'Orbitron', sans-serif; font-size: 0.42rem; font-weight: 700;
+            color: rgba(29,185,84,0.65); letter-spacing: 2px; white-space: nowrap; flex-shrink: 0;
+        }
+        .sp-input {
+            flex: 1; min-width: 0; background: transparent;
+            border: 1px solid rgba(29,185,84,0.25); border-bottom: 1px solid rgba(29,185,84,0.4);
+            color: rgba(29,185,84,0.85); font-family: 'Orbitron', sans-serif; font-size: 0.38rem;
+            padding: 2px 6px; outline: none; transition: border-color 0.2s;
+        }
+        .sp-input:focus { border-color: rgba(29,185,84,0.7); }
+        .sp-input::placeholder { color: rgba(29,185,84,0.25); }
+        .sp-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 0.42rem; font-weight: 700;
+            color: rgba(29,185,84,0.65); border: 1px solid rgba(29,185,84,0.3);
+            background: transparent; padding: 3px 12px; cursor: pointer; outline: none;
+            transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
+            clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%); position: relative; overflow: hidden;
+        }
+        .sp-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg,transparent,rgba(29,185,84,0.25),transparent); transition: left 0.4s; }
+        .sp-btn:hover::before { left: 200%; }
+        .sp-btn:hover { color: #1DB954; border-color: #1DB954; box-shadow: 0 0 8px rgba(29,185,84,0.25); }
+        .sp-player { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; }
+        .sp-art { width: 28px; height: 28px; border-radius: 2px; object-fit: cover; border: 1px solid rgba(29,185,84,0.2); flex-shrink: 0; }
+        .sp-art[src=""] { display: none; }
+        .sp-info { flex: 1; min-width: 0; }
+        .sp-track { font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sp-artist { font-family: 'Orbitron', sans-serif; font-size: 0.36rem; color: rgba(29,185,84,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sp-mid { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
+        .sp-controls { display: flex; align-items: center; gap: 2px; }
+        .sp-ctrl-btn { font-size: 0.55rem; color: rgba(29,185,84,0.55); background: transparent; border: none; cursor: pointer; padding: 2px 5px; transition: color 0.15s; outline: none; }
+        .sp-ctrl-btn:hover { color: #1DB954; }
+        .sp-play-btn { font-size: 0.75rem !important; color: rgba(29,185,84,0.75) !important; }
+        .sp-progress-wrap { width: 80px; height: 2px; background: rgba(29,185,84,0.12); border-radius: 1px; overflow: hidden; }
+        .sp-progress-bar { height: 100%; background: #1DB954; border-radius: 1px; transition: width 1s linear; width: 0%; }
+        .sp-disconnect-btn { font-size: 0.4rem; color: rgba(255,255,255,0.18); background: transparent; border: none; cursor: pointer; padding: 2px 4px; transition: color 0.2s; flex-shrink: 0; outline: none; }
+        .sp-disconnect-btn:hover { color: rgba(255,100,100,0.7); }
 
         /* === GOAL TEMPLATE === */
         .btn-tmpl {
@@ -2762,15 +2817,20 @@
 </head>
 <body>
 
+<div class="sticky-header">
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.50</span></div>
-    <div class="conn-indicator">
-        <span class="conn-dot" id="conn-dot"></span>
-        <span id="conn-text">ONLINE</span>
-        <button class="btn-update-now" id="btn-update-now" onclick="location.replace(location.pathname + '?v=' + Date.now())" style="display:none;">UPDATE</button>
-        <button class="btn-nav-sync" id="btn-nav-sync" onclick="Sync.fetchData()" title="Sync now">↺</button>
+    <div class="nav-row">
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.54</span></div>
+        <div class="conn-indicator">
+            <span class="conn-dot" id="conn-dot"></span>
+            <span id="conn-text">ONLINE</span>
+            <button class="btn-update-now" id="btn-update-now" onclick="location.replace(location.pathname + '?v=' + Date.now())" style="display:none;">UPDATE</button>
+            <button class="btn-nav-sync" id="btn-nav-sync" onclick="Sync.fetchData()" title="Sync now">↺</button>
+        </div>
     </div>
 </nav>
+<div id="spotify-bar"></div>
+</div>
 
 <div class="header-section">
     <div class="date-nav-row">
@@ -5242,6 +5302,227 @@ const JarvisModule = {
     },
 };
 
+// ---------- SPOTIFY MODULE ----------
+const SpotifyModule = {
+    SCOPES: 'user-read-playback-state user-modify-playback-state user-read-currently-playing',
+    LS_TOKEN:  'gpal_spotify_token',
+    LS_CONFIG: 'gpal_spotify_config',
+    LS_VERIFY: 'gpal_spotify_verifier',
+
+    _token: null, _refreshToken: null, _expiry: 0,
+    _track: null, _playing: false, _volume: 50,
+    _pollTimer: null,
+
+    // ─── Init ───────────────────────────────────────────────────────────────
+    init() {
+        // 預設 Client ID + Redirect URI（用戶專屬）
+        const DEFAULT_CONFIG = { clientId: 'cc2c4917566648d1a79b3f84b9a3e28f', redirectUri: 'https://oldjim4466.github.io/gpal/index.html' };
+        if (!localStorage.getItem(SpotifyModule.LS_CONFIG)) {
+            localStorage.setItem(SpotifyModule.LS_CONFIG, JSON.stringify(DEFAULT_CONFIG));
+        }
+
+        // 載入 config + token
+        try {
+            const tok = JSON.parse(localStorage.getItem(SpotifyModule.LS_TOKEN) || 'null');
+            if (tok) { SpotifyModule._token = tok.a; SpotifyModule._refreshToken = tok.r; SpotifyModule._expiry = tok.e; }
+        } catch {}
+
+        // 檢查 OAuth callback（URL 含 ?code=）
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (code) {
+            window.history.replaceState({}, '', window.location.pathname);
+            SpotifyModule._handleCallback(code);
+        } else {
+            SpotifyModule.render();
+            if (SpotifyModule._token) SpotifyModule._startPolling();
+        }
+    },
+
+    // ─── OAuth PKCE ─────────────────────────────────────────────────────────
+    async authorize() {
+        const cfg = JSON.parse(localStorage.getItem(SpotifyModule.LS_CONFIG) || 'null');
+        const clientId = document.getElementById('sp-client-id')?.value.trim() || cfg?.clientId;
+        if (!clientId) { alert('Please enter your Spotify Client ID'); return; }
+        const redirectUri = cfg?.redirectUri || window.location.href.split('?')[0].split('#')[0];
+        localStorage.setItem(SpotifyModule.LS_CONFIG, JSON.stringify({ clientId, redirectUri }));
+
+        const verifier = SpotifyModule._randomStr();
+        const challenge = await SpotifyModule._sha256b64(verifier);
+        localStorage.setItem(SpotifyModule.LS_VERIFY, verifier);
+
+        const url = new URL('https://accounts.spotify.com/authorize');
+        url.searchParams.set('client_id', clientId);
+        url.searchParams.set('response_type', 'code');
+        url.searchParams.set('redirect_uri', redirectUri);
+        url.searchParams.set('scope', SpotifyModule.SCOPES);
+        url.searchParams.set('code_challenge_method', 'S256');
+        url.searchParams.set('code_challenge', challenge);
+        window.location.href = url.toString();
+    },
+
+    async _handleCallback(code) {
+        const cfg = JSON.parse(localStorage.getItem(SpotifyModule.LS_CONFIG) || 'null');
+        const verifier = localStorage.getItem(SpotifyModule.LS_VERIFY);
+        if (!cfg || !verifier) { SpotifyModule.render(); return; }
+        try {
+            const res = await fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ client_id: cfg.clientId, grant_type: 'authorization_code', code, redirect_uri: cfg.redirectUri, code_verifier: verifier })
+            });
+            const data = await res.json();
+            if (data.access_token) {
+                SpotifyModule._saveToken(data);
+                localStorage.removeItem(SpotifyModule.LS_VERIFY);
+                SpotifyModule.render();
+                SpotifyModule._startPolling();
+            } else { SpotifyModule.render(); }
+        } catch { SpotifyModule.render(); }
+    },
+
+    _saveToken(data) {
+        SpotifyModule._token = data.access_token;
+        if (data.refresh_token) SpotifyModule._refreshToken = data.refresh_token;
+        SpotifyModule._expiry = Date.now() + (data.expires_in - 60) * 1000;
+        localStorage.setItem(SpotifyModule.LS_TOKEN, JSON.stringify({ a: SpotifyModule._token, r: SpotifyModule._refreshToken, e: SpotifyModule._expiry }));
+    },
+
+    async _ensureToken() {
+        if (Date.now() < SpotifyModule._expiry) return true;
+        if (!SpotifyModule._refreshToken) return false;
+        const cfg = JSON.parse(localStorage.getItem(SpotifyModule.LS_CONFIG) || 'null');
+        if (!cfg) return false;
+        try {
+            const res = await fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ client_id: cfg.clientId, grant_type: 'refresh_token', refresh_token: SpotifyModule._refreshToken })
+            });
+            const data = await res.json();
+            if (data.access_token) { SpotifyModule._saveToken(data); return true; }
+        } catch {}
+        return false;
+    },
+
+    // ─── API ─────────────────────────────────────────────────────────────────
+    async _api(path, method = 'GET', body = null) {
+        if (!await SpotifyModule._ensureToken()) { SpotifyModule.disconnect(); return null; }
+        const opts = { method, headers: { Authorization: `Bearer ${SpotifyModule._token}` } };
+        if (body) { opts.body = JSON.stringify(body); opts.headers['Content-Type'] = 'application/json'; }
+        try {
+            const res = await fetch(`https://api.spotify.com/v1${path}`, opts);
+            if (res.status === 401) { SpotifyModule.disconnect(); return null; }
+            if (res.status === 204 || res.status === 202) return {};
+            if (!res.ok) return null;
+            return res.json();
+        } catch { return null; }
+    },
+
+    async fetchNowPlaying() {
+        const data = await SpotifyModule._api('/me/player?market=from_token');
+        if (!data || !data.item) {
+            SpotifyModule._track = null; SpotifyModule._playing = false;
+        } else {
+            SpotifyModule._track = {
+                name: data.item.name,
+                artist: data.item.artists?.map(a => a.name).join(', ') || '',
+                art: data.item.album?.images?.[2]?.url || data.item.album?.images?.[0]?.url || '',
+                duration: data.item.duration_ms || 0,
+                progress: data.progress_ms || 0,
+            };
+            SpotifyModule._playing = data.is_playing;
+        }
+        SpotifyModule._updateUI();
+    },
+
+    async togglePlay()  { if (SpotifyModule._playing) { await SpotifyModule._api('/me/player/pause','PUT'); SpotifyModule._playing=false; } else { await SpotifyModule._api('/me/player/play','PUT'); SpotifyModule._playing=true; } SpotifyModule._updatePlayBtn(); },
+    async next()        { await SpotifyModule._api('/me/player/next','POST'); setTimeout(SpotifyModule.fetchNowPlaying, 400); },
+    async previous()    { await SpotifyModule._api('/me/player/previous','POST'); setTimeout(SpotifyModule.fetchNowPlaying, 400); },
+
+    disconnect() {
+        clearInterval(SpotifyModule._pollTimer);
+        SpotifyModule._token = null; SpotifyModule._refreshToken = null;
+        SpotifyModule._track = null; SpotifyModule._playing = false;
+        localStorage.removeItem(SpotifyModule.LS_TOKEN);
+        SpotifyModule.render();
+    },
+
+    _startPolling() {
+        clearInterval(SpotifyModule._pollTimer);
+        SpotifyModule.fetchNowPlaying();
+        SpotifyModule._pollTimer = setInterval(SpotifyModule.fetchNowPlaying, 5000);
+    },
+
+    // ─── UI ──────────────────────────────────────────────────────────────────
+    render() {
+        const bar = document.getElementById('spotify-bar');
+        if (!bar) return;
+        if (!SpotifyModule._token) {
+            const cfg = JSON.parse(localStorage.getItem(SpotifyModule.LS_CONFIG) || 'null');
+            bar.innerHTML = `<div class="sp-connect-row">
+                <span class="sp-label">♬ SPOTIFY</span>
+                <input id="sp-client-id" class="sp-input" placeholder="Spotify Client ID" type="text" value="${cfg?.clientId || ''}">
+                <button class="sp-btn" onclick="SpotifyModule.authorize()">CONNECT</button>
+            </div>`;
+        } else {
+            bar.innerHTML = `<div class="sp-player">
+                <img id="sp-art" class="sp-art" src="" alt="">
+                <div class="sp-info">
+                    <div id="sp-track" class="sp-track">—</div>
+                    <div id="sp-artist" class="sp-artist">—</div>
+                </div>
+                <div class="sp-mid">
+                    <div class="sp-controls">
+                        <button class="sp-ctrl-btn" onclick="SpotifyModule.previous()" title="Previous">◀◀</button>
+                        <button class="sp-ctrl-btn sp-play-btn" id="sp-play-btn" onclick="SpotifyModule.togglePlay()">▶</button>
+                        <button class="sp-ctrl-btn" onclick="SpotifyModule.next()" title="Next">▶▶</button>
+                    </div>
+                    <div class="sp-progress-wrap"><div id="sp-prog" class="sp-progress-bar"></div></div>
+                </div>
+                <button class="sp-disconnect-btn" onclick="SpotifyModule.disconnect()" title="Disconnect Spotify">✕</button>
+            </div>`;
+            SpotifyModule._updateUI();
+        }
+    },
+
+    _updateUI() {
+        const t = SpotifyModule._track;
+        const artEl  = document.getElementById('sp-art');
+        const trackEl  = document.getElementById('sp-track');
+        const artistEl = document.getElementById('sp-artist');
+        const progEl   = document.getElementById('sp-prog');
+        if (t) {
+            if (artEl)    { artEl.src = t.art; artEl.style.display = t.art ? '' : 'none'; }
+            if (trackEl)  trackEl.textContent = t.name;
+            if (artistEl) artistEl.textContent = t.artist;
+            if (progEl && t.duration) progEl.style.width = (t.progress / t.duration * 100).toFixed(1) + '%';
+        } else {
+            if (trackEl)  trackEl.textContent = '—';
+            if (artistEl) artistEl.textContent = '—';
+            if (progEl)   progEl.style.width = '0%';
+        }
+        SpotifyModule._updatePlayBtn();
+    },
+
+    _updatePlayBtn() {
+        const btn = document.getElementById('sp-play-btn');
+        if (btn) btn.textContent = SpotifyModule._playing ? '⏸' : '▶';
+    },
+
+    // ─── PKCE Helpers ────────────────────────────────────────────────────────
+    _randomStr() {
+        const arr = new Uint8Array(32);
+        crypto.getRandomValues(arr);
+        return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    },
+    async _sha256b64(str) {
+        const data = new TextEncoder().encode(str);
+        const digest = await crypto.subtle.digest('SHA-256', data);
+        return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    },
+};
+
 // ---------- SYNC MODULE ----------
 const Sync = {
     // 預取 ±3 天資料存入 localStorage
@@ -7066,6 +7347,7 @@ window.addEventListener('DOMContentLoaded', () => {
     LongTermModule.init();
     HabitModule.init();
     GoalTemplateModule.init();
+    SpotifyModule.init();
     MissionClockModule.init();
     StreakModule.init();
     Events.init();
@@ -7083,7 +7365,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605222200';
+    const CURRENT_VERSION = '202605230100';
     async function checkVersion() {
         try {
             // 只抓前 500 字節（version tag 在 <head> 裡），比下載整頁快 10x+

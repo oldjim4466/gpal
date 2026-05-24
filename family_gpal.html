@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605222000">
+    <meta name="version" content="202605222100">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.47</title>
+    <title>GPAL FAMILY v1.48</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1563,7 +1563,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.47</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.48</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3197,6 +3197,10 @@ const HabitModule = {
     triggerSave() {
         HabitModule._dataVersion++;
         HabitModule._lastRenderedKey = null;
+        HabitModule._scheduleSave();
+    },
+
+    _scheduleSave() {
         try { localStorage.setItem(HabitModule.LS_KEY, JSON.stringify(HabitModule.data)); } catch {}
         if (HabitModule._saveTimer) clearTimeout(HabitModule._saveTimer);
         HabitModule._saveTimer = setTimeout(async () => {
@@ -3272,7 +3276,7 @@ const HabitModule = {
             e.target.classList.toggle('done', !!habits[idx].logs[date]);
             const streakEl = row.querySelector('.habit-streak');
             if (streakEl) { const s = HabitModule.getStreak(habits[idx]); streakEl.textContent = s > 0 ? (s >= 7 ? '🔥' : '✦') + s + 'd' : ''; }
-            HabitModule.triggerSave();
+            HabitModule._scheduleSave(); // 靜默保存，不失效 render 快取
         } else if (e.target.dataset.role === 'habit-del') {
             if (confirm('DELETE THIS HABIT?')) { habits.splice(idx, 1); HabitModule.triggerSave(); HabitModule.render(); }
         }
@@ -3504,6 +3508,7 @@ const Events = {
                 container.classList.toggle('completed', t.checked);
                 GoalModule.updateProgress();
                 SaveQueue.trigger();
+                GoalModule.saveCurrent(); // 立即同步 allData（Streak 需要最新狀態）
                 StreakModule.checkAndUpdate(DOM.datePicker.value);
             }
         });
@@ -3844,7 +3849,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = '202605222000';
+    const CURRENT_VERSION = '202605222100';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

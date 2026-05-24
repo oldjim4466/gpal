@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605221730">
+    <meta name="version" content="202605221800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.43</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.44</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -574,6 +574,34 @@
         .streak-display.cold { color: rgba(255,255,255,0.25); }
         .streak-milestone { animation: streak-burst 0.5s ease-out; }
         @keyframes streak-burst { 0%{transform:scale(1.6)} 100%{transform:scale(1)} }
+
+        /* === GOAL TEMPLATE === */
+        .btn-tmpl {
+            font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
+            color: rgba(0,242,255,0.45); border: 1px solid rgba(0,242,255,0.2);
+            background: transparent; padding: 1px 6px; cursor: pointer;
+            transition: all 0.2s; margin-left: 4px; outline: none;
+        }
+        .btn-tmpl:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
+        .btn-tmpl.active { color: var(--stark-cyan); border-color: var(--stark-cyan); background: rgba(0,242,255,0.08); }
+        .goal-tmpl-panel {
+            border: 1px solid rgba(0,242,255,0.15); border-left: 3px solid var(--stark-cyan);
+            background: rgba(0,242,255,0.03); padding: 8px 10px; margin-bottom: 6px;
+        }
+        .tmpl-empty { font-family: 'Orbitron'; font-size: 0.4rem; color: rgba(0,242,255,0.3); letter-spacing: 1px; }
+        .tmpl-item { display: flex; align-items: center; gap: 6px; padding: 4px; border: 1px solid transparent; transition: all 0.15s; }
+        .tmpl-item:hover { background: rgba(0,242,255,0.05); border-color: rgba(0,242,255,0.15); }
+        .tmpl-item-name { flex: 1; font-family: 'Rajdhani'; font-size: 0.9rem; color: var(--stark-text); }
+        .tmpl-item-apply { font-family: 'Orbitron'; font-size: 0.35rem; color: rgba(0,242,255,0.5); cursor: pointer; padding: 1px 5px; border: 1px solid rgba(0,242,255,0.2); transition: all 0.15s; }
+        .tmpl-item-apply:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
+        .tmpl-item-del { font-family: 'Orbitron'; font-size: 0.35rem; color: rgba(255,77,77,0.45); cursor: pointer; padding: 1px 4px; transition: color 0.15s; }
+        .tmpl-item-del:hover { color: var(--stark-red); }
+        .tmpl-save-row { display: flex; gap: 6px; margin-top: 8px; border-top: 1px solid rgba(0,242,255,0.1); padding-top: 8px; align-items: center; }
+        .tmpl-name-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid rgba(0,242,255,0.2); color: #fff; font-family: 'Rajdhani'; font-size: 0.85rem; padding: 2px 0; outline: none; }
+        .tmpl-name-input:focus { border-bottom-color: var(--stark-cyan); }
+        .tmpl-name-input::placeholder { color: rgba(255,255,255,0.25); }
+        .tmpl-save-btn { font-family: 'Orbitron'; font-size: 0.38rem; font-weight: 700; color: rgba(0,242,255,0.5); border: 1px solid rgba(0,242,255,0.2); background: transparent; padding: 2px 8px; cursor: pointer; white-space: nowrap; transition: all 0.2s; outline: none; }
+        .tmpl-save-btn:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
 
         /* === LONGTERM GOAL === */
         .lt-card { border-left-color: var(--stark-gold) !important; }
@@ -2699,7 +2727,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.43</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.44</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2750,7 +2778,9 @@
             <h2>[ 01 ] MISSION_GOAL</h2>
             <div id="progress-display" class="progress-stats">[ 0% ]</div>
             <div id="streak-display" class="streak-display cold">⚡ 0D</div>
+            <button class="btn-tmpl" id="btn-tmpl" title="Goal Templates">TMPL</button>
         </div>
+        <div id="goal-tmpl-panel" class="goal-tmpl-panel" style="display:none;"></div>
         <div id="goal-list" class="goal-list"></div>
     </section>
     <section class="gpal-card">
@@ -3087,6 +3117,7 @@
     <div class="action-area">
         <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
         <button class="btn-sync" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())">REFRESH</button>
+        <button class="btn-sync" id="btn-jarvis" title="JARVIS Status Report">◎ BRIEF</button>
     </div>
 </footer>
 
@@ -4883,6 +4914,218 @@ const HabitModule = {
     },
 };
 
+// ---------- GOAL TEMPLATE MODULE ----------
+const GoalTemplateModule = {
+    LS_KEY: 'gpal_goal_templates',
+    templates: [],
+
+    init() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]');
+            if (Array.isArray(saved)) this.templates = saved;
+        } catch {}
+    },
+
+    _save() {
+        if (this.templates.length > 10) this.templates = this.templates.slice(-10);
+        try { localStorage.setItem(this.LS_KEY, JSON.stringify(this.templates)); } catch {}
+    },
+
+    // 從 GoalModule.allData 提取當前成員的 goals（格式：{text,prio}[]）
+    _extractGoals() {
+        GoalModule.saveCurrent();
+        const raw = GoalModule.allData[State.memberIdx] || '';
+        return raw.split('\n')
+            .filter(l => l.trim() && /^\[[ x]\]/.test(l))
+            .map(l => {
+                const prioMatch = l.match(/\((P[1-3]|NONE)\)/);
+                const text = l.replace(/^\[[ x]\]\s*\((P[1-3]|NONE)\)\s*/, '').replace(/^\[[ x]\]\s*/, '').trim();
+                return { text, prio: prioMatch ? prioMatch[1] : 'NONE' };
+            })
+            .filter(g => g.text);
+    },
+
+    saveCurrentAs(name) {
+        const n = name.trim();
+        if (!n) return;
+        const goals = this._extractGoals();
+        if (!goals.length) { Utils.setStatus('NO_GOALS_TO_SAVE', 'warn'); return; }
+        const existIdx = this.templates.findIndex(t => t.name === n);
+        const tmpl = { id: 'tmpl_' + Date.now(), name: n, goals };
+        if (existIdx >= 0) this.templates[existIdx] = tmpl;
+        else this.templates.push(tmpl);
+        this._save();
+        Utils.setStatus(`TEMPLATE_SAVED · ${n}`, 'success');
+        this.renderPanel();
+    },
+
+    applyTemplate(id) {
+        const tmpl = this.templates.find(t => t.id === id);
+        if (!tmpl) return;
+        if (!confirm(`Apply "${tmpl.name}"? Current goals will be replaced.`)) return;
+        // 全部設為未完成，保留 priority
+        const raw = tmpl.goals.map(g => `[ ] (${g.prio}) ${g.text}`).join('\n');
+        GoalModule.parseSingle(raw);
+        GoalModule.saveCurrent();
+        SaveQueue.trigger();
+        GoalTemplateModule.closePanel();
+        Utils.setStatus(`TEMPLATE_APPLIED · ${tmpl.name}`, 'success');
+    },
+
+    deleteTemplate(id) {
+        this.templates = this.templates.filter(t => t.id !== id);
+        this._save();
+        this.renderPanel();
+    },
+
+    togglePanel() {
+        const panel = document.getElementById('goal-tmpl-panel');
+        const btn = document.getElementById('btn-tmpl');
+        if (!panel) return;
+        const isOpen = panel.style.display !== 'none';
+        panel.style.display = isOpen ? 'none' : 'block';
+        if (btn) btn.classList.toggle('active', !isOpen);
+        if (!isOpen) this.renderPanel();
+    },
+
+    closePanel() {
+        const panel = document.getElementById('goal-tmpl-panel');
+        const btn = document.getElementById('btn-tmpl');
+        if (panel) panel.style.display = 'none';
+        if (btn) btn.classList.remove('active');
+    },
+
+    renderPanel() {
+        const panel = document.getElementById('goal-tmpl-panel');
+        if (!panel || panel.style.display === 'none') return;
+        panel.replaceChildren();
+
+        if (!this.templates.length) {
+            const empty = document.createElement('div');
+            empty.className = 'tmpl-empty';
+            empty.textContent = 'NO_TEMPLATES · SAVE CURRENT GOALS BELOW';
+            panel.appendChild(empty);
+        } else {
+            const list = document.createElement('div');
+            this.templates.forEach(tmpl => {
+                const item = document.createElement('div');
+                item.className = 'tmpl-item';
+
+                const nameEl = document.createElement('span');
+                nameEl.className = 'tmpl-item-name';
+                nameEl.textContent = tmpl.name + '  ·  ' + tmpl.goals.length + ' goals';
+
+                const applyEl = document.createElement('span');
+                applyEl.className = 'tmpl-item-apply';
+                applyEl.textContent = '[APPLY]';
+                applyEl.onclick = () => GoalTemplateModule.applyTemplate(tmpl.id);
+
+                const delEl = document.createElement('span');
+                delEl.className = 'tmpl-item-del';
+                delEl.textContent = 'X';
+                delEl.onclick = e => { e.stopPropagation(); GoalTemplateModule.deleteTemplate(tmpl.id); };
+
+                item.append(nameEl, applyEl, delEl);
+                list.appendChild(item);
+            });
+            panel.appendChild(list);
+        }
+
+        const saveRow = document.createElement('div');
+        saveRow.className = 'tmpl-save-row';
+
+        const input = document.createElement('input');
+        input.type = 'text'; input.className = 'tmpl-name-input';
+        input.placeholder = 'Template name...'; input.maxLength = 30;
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') GoalTemplateModule.saveCurrentAs(input.value);
+        });
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'tmpl-save-btn';
+        saveBtn.textContent = 'SAVE CURRENT';
+        saveBtn.onclick = () => GoalTemplateModule.saveCurrentAs(input.value);
+
+        saveRow.append(input, saveBtn);
+        panel.appendChild(saveRow);
+    },
+};
+
+// ---------- JARVIS BRIEF MODULE ----------
+const JarvisModule = {
+    _speaking: false,
+
+    _selectVoice() {
+        if (!('speechSynthesis' in window)) return null;
+        const voices = window.speechSynthesis.getVoices();
+        return voices.find(v => v.lang === 'zh-TW') ||
+               voices.find(v => v.lang === 'zh-HK') ||
+               voices.find(v => v.lang.startsWith('zh')) ||
+               voices.find(v => v.lang === 'en-US') ||
+               voices[0] || null;
+    },
+
+    _buildReport() {
+        const date = (DOM.datePicker && DOM.datePicker.value) || Utils.todayISO();
+        const raw = GoalModule.allData[State.memberIdx] || '';
+        const lines = raw.split('\n').filter(l => l.trim() && /^\[[ x]\]/.test(l));
+        const done = lines.filter(l => l.startsWith('[x]'));
+        const pending = lines.filter(l => l.startsWith('[ ]'));
+        const pct = lines.length ? Math.round(done.length / lines.length * 100) : 0;
+        const clean = l => l.replace(/^\[[ x]\]\s*\((P[1-3]|NONE)\)\s*/, '').replace(/^\[[ x]\]\s*/, '').trim();
+        const doneTexts = done.map(clean).filter(Boolean);
+        const pendingTexts = pending.map(clean).filter(Boolean);
+        const d = new Date(date + 'T12:00:00');
+        const dateStr = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+        const member = MemberMgr.names[State.memberIdx] || 'A';
+
+        let report = `JARVIS 系統匯報。${member} 的任務狀態。日期：${dateStr}。`;
+        if (lines.length) {
+            report += ` 任務完成率：${pct}%。`;
+            if (doneTexts.length) report += ` 已完成：${doneTexts.join('、')}。`;
+            if (pendingTexts.length) report += ` 待完成：${pendingTexts.join('、')}。`;
+        } else {
+            report += ` 今日尚未設定任何任務。`;
+        }
+        try {
+            const h = HealthModule.load(date);
+            if (h && (h.water > 0 || h.sleep > 0 || h.exercise > 0)) {
+                report += ` 健康數據：飲水 ${h.water} 杯，睡眠 ${h.sleep} 小時，運動 ${h.exercise} 分鐘。`;
+            }
+        } catch {}
+        report += ` 所有系統正常。匯報完畢。`;
+        return report;
+    },
+
+    speak() {
+        if (!('speechSynthesis' in window)) { Utils.setStatus('SPEECH_NOT_SUPPORTED', 'error'); return; }
+        if (this._speaking) { this.stop(); return; }
+        window.speechSynthesis.cancel();
+        const text = this._buildReport();
+        const utt = new SpeechSynthesisUtterance(text);
+        const voice = this._selectVoice();
+        if (voice) utt.voice = voice;
+        utt.rate = 0.88; utt.pitch = 0.85; utt.volume = 1;
+        const cleanup = () => {
+            JarvisModule._speaking = false;
+            const btn = document.getElementById('btn-jarvis');
+            if (btn) btn.textContent = '◎ BRIEF';
+        };
+        utt.onend = cleanup; utt.onerror = cleanup;
+        window.speechSynthesis.speak(utt);
+        this._speaking = true;
+        const btn = document.getElementById('btn-jarvis');
+        if (btn) btn.textContent = '◉ STOP';
+    },
+
+    stop() {
+        window.speechSynthesis.cancel();
+        this._speaking = false;
+        const btn = document.getElementById('btn-jarvis');
+        if (btn) btn.textContent = '◎ BRIEF';
+    },
+};
+
 // ---------- SYNC MODULE ----------
 const Sync = {
     // 預取 ±3 天資料存入 localStorage
@@ -5351,6 +5594,14 @@ const Events = {
                 SaveQueue.trigger();
             });
         });
+
+        // GOAL TEMPLATE 事件
+        const btnTmpl = document.getElementById('btn-tmpl');
+        if (btnTmpl) btnTmpl.addEventListener('click', () => GoalTemplateModule.togglePanel());
+
+        // JARVIS BRIEF 事件
+        const btnJarvis = document.getElementById('btn-jarvis');
+        if (btnJarvis) btnJarvis.addEventListener('click', () => JarvisModule.speak());
 
         // HABIT TRACKER 事件
         const habitList = document.getElementById('habit-list');
@@ -6685,6 +6936,7 @@ window.addEventListener('DOMContentLoaded', () => {
     MemberMgr.init();
     LongTermModule.init();
     HabitModule.init();
+    GoalTemplateModule.init();
     MissionClockModule.init();
     StreakModule.init();
     Events.init();
@@ -6702,7 +6954,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605221730';
+    const CURRENT_VERSION = '202605221800';
     async function checkVersion() {
         try {
             // 只抓前 500 字節（version tag 在 <head> 裡），比下載整頁快 10x+

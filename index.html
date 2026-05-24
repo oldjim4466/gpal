@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605221800">
+    <meta name="version" content="202605221900">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.44</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.45</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1046,7 +1046,22 @@
             padding-bottom: 1rem;
             display: flex;
             justify-content: center;
+            gap: 6px;
+            align-items: center;
         }
+        .jarvis-lang-sel {
+            background: transparent;
+            border: 1px solid rgba(0,242,255,0.25);
+            color: rgba(0,242,255,0.55);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.42rem;
+            padding: 3px 6px;
+            cursor: pointer;
+            outline: none;
+            color-scheme: dark;
+            transition: all 0.2s;
+        }
+        .jarvis-lang-sel:hover { border-color: var(--stark-cyan); color: var(--stark-cyan); }
         .btn-sync {
             background: transparent;
             border: 1px solid var(--stark-cyan);
@@ -2727,7 +2742,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.44</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.45</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3117,6 +3132,13 @@
     <div class="action-area">
         <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
         <button class="btn-sync" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())">REFRESH</button>
+        <select id="jarvis-lang" class="jarvis-lang-sel" title="JARVIS voice language">
+            <option value="auto">AUTO</option>
+            <option value="zh-TW">繁中</option>
+            <option value="zh-CN">簡中</option>
+            <option value="en-US">EN</option>
+            <option value="ja-JP">日語</option>
+        </select>
         <button class="btn-sync" id="btn-jarvis" title="JARVIS Status Report">◎ BRIEF</button>
     </div>
 </footer>
@@ -5053,19 +5075,51 @@ const GoalTemplateModule = {
 
 // ---------- JARVIS BRIEF MODULE ----------
 const JarvisModule = {
+    LS_KEY: 'gpal_jarvis_lang',
     _speaking: false,
+
+    _getLang() {
+        return localStorage.getItem(JarvisModule.LS_KEY) || 'auto';
+    },
 
     _selectVoice() {
         if (!('speechSynthesis' in window)) return null;
         const voices = window.speechSynthesis.getVoices();
-        return voices.find(v => v.lang === 'zh-TW') ||
-               voices.find(v => v.lang === 'zh-HK') ||
-               voices.find(v => v.lang.startsWith('zh')) ||
-               voices.find(v => v.lang === 'en-US') ||
+        const lang = JarvisModule._getLang();
+        if (lang === 'auto') {
+            return voices.find(v => v.lang === 'zh-TW') ||
+                   voices.find(v => v.lang === 'zh-HK') ||
+                   voices.find(v => v.lang.startsWith('zh')) ||
+                   voices.find(v => v.lang === 'en-US') ||
+                   voices[0] || null;
+        }
+        return voices.find(v => v.lang === lang) ||
+               voices.find(v => v.lang.startsWith(lang.slice(0, 2))) ||
                voices[0] || null;
     },
 
+    _weatherDesc(code) {
+        const lang = JarvisModule._getLang();
+        const isEn = lang === 'en-US';
+        const isJa = lang === 'ja-JP';
+        const map = [
+            [0,   isEn ? 'clear sky'      : isJa ? '快晴'    : '晴天'],
+            [2,   isEn ? 'partly cloudy'  : isJa ? '晴れ時々曇り' : '多雲時晴'],
+            [3,   isEn ? 'overcast'       : isJa ? '曇り'    : '陰天'],
+            [49,  isEn ? 'foggy'          : isJa ? '霧'      : '有霧'],
+            [67,  isEn ? 'rainy'          : isJa ? '雨'      : '下雨'],
+            [77,  isEn ? 'snowy'          : isJa ? '雪'      : '下雪'],
+            [82,  isEn ? 'showers'        : isJa ? 'にわか雨' : '陣雨'],
+            [99,  isEn ? 'thunderstorm'   : isJa ? '雷雨'    : '雷暴'],
+        ];
+        for (const [max, desc] of map) { if (code <= max) return desc; }
+        return isEn ? 'unknown' : '未知';
+    },
+
     _buildReport() {
+        const lang = JarvisModule._getLang();
+        const isEn = lang === 'en-US';
+        const isJa = lang === 'ja-JP';
         const date = (DOM.datePicker && DOM.datePicker.value) || Utils.todayISO();
         const raw = GoalModule.allData[State.memberIdx] || '';
         const lines = raw.split('\n').filter(l => l.trim() && /^\[[ x]\]/.test(l));
@@ -5076,24 +5130,47 @@ const JarvisModule = {
         const doneTexts = done.map(clean).filter(Boolean);
         const pendingTexts = pending.map(clean).filter(Boolean);
         const d = new Date(date + 'T12:00:00');
-        const dateStr = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
         const member = MemberMgr.names[State.memberIdx] || 'A';
 
-        let report = `JARVIS 系統匯報。${member} 的任務狀態。日期：${dateStr}。`;
-        if (lines.length) {
-            report += ` 任務完成率：${pct}%。`;
-            if (doneTexts.length) report += ` 已完成：${doneTexts.join('、')}。`;
-            if (pendingTexts.length) report += ` 待完成：${pendingTexts.join('、')}。`;
+        let report = '';
+        if (isEn) {
+            const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            const dateStr = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+            report = `JARVIS status report. ${member}'s mission status. Date: ${dateStr}. `;
+            if (lines.length) {
+                report += `Mission completion: ${pct} percent. `;
+                if (doneTexts.length) report += `Completed: ${doneTexts.join(', ')}. `;
+                if (pendingTexts.length) report += `Pending: ${pendingTexts.join(', ')}. `;
+            } else { report += `No tasks set for today. `; }
+            const w = window._gpalWeather;
+            if (w) report += `Weather: ${JarvisModule._weatherDesc(w.code)}, ${w.temp} degrees Celsius. `;
+            try { const h = HealthModule.load(date); if (h && (h.water || h.sleep || h.exercise)) { report += `Health: ${h.water} cups of water, ${h.sleep} hours sleep, ${h.exercise} minutes exercise. `; } } catch {}
+            report += `All systems nominal. End of report.`;
+        } else if (isJa) {
+            const dateStr = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+            report = `JARVISシステムレポート。${member}のミッション状況。日付：${dateStr}。`;
+            if (lines.length) {
+                report += `タスク完了率：${pct}%。`;
+                if (doneTexts.length) report += `完了：${doneTexts.join('、')}。`;
+                if (pendingTexts.length) report += `未完了：${pendingTexts.join('、')}。`;
+            } else { report += `本日のタスクはまだ設定されていません。`; }
+            const w = window._gpalWeather;
+            if (w) report += `天気：${JarvisModule._weatherDesc(w.code)}、気温${w.temp}度。`;
+            report += `全システム正常。レポート終了。`;
         } else {
-            report += ` 今日尚未設定任何任務。`;
+            // zh-TW / zh-CN / auto
+            const dateStr = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+            report = `JARVIS 系統匯報。${member} 的任務狀態。日期：${dateStr}。`;
+            if (lines.length) {
+                report += `任務完成率：${pct}%。`;
+                if (doneTexts.length) report += `已完成：${doneTexts.join('、')}。`;
+                if (pendingTexts.length) report += `待完成：${pendingTexts.join('、')}。`;
+            } else { report += `今日尚未設定任何任務。`; }
+            const w = window._gpalWeather;
+            if (w) report += `天氣狀況：${JarvisModule._weatherDesc(w.code)}，氣溫 ${w.temp} 度。`;
+            try { const h = HealthModule.load(date); if (h && (h.water > 0 || h.sleep > 0 || h.exercise > 0)) { report += `健康數據：飲水 ${h.water} 杯，睡眠 ${h.sleep} 小時，運動 ${h.exercise} 分鐘。`; } } catch {}
+            report += `所有系統正常。匯報完畢。`;
         }
-        try {
-            const h = HealthModule.load(date);
-            if (h && (h.water > 0 || h.sleep > 0 || h.exercise > 0)) {
-                report += ` 健康數據：飲水 ${h.water} 杯，睡眠 ${h.sleep} 小時，運動 ${h.exercise} 分鐘。`;
-            }
-        } catch {}
-        report += ` 所有系統正常。匯報完畢。`;
         return report;
     },
 
@@ -5101,21 +5178,25 @@ const JarvisModule = {
         if (!('speechSynthesis' in window)) { Utils.setStatus('SPEECH_NOT_SUPPORTED', 'error'); return; }
         if (this._speaking) { this.stop(); return; }
         window.speechSynthesis.cancel();
-        const text = this._buildReport();
-        const utt = new SpeechSynthesisUtterance(text);
-        const voice = this._selectVoice();
-        if (voice) utt.voice = voice;
-        utt.rate = 0.88; utt.pitch = 0.85; utt.volume = 1;
-        const cleanup = () => {
-            JarvisModule._speaking = false;
+        const utt = new SpeechSynthesisUtterance(this._buildReport());
+        // Voices may not be loaded yet — retry once
+        const doSpeak = () => {
+            const voice = JarvisModule._selectVoice();
+            if (voice) utt.voice = voice;
+            utt.rate = 0.88; utt.pitch = 0.85; utt.volume = 1;
+            const cleanup = () => {
+                JarvisModule._speaking = false;
+                const btn = document.getElementById('btn-jarvis');
+                if (btn) btn.textContent = '◎ BRIEF';
+            };
+            utt.onend = cleanup; utt.onerror = cleanup;
+            window.speechSynthesis.speak(utt);
+            JarvisModule._speaking = true;
             const btn = document.getElementById('btn-jarvis');
-            if (btn) btn.textContent = '◎ BRIEF';
+            if (btn) btn.textContent = '◉ STOP';
         };
-        utt.onend = cleanup; utt.onerror = cleanup;
-        window.speechSynthesis.speak(utt);
-        this._speaking = true;
-        const btn = document.getElementById('btn-jarvis');
-        if (btn) btn.textContent = '◉ STOP';
+        if (window.speechSynthesis.getVoices().length) { doSpeak(); }
+        else { window.speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true }); }
     },
 
     stop() {
@@ -5602,6 +5683,16 @@ const Events = {
         // JARVIS BRIEF 事件
         const btnJarvis = document.getElementById('btn-jarvis');
         if (btnJarvis) btnJarvis.addEventListener('click', () => JarvisModule.speak());
+
+        const jarvisLang = document.getElementById('jarvis-lang');
+        if (jarvisLang) {
+            // 恢復上次選擇
+            const saved = localStorage.getItem(JarvisModule.LS_KEY);
+            if (saved) jarvisLang.value = saved;
+            jarvisLang.addEventListener('change', () => {
+                localStorage.setItem(JarvisModule.LS_KEY, jarvisLang.value);
+            });
+        }
 
         // HABIT TRACKER 事件
         const habitList = document.getElementById('habit-list');
@@ -6901,6 +6992,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const res  = await fetch(`${CONFIG.WEB_APP_URL}?type=weather`);
             const data = await res.json();
             if (data.temp != null) {
+                window._gpalWeather = { temp: data.temp, code: data.code };
                 el.innerHTML = `<span class="w-icon">${weatherIcon(data.code)}</span><span class="w-temp">${data.temp}°C</span>`;
                 return;
             }
@@ -6911,7 +7003,9 @@ window.addEventListener('DOMContentLoaded', () => {
             const wRes  = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.8&longitude=-122.3&current=temperature_2m,weather_code&temperature_unit=celsius&timezone=auto');
             const wData = await wRes.json();
             const cur   = wData.current;
-            el.innerHTML = `<span class="w-icon">${weatherIcon(cur.weather_code)}</span><span class="w-temp">${Math.round(cur.temperature_2m)}°C</span>`;
+            const temp  = Math.round(cur.temperature_2m);
+            window._gpalWeather = { temp, code: cur.weather_code };
+            el.innerHTML = `<span class="w-icon">${weatherIcon(cur.weather_code)}</span><span class="w-temp">${temp}°C</span>`;
         } catch(e) {
             el.textContent = '';
         }
@@ -6954,7 +7048,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605221800';
+    const CURRENT_VERSION = '202605221900';
     async function checkVersion() {
         try {
             // 只抓前 500 字節（version tag 在 <head> 裡），比下載整頁快 10x+

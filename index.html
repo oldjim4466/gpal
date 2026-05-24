@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605221500">
+    <meta name="version" content="202605221530">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.39</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.40</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -546,9 +546,25 @@
         .mc-time.urgent { color: var(--stark-red); animation: lt-pulse 1s ease-in-out infinite; }
         .mc-btn { font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700; background: transparent; border: 1px solid rgba(255,204,0,0.3); color: rgba(255,204,0,0.6); padding: 2px 6px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; outline: none; }
         .mc-btn:hover { border-color: var(--stark-gold); color: var(--stark-gold); }
-        .clock-start-btn { font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700; color: rgba(255,204,0,0.4); border: 1px solid rgba(255,204,0,0.2); background: transparent; padding: 1px 5px; cursor: pointer; transition: all 0.2s; user-select: none; }
-        .clock-start-btn:hover { color: var(--stark-gold); border-color: var(--stark-gold); }
-        .clock-start-btn.empty { opacity: 0.2; cursor: default; pointer-events: none; }
+        .clock-start-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 900;
+            color: rgba(255,204,0,0.45); border: 1px solid rgba(255,204,0,0.25);
+            background: rgba(255,204,0,0.03); padding: 2px 7px;
+            cursor: pointer; user-select: none; letter-spacing: 1px;
+            clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
+            position: relative; overflow: hidden;
+            transition: all 0.2s var(--easing-cyber);
+        }
+        .clock-start-btn::before {
+            content: ''; position: absolute; top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,204,0,0.3), transparent);
+            transition: left 0.4s;
+        }
+        .clock-start-btn:hover::before { left: 200%; }
+        .clock-start-btn:hover { color: var(--stark-gold); border-color: var(--stark-gold); background: rgba(255,204,0,0.08); box-shadow: 0 0 8px rgba(255,204,0,0.25); }
+        .clock-start-btn:active { transform: scale(0.95); }
+        .clock-start-btn.empty { opacity: 0.12; cursor: default; pointer-events: none; }
         .plan-row.clocking { border-left-color: var(--stark-gold) !important; animation: clock-pulse 2s ease-in-out infinite; }
         @keyframes clock-pulse { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 0 3px rgba(255,204,0,0.12)} }
 
@@ -2641,7 +2657,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.39</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.40</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -6424,7 +6440,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605221500';
+    const CURRENT_VERSION = '202605221530';
     async function checkVersion() {
         try {
             // 只抓前 500 字節（version tag 在 <head> 裡），比下載整頁快 10x+

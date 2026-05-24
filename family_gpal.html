@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605221700">
+    <meta name="version" content="202605221730">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.42</title>
+    <title>GPAL FAMILY v1.43</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1519,7 +1519,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.42</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.43</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -1564,13 +1564,6 @@
             <button class="btn-lt-add" id="btn-lt-add">+ ADD</button>
         </div>
         <div id="lt-goal-list" class="lt-goal-list"></div>
-    </section>
-    <section class="gpal-card habit-card">
-        <div class="card-header">
-            <h2>[ 01H ] HABIT_TRACKER</h2>
-            <button class="btn-habit-add" id="btn-habit-add">+ ADD</button>
-        </div>
-        <div id="habit-list" class="habit-list"></div>
     </section>
     <section class="gpal-card">
         <div class="card-header">
@@ -1663,6 +1656,14 @@
             </div>
         </div>
     </div>
+
+    <section class="gpal-card habit-card">
+        <div class="card-header">
+            <h2>[ 01H ] HABIT_TRACKER</h2>
+            <button class="btn-habit-add" id="btn-habit-add">+ ADD</button>
+        </div>
+        <div id="habit-list" class="habit-list"></div>
+    </section>
 </main>
 
 <footer>
@@ -3615,7 +3616,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = '202605221700';
+    const CURRENT_VERSION = '202605221730';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

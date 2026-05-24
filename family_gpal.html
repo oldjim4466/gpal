@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605221900">
+    <meta name="version" content="202605221930">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.45</title>
+    <title>GPAL FAMILY v1.46</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -442,8 +442,9 @@
             padding-left: 8px;
             margin-bottom: 10px;
             display: flex;
-            align-items: baseline;
-            gap: 12px;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 8px;
             position: relative;
         }
         .card-header::before {
@@ -467,6 +468,11 @@
             font-family: 'Orbitron';
             margin: 0;
             text-shadow: 0 0 12px rgba(0,242,255,0.3);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            min-width: 0;
         }
         .btn-copy-plan {
             margin-left: auto;
@@ -506,8 +512,8 @@
             color: var(--stark-gold);
             font-weight: 900;
             transition: 0.3s;
-            margin-left: auto;
-            padding-left: 24px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         textarea.auto-height {
@@ -1548,7 +1554,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.45</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.46</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3829,7 +3835,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = '202605221900';
+    const CURRENT_VERSION = '202605221930';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605221600">
+    <meta name="version" content="202605221700">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.41</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.42</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -645,6 +645,48 @@
             cursor: pointer; transition: all 0.2s; outline: none;
         }
         .btn-lt-add:hover { border-color: var(--stark-gold); color: var(--stark-gold); }
+
+        /* === HABIT TRACKER === */
+        .habit-card { border-left-color: var(--stark-green) !important; }
+        .habit-card .card-header::before { background: var(--stark-green); box-shadow: 0 0 10px rgba(0,255,136,0.5); }
+        .habit-card .card-header h2 { color: var(--stark-green); text-shadow: 0 0 12px rgba(0,255,136,0.3); }
+        .habit-list { display: flex; flex-direction: column; gap: 8px; }
+        .habit-row {
+            display: flex; align-items: center; gap: 8px; padding: 3px 0;
+            border-left: 2px solid transparent; transition: border-color 0.2s;
+            animation: slide-in 0.3s var(--easing-smooth) both;
+        }
+        .habit-row:hover { border-left-color: rgba(0,255,136,0.35); }
+        .habit-name-input {
+            flex: 1; background: transparent; border: none; outline: none;
+            color: #fff; font-size: 1.05rem; font-family: 'Rajdhani';
+            border-bottom: 1px solid rgba(0,255,136,0.15); padding: 2px 0;
+            transition: border-color 0.2s; text-overflow: ellipsis;
+        }
+        .habit-name-input:focus { border-bottom-color: var(--stark-green); }
+        .habit-name-input::placeholder { color: rgba(255,255,255,0.25); }
+        .habit-dots { display: flex; gap: 4px; flex-shrink: 0; }
+        .habit-dot {
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 1px solid rgba(0,255,136,0.25);
+            cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+        }
+        .habit-dot.done { background: var(--stark-green); border-color: var(--stark-green); box-shadow: 0 0 5px rgba(0,255,136,0.45); }
+        .habit-dot.is-today { border-color: rgba(0,255,136,0.7); border-width: 2px; }
+        .habit-dot.done.is-today { box-shadow: 0 0 8px rgba(0,255,136,0.7); }
+        .habit-dot:hover:not(.done) { background: rgba(0,255,136,0.15); border-color: var(--stark-green); }
+        .habit-streak {
+            font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
+            color: rgba(0,255,136,0.6); white-space: nowrap; min-width: 28px;
+        }
+        .btn-habit-add {
+            margin-left: auto; background: transparent;
+            border: 1px solid rgba(0,255,136,0.25); color: rgba(0,255,136,0.5);
+            font-family: 'Orbitron', sans-serif; font-size: 0.42rem;
+            font-weight: 700; letter-spacing: 1px; padding: 2px 8px;
+            cursor: pointer; transition: all 0.2s; outline: none;
+        }
+        .btn-habit-add:hover { border-color: var(--stark-green); color: var(--stark-green); }
         .goal-row {
             display: flex;
             align-items: center;
@@ -2657,7 +2699,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.41</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.42</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2702,6 +2744,13 @@
             <button class="btn-lt-add" id="btn-lt-add">+ ADD</button>
         </div>
         <div id="lt-goal-list" class="lt-goal-list"></div>
+    </section>
+    <section class="gpal-card habit-card">
+        <div class="card-header">
+            <h2>[ 01H ] HABIT_TRACKER</h2>
+            <button class="btn-habit-add" id="btn-habit-add">+ ADD</button>
+        </div>
+        <div id="habit-list" class="habit-list"></div>
     </section>
     <section class="gpal-card">
         <div class="card-header">
@@ -4179,7 +4228,8 @@ function switchMember(idx) {
     ActionModule.renderCurrent();
     LearnModule.renderCurrent();
     LongTermModule.render();
-    StreakModule.render(); // 切換成員後顯示該成員的 streak
+    HabitModule.render();
+    StreakModule.render();
 }
 
 // ---------- LONGTERM GOAL MODULE ----------
@@ -4628,6 +4678,208 @@ const StreakModule = {
             }
         }
         el.title = 'Best: ' + (s.best || 0) + 'D · Threshold: ' + Math.round((s.threshold || 0.7) * 100) + '%';
+    },
+};
+
+// ---------- HABIT TRACKER MODULE ----------
+const HabitModule = {
+    LS_KEY: 'gpal_habits',
+    data: {},          // { memberName: [{id,name,logs:{date:true}}] }
+    _saveTimer: null,
+    _dataVersion: 0,
+    _lastRenderedKey: null,
+
+    currentHabits() {
+        const name = MemberMgr.names[State.memberIdx];
+        if (!Array.isArray(HabitModule.data[name])) HabitModule.data[name] = [];
+        return HabitModule.data[name];
+    },
+
+    // 最近 N 天（包括今天）的 ISO 日期陣列
+    _recentDays(n = 7) {
+        const today = Utils.todayISO();
+        const days = [];
+        for (let i = n - 1; i >= 0; i--) {
+            const d = new Date(today + 'T12:00:00');
+            d.setDate(d.getDate() - i);
+            days.push(d.getFullYear() + '-' + Utils.pad2(d.getMonth() + 1) + '-' + Utils.pad2(d.getDate()));
+        }
+        return days;
+    },
+
+    // 計算連續打卡天數（從今天往前）
+    getStreak(habit) {
+        const today = Utils.todayISO();
+        let streak = 0;
+        const d = new Date(today + 'T12:00:00');
+        while (streak < 365) {
+            const ds = d.getFullYear() + '-' + Utils.pad2(d.getMonth() + 1) + '-' + Utils.pad2(d.getDate());
+            if (!habit.logs[ds]) break;
+            streak++;
+            d.setDate(d.getDate() - 1);
+        }
+        return streak;
+    },
+
+    // 清理超過 90 天的舊記錄
+    _pruneLogs(habit) {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 90);
+        const cutoffStr = cutoff.getFullYear() + '-' + Utils.pad2(cutoff.getMonth() + 1) + '-' + Utils.pad2(cutoff.getDate());
+        Object.keys(habit.logs).forEach(d => { if (d < cutoffStr) delete habit.logs[d]; });
+    },
+
+    async init() {
+        try {
+            const cached = JSON.parse(localStorage.getItem(HabitModule.LS_KEY) || 'null');
+            if (cached && typeof cached === 'object') HabitModule.data = cached;
+        } catch {}
+        HabitModule.render();
+        try {
+            const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=habit`);
+            const json = await res.json();
+            if (json.habits && typeof json.habits === 'object' && json.found !== false) {
+                HabitModule.data = json.habits;
+                HabitModule._dataVersion++;
+                try { localStorage.setItem(HabitModule.LS_KEY, JSON.stringify(HabitModule.data)); } catch {}
+                HabitModule.render();
+            }
+        } catch {}
+    },
+
+    triggerSave() {
+        HabitModule._dataVersion++;
+        HabitModule._lastRenderedKey = null;
+        try { localStorage.setItem(HabitModule.LS_KEY, JSON.stringify(HabitModule.data)); } catch {}
+        if (HabitModule._saveTimer) clearTimeout(HabitModule._saveTimer);
+        HabitModule._saveTimer = setTimeout(async () => {
+            try {
+                const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ type: 'habit', data: HabitModule.data })
+                });
+                const json = await res.json();
+                if (!json.success) throw new Error('save failed');
+            } catch {
+                Utils.setStatus('HABIT_SAVE_ERR · LOCAL_SAVED', 'error');
+            }
+        }, 3000);
+    },
+
+    render() {
+        const listEl = document.getElementById('habit-list');
+        if (!listEl) return;
+
+        // 快取：相同資料不重建
+        const cacheKey = `${State.memberIdx}|${HabitModule._dataVersion}`;
+        if (cacheKey === HabitModule._lastRenderedKey) return;
+        HabitModule._lastRenderedKey = cacheKey;
+
+        const habits = HabitModule.currentHabits();
+        const days = HabitModule._recentDays(7);
+        const today = Utils.todayISO();
+
+        listEl.replaceChildren();
+        if (!habits.length) return;
+
+        const frag = document.createDocumentFragment();
+        habits.forEach(habit => {
+            const row = document.createElement('div');
+            row.className = 'habit-row';
+            row.dataset.habitId = habit.id;
+
+            // 名稱輸入
+            const nameEl = document.createElement('input');
+            nameEl.type = 'text';
+            nameEl.className = 'habit-name-input';
+            nameEl.value = habit.name;
+            nameEl.placeholder = 'Habit name...';
+            nameEl.dataset.role = 'habit-name';
+
+            // 7個打卡點
+            const dotsEl = document.createElement('div');
+            dotsEl.className = 'habit-dots';
+            days.forEach(day => {
+                const dot = document.createElement('div');
+                dot.className = 'habit-dot' +
+                    (habit.logs[day] ? ' done' : '') +
+                    (day === today ? ' is-today' : '');
+                dot.dataset.role = 'habit-dot';
+                dot.dataset.date = day;
+                dot.title = day;
+                dotsEl.appendChild(dot);
+            });
+
+            // 連續天數
+            const streakEl = document.createElement('span');
+            streakEl.className = 'habit-streak';
+            const s = HabitModule.getStreak(habit);
+            streakEl.textContent = s > 0 ? (s >= 7 ? '🔥' : '✦') + s + 'd' : '';
+
+            // 刪除
+            const delBtn = document.createElement('div');
+            delBtn.className = 'del-btn';
+            delBtn.textContent = 'X';
+            delBtn.dataset.role = 'habit-del';
+
+            row.append(nameEl, dotsEl, streakEl, delBtn);
+            frag.appendChild(row);
+        });
+        listEl.appendChild(frag);
+    },
+
+    add() {
+        const habits = HabitModule.currentHabits();
+        habits.push({ id: 'h_' + Date.now(), name: '', logs: {} });
+        HabitModule.triggerSave();
+        HabitModule.render();
+        const listEl = document.getElementById('habit-list');
+        listEl?.lastElementChild?.querySelector('[data-role=habit-name]')?.focus();
+    },
+
+    handleClick(e) {
+        const row = e.target.closest('.habit-row');
+        if (!row) return;
+        const id = row.dataset.habitId;
+        const habits = HabitModule.currentHabits();
+        const idx = habits.findIndex(h => h.id === id);
+        if (idx < 0) return;
+        const role = e.target.dataset.role;
+
+        if (role === 'habit-dot') {
+            const date = e.target.dataset.date;
+            if (!habits[idx].logs) habits[idx].logs = {};
+            if (habits[idx].logs[date]) {
+                delete habits[idx].logs[date];
+            } else {
+                habits[idx].logs[date] = true;
+                HabitModule._pruneLogs(habits[idx]);
+            }
+            // 直接更新 dot（不重建整個 list）
+            e.target.classList.toggle('done', !!habits[idx].logs[date]);
+            // 更新 streak span
+            const streakEl = row.querySelector('.habit-streak');
+            if (streakEl) {
+                const s = HabitModule.getStreak(habits[idx]);
+                streakEl.textContent = s > 0 ? (s >= 7 ? '🔥' : '✦') + s + 'd' : '';
+            }
+            HabitModule.triggerSave();
+        } else if (role === 'habit-del') {
+            if (confirm('DELETE THIS HABIT?')) {
+                habits.splice(idx, 1);
+                HabitModule.triggerSave();
+                HabitModule.render();
+            }
+        }
+    },
+
+    handleInput(e) {
+        const row = e.target.closest('.habit-row');
+        if (!row || e.target.dataset.role !== 'habit-name') return;
+        const id = row.dataset.habitId;
+        const habit = HabitModule.currentHabits().find(h => h.id === id);
+        if (habit) { habit.name = e.target.value; HabitModule.triggerSave(); }
     },
 };
 
@@ -5099,6 +5351,15 @@ const Events = {
                 SaveQueue.trigger();
             });
         });
+
+        // HABIT TRACKER 事件
+        const habitList = document.getElementById('habit-list');
+        if (habitList) {
+            habitList.addEventListener('click', HabitModule.handleClick);
+            habitList.addEventListener('input', HabitModule.handleInput);
+        }
+        const btnHabitAdd = document.getElementById('btn-habit-add');
+        if (btnHabitAdd) btnHabitAdd.addEventListener('click', () => HabitModule.add());
 
         // LONGTERM GOAL 事件
         const ltList = document.getElementById('lt-goal-list');
@@ -6423,8 +6684,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     MemberMgr.init();
     LongTermModule.init();
-    MissionClockModule.init(); // 綁定 visibilitychange（手機後台恢復計時同步）
-    StreakModule.init();        // 從 localStorage 載入 streak 資料
+    HabitModule.init();
+    MissionClockModule.init();
+    StreakModule.init();
     Events.init();
     HealthModule.bindEvents();
     HealthModule.render(DOM.datePicker.value);
@@ -6440,7 +6702,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605221600';
+    const CURRENT_VERSION = '202605221700';
     async function checkVersion() {
         try {
             // 只抓前 500 字節（version tag 在 <head> 裡），比下載整頁快 10x+

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605222100">
+    <meta name="version" content="202605222130">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.48</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.49</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2763,7 +2763,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.48</span></div>
+    <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.49</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -4372,11 +4372,21 @@ const LongTermModule = {
         const goals = LongTermModule.currentGoals();
         const today = Utils.todayISO();
 
-        // Bug3 修復：先檢查是否有到期項目，有才改資料並 save
+        // 到期自動完成：先更新版本號再做快取比對，確保重渲染
         const autoChanged = goals.some(g => !g.done && g.deadline && g.deadline <= today);
         if (autoChanged) {
             goals.forEach(g => { if (!g.done && g.deadline && g.deadline <= today) g.done = true; });
-            LongTermModule.triggerSave();
+            LongTermModule._dataVersion++; // 直接遞增（不走完整 triggerSave）
+            try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
+            // 延遲雲端保存（debounce）
+            if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
+            LongTermModule._saveTimer = setTimeout(async () => {
+                try {
+                    const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'longterm', data: LongTermModule.data }) });
+                    const json = await res.json();
+                    if (!json.success) throw new Error('save failed');
+                } catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
+            }, 3000);
         }
 
         // 快取比對：用版本號（比 JSON.stringify 快）
@@ -4454,11 +4464,11 @@ const LongTermModule = {
         const goals = LongTermModule.currentGoals();
         const newGoal = { id: 'lt_' + Date.now(), text: '', deadline: '', done: false };
         goals.push(newGoal);
+        LongTermModule.triggerSave(); // 先更新版本號，確保 render 不被快取跳過
         LongTermModule.render();
         const listEl = document.getElementById('lt-goal-list');
         const lastInput = listEl?.lastElementChild?.querySelector('[data-role=lt-text]');
         if (lastInput) lastInput.focus();
-        LongTermModule.triggerSave();
     },
 
     // 事件處理（由 Events.init 委托）
@@ -4497,8 +4507,8 @@ const LongTermModule = {
             LongTermModule.triggerSave();
         } else if (role === 'lt-del') {
             goals.splice(idx, 1);
-            LongTermModule.render();
-            LongTermModule.triggerSave();
+            LongTermModule.triggerSave(); // 先更新版本號
+            LongTermModule.render();      // 再渲染（快取一定失效）
         }
     },
     handleInput(e) {
@@ -7072,7 +7082,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605222100';
+    const CURRENT_VERSION = '202605222130';
     async function checkVersion() {
         try {
             // 只抓前 500 字節（version tag 在 <head> 裡），比下載整頁快 10x+

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605221400">
+    <meta name="version" content="202605221500">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.38</title>
+    <title>GPAL FAMILY v1.39</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -530,6 +530,34 @@
 
         /* === MISSION GOAL === */
         .goal-list { display: flex; flex-direction: column; gap: 8px; }
+
+        /* === MISSION CLOCK === */
+        .mission-clock-bar {
+            background: rgba(255,204,0,0.05); border: 1px solid rgba(255,204,0,0.3);
+            border-left: 3px solid var(--stark-gold); padding: 8px 10px; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px; border-radius: 2px;
+        }
+        .mc-info { flex: 1; min-width: 0; }
+        .mc-label { font-family: 'Orbitron', sans-serif; font-size: 0.38rem; color: var(--stark-gold); letter-spacing: 2px; opacity: 0.7; }
+        .mc-task-name { font-size: 0.85rem; font-family: 'Rajdhani', sans-serif; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mc-progress-wrap { width: 80px; height: 3px; background: rgba(255,204,0,0.15); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+        .mc-progress-bar { height: 100%; background: var(--stark-gold); box-shadow: 0 0 6px rgba(255,204,0,0.5); transition: width 1s linear; }
+        .mc-time { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 900; color: var(--stark-gold); letter-spacing: 2px; flex-shrink: 0; min-width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
+        .mc-time.urgent { color: var(--stark-red); animation: lt-pulse 1s ease-in-out infinite; }
+        .mc-btn { font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700; background: transparent; border: 1px solid rgba(255,204,0,0.3); color: rgba(255,204,0,0.6); padding: 2px 6px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; outline: none; }
+        .mc-btn:hover { border-color: var(--stark-gold); color: var(--stark-gold); }
+        .clock-start-btn { font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700; color: rgba(255,204,0,0.4); border: 1px solid rgba(255,204,0,0.2); background: transparent; padding: 1px 5px; cursor: pointer; transition: all 0.2s; user-select: none; }
+        .clock-start-btn:hover { color: var(--stark-gold); border-color: var(--stark-gold); }
+        .clock-start-btn.empty { opacity: 0.2; cursor: default; pointer-events: none; }
+        .plan-row.clocking { border-left-color: var(--stark-gold) !important; animation: clock-pulse 2s ease-in-out infinite; }
+        @keyframes clock-pulse { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 0 3px rgba(255,204,0,0.12)} }
+
+        /* === STREAK === */
+        .streak-display { font-family: 'Orbitron', sans-serif; font-size: 0.42rem; font-weight: 700; letter-spacing: 1px; margin-left: 6px; flex-shrink: 0; transition: all 0.3s; }
+        .streak-display.hot { color: var(--stark-gold); }
+        .streak-display.cold { color: rgba(255,255,255,0.25); }
+        .streak-milestone { animation: streak-burst 0.5s ease-out; }
+        @keyframes streak-burst { 0%{transform:scale(1.6)} 100%{transform:scale(1)} }
 
         /* === LONGTERM GOAL === */
         .lt-card { border-left-color: var(--stark-gold) !important; }
@@ -1455,7 +1483,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.38</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.39</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -1484,6 +1512,16 @@
     <div class="member-bar">
         <div id="member-switcher" class="member-switcher"></div>
     </div>
+    <div id="mission-clock-bar" class="mission-clock-bar" style="display:none;">
+        <div class="mc-info">
+            <div class="mc-label">MISSION CLOCK</div>
+            <div class="mc-task-name" id="mc-task-name">—</div>
+        </div>
+        <div class="mc-progress-wrap"><div class="mc-progress-bar" id="mc-progress-bar" style="width:100%"></div></div>
+        <div class="mc-time" id="mc-time">25:00</div>
+        <button class="mc-btn" id="mc-pause-btn" onclick="MissionClockModule.togglePause()">PAUSE</button>
+        <button class="mc-btn" onclick="MissionClockModule.stop()">■</button>
+    </div>
     <section class="gpal-card lt-card">
         <div class="card-header">
             <h2>[ 01L ] LONGTERM_GOAL</h2>
@@ -1495,6 +1533,7 @@
         <div class="card-header">
             <h2>[ 01 ] MISSION_GOAL</h2>
             <div id="progress-display" class="progress-stats">[ 0% ]</div>
+            <div id="streak-display" class="streak-display cold">⚡ 0D</div>
         </div>
         <div id="goal-list" class="goal-list"></div>
     </section>
@@ -2105,7 +2144,13 @@ const PlanModule = {
         copyBtn.dataset.role = 'copy-item';
         copyBtn.title = 'Copy this item';
 
-        actions.append(addBtn, locEdit, locTagGroup, copyBtn, delBtn);
+        const clockBtn = document.createElement('div');
+        clockBtn.className = 'clock-start-btn' + (text ? '' : ' empty');
+        clockBtn.textContent = '▶';
+        clockBtn.dataset.role = 'clock-start';
+        clockBtn.title = 'Start Mission Clock';
+
+        actions.append(addBtn, locEdit, locTagGroup, copyBtn, clockBtn, delBtn);
         row.append(timeRow, input, actions);
         parent.appendChild(row);
         return row;
@@ -2474,6 +2519,7 @@ function switchMember(idx) {
     ActionModule.renderCurrent();
     LearnModule.renderCurrent();
     LongTermModule.render();
+    StreakModule.render();
 }
 
 // ---------- LONGTERM GOAL MODULE ----------
@@ -2656,6 +2702,178 @@ const LongTermModule = {
     },
 };
 
+// ---------- MISSION CLOCK MODULE ----------
+const MissionClockModule = {
+    DURATION: 25 * 60 * 1000,
+    startTs: null, pausedMs: 0, pauseStart: null,
+    taskName: '', activeRow: null, _tickTimer: null,
+
+    get isRunning() { return this.startTs !== null && this.pauseStart === null; },
+    get isPaused()  { return this.startTs !== null && this.pauseStart !== null; },
+    get isIdle()    { return this.startTs === null; },
+
+    getElapsed() {
+        if (this.isIdle) return 0;
+        const pausedTotal = this.pausedMs + (this.pauseStart ? Date.now() - this.pauseStart : 0);
+        return (Date.now() - this.startTs) - pausedTotal;
+    },
+    getRemaining() { return Math.max(0, this.DURATION - this.getElapsed()); },
+
+    start(taskName, row) {
+        MissionClockModule.stop();
+        MissionClockModule.taskName = taskName;
+        MissionClockModule.activeRow = row;
+        MissionClockModule.startTs = Date.now();
+        MissionClockModule.pausedMs = 0;
+        MissionClockModule.pauseStart = null;
+        if (row) row.classList.add('clocking');
+        const bar = document.getElementById('mission-clock-bar');
+        if (bar) bar.style.display = 'flex';
+        const tn = document.getElementById('mc-task-name');
+        if (tn) tn.textContent = taskName;
+        const pb = document.getElementById('mc-pause-btn');
+        if (pb) pb.textContent = 'PAUSE';
+        MissionClockModule._updateUI();
+        MissionClockModule._scheduleTick();
+        if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+    },
+
+    togglePause() {
+        if (MissionClockModule.isIdle) return;
+        if (MissionClockModule.isRunning) {
+            MissionClockModule.pauseStart = Date.now();
+            const pb = document.getElementById('mc-pause-btn');
+            if (pb) pb.textContent = 'RESUME';
+            if (MissionClockModule._tickTimer) { clearTimeout(MissionClockModule._tickTimer); MissionClockModule._tickTimer = null; }
+        } else if (MissionClockModule.isPaused) {
+            MissionClockModule.pausedMs += Date.now() - MissionClockModule.pauseStart;
+            MissionClockModule.pauseStart = null;
+            const pb = document.getElementById('mc-pause-btn');
+            if (pb) pb.textContent = 'PAUSE';
+            MissionClockModule._scheduleTick();
+        }
+        MissionClockModule._updateUI();
+    },
+
+    stop() {
+        if (MissionClockModule._tickTimer) { clearTimeout(MissionClockModule._tickTimer); MissionClockModule._tickTimer = null; }
+        if (MissionClockModule.activeRow) MissionClockModule.activeRow.classList.remove('clocking');
+        MissionClockModule.startTs = null; MissionClockModule.pausedMs = 0;
+        MissionClockModule.pauseStart = null; MissionClockModule.taskName = ''; MissionClockModule.activeRow = null;
+        const bar = document.getElementById('mission-clock-bar');
+        if (bar) bar.style.display = 'none';
+        const timeEl = document.getElementById('mc-time');
+        if (timeEl) { timeEl.textContent = '25:00'; timeEl.classList.remove('urgent'); }
+        const progEl = document.getElementById('mc-progress-bar');
+        if (progEl) progEl.style.width = '100%';
+    },
+
+    finish() {
+        const taskName = MissionClockModule.taskName;
+        MissionClockModule.stop();
+        Utils.setStatus('MISSION COMPLETE ✓', 'success');
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(255,204,0,0.08);pointer-events:none;z-index:9999;transition:opacity 0.6s;';
+        document.body.appendChild(overlay);
+        setTimeout(() => { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 600); }, 200);
+        if ('Notification' in window && Notification.permission === 'granted') {
+            try { new Notification('✓ MISSION COMPLETE', { body: taskName, silent: false }); } catch {}
+        }
+    },
+
+    _scheduleTick() {
+        if (MissionClockModule._tickTimer) clearTimeout(MissionClockModule._tickTimer);
+        if (!MissionClockModule.isRunning) return;
+        MissionClockModule._tickTimer = setTimeout(() => {
+            MissionClockModule._updateUI();
+            if (MissionClockModule.getRemaining() <= 0) MissionClockModule.finish();
+            else MissionClockModule._scheduleTick();
+        }, 500);
+    },
+
+    _updateUI() {
+        const remaining = MissionClockModule.getRemaining();
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        const timeEl = document.getElementById('mc-time');
+        const progEl = document.getElementById('mc-progress-bar');
+        if (timeEl) { timeEl.textContent = Utils.pad2(mins) + ':' + Utils.pad2(secs); timeEl.classList.toggle('urgent', remaining < 5 * 60 * 1000 && remaining > 0); }
+        if (progEl) progEl.style.width = (remaining / MissionClockModule.DURATION * 100) + '%';
+    },
+
+    onVisibilityChange() {
+        if (document.hidden || MissionClockModule.isIdle) return;
+        if (MissionClockModule.getRemaining() <= 0) MissionClockModule.finish();
+        else if (MissionClockModule.isRunning) { MissionClockModule._updateUI(); MissionClockModule._scheduleTick(); }
+    },
+
+    init() { document.addEventListener('visibilitychange', MissionClockModule.onVisibilityChange); },
+};
+
+// ---------- STREAK MODULE ----------
+const StreakModule = {
+    LS_KEY: 'gpal_streak',
+    data: {},
+
+    getMember(name) {
+        if (!StreakModule.data[name]) StreakModule.data[name] = { current: 0, best: 0, lastDate: '', graceUsed: false, graceMonth: '', threshold: 0.7 };
+        return StreakModule.data[name];
+    },
+
+    init() {
+        try {
+            const cached = JSON.parse(localStorage.getItem(StreakModule.LS_KEY) || 'null');
+            if (cached && typeof cached === 'object') StreakModule.data = cached;
+        } catch {}
+        StreakModule.render();
+    },
+
+    save() { try { localStorage.setItem(StreakModule.LS_KEY, JSON.stringify(StreakModule.data)); } catch {} },
+
+    checkAndUpdate(date) {
+        if (!date || date !== Utils.todayISO()) return;
+        const name = MemberMgr.names[State.memberIdx];
+        const s = StreakModule.getMember(name);
+        const raw = GoalModule.allData[State.memberIdx] || '';
+        const lines = raw.split('\n').filter(l => l.trim() && /^\[[ x]\]/.test(l));
+        if (!lines.length) return;
+        const doneCount = lines.filter(l => l.startsWith('[x]')).length;
+        if (doneCount / lines.length < (s.threshold || 0.7)) return;
+        const today = date;
+        if (s.lastDate === today) return;
+        const d = new Date(today + 'T12:00:00');
+        d.setDate(d.getDate() - 1);
+        const yesterday = d.getFullYear() + '-' + Utils.pad2(d.getMonth() + 1) + '-' + Utils.pad2(d.getDate());
+        const currentMonth = today.slice(0, 7);
+        if (s.lastDate === yesterday) { s.current++; }
+        else {
+            if (!s.graceUsed || s.graceMonth !== currentMonth) { s.graceUsed = true; s.graceMonth = currentMonth; if (!s.current) s.current = 1; }
+            else { s.current = 1; }
+        }
+        s.best = Math.max(s.best || 0, s.current);
+        s.lastDate = today;
+        StreakModule.data[name] = s;
+        StreakModule.save();
+        StreakModule.render();
+    },
+
+    render() {
+        const el = document.getElementById('streak-display');
+        if (!el) return;
+        const name = MemberMgr.names[State.memberIdx];
+        const s = StreakModule.getMember(name);
+        const c = s.current || 0;
+        const wasMilestone = c === 7 || c === 30 || c === 100;
+        if (c === 0) { el.textContent = '⚡ 0D'; el.className = 'streak-display cold'; }
+        else {
+            el.textContent = (c >= 7 ? '🔥' : '✦') + ' ' + c + 'D';
+            el.className = 'streak-display hot';
+            if (wasMilestone) { el.classList.add('streak-milestone'); setTimeout(() => el.classList.remove('streak-milestone'), 600); }
+        }
+        el.title = 'Best: ' + (s.best || 0) + 'D · Threshold: ' + Math.round((s.threshold || 0.7) * 100) + '%';
+    },
+};
+
 // ---------- HEALTH MODULE ----------
 const HealthModule = { load(){return{};}, save(){}, syncToCloud(){}, loadFromCloud(){}, render(){}, bindEvents(){} };
 
@@ -2768,6 +2986,7 @@ const Sync = {
                 ActionModule.parseAll(data.action || '');
                 LearnModule.parseAll(data.learn || '');
             }
+            StreakModule.checkAndUpdate(date);
 
             Utils.setStatus('STARK_OS_ONLINE', 'success');
             Utils.setConnState('online');
@@ -2873,6 +3092,7 @@ const Events = {
                 container.classList.toggle('completed', t.checked);
                 GoalModule.updateProgress();
                 SaveQueue.trigger();
+                StreakModule.checkAndUpdate(DOM.datePicker.value);
             }
         });
 
@@ -2945,6 +3165,9 @@ const Events = {
                         document.body.removeChild(ta);
                         doFeedback();
                     });
+            } else if (role === 'clock-start') {
+                const txt = row.querySelector('input[data-role=text]')?.value.trim();
+                if (txt) MissionClockModule.start(txt, row);
             } else if (role === 'del') {
                 if (confirm('DELETE THIS TASK?')) {
                     row.style.transition = 'opacity 0.2s, transform 0.2s';
@@ -2998,6 +3221,8 @@ const Events = {
             if (role === 'text') {
                 PlanModule.ensureTrailingEmpty();
                 SaveQueue.trigger();
+                const clockBtn = row?.querySelector('[data-role=clock-start]');
+                if (clockBtn) clockBtn.classList.toggle('empty', !e.target.value.trim());
             }
         });
 
@@ -3173,13 +3398,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
     MemberMgr.init();
     LongTermModule.init();
+    MissionClockModule.init();
+    StreakModule.init();
     Events.init();
     Sync.fetchData();
 
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = '202605221400';
+    const CURRENT_VERSION = '202605221500';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

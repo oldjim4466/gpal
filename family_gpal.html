@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v1.84">
+    <meta name="version" content="v1.85">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.84</title>
+    <title>GPAL FAMILY v1.85</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -200,20 +200,6 @@
             animation: spin 0.6s linear infinite;
             color: var(--stark-gold);
             border-color: var(--stark-gold);
-        }
-        /* member selector */
-        .member-selector { display: flex; gap: 4px; align-items: center; }
-        .member-btn {
-            font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
-            padding: 3px 8px; border: 1px solid rgba(0,242,255,0.25);
-            background: transparent; color: rgba(0,242,255,0.4);
-            cursor: pointer; transition: all 0.2s; outline: none; letter-spacing: 1px;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .member-btn:hover { color: var(--stark-cyan); border-color: rgba(0,242,255,0.6); }
-        .member-btn.active {
-            color: var(--stark-dark); background: var(--stark-cyan);
-            border-color: var(--stark-cyan); box-shadow: 0 0 8px rgba(0,242,255,0.5);
         }
         .conn-indicator {
             display: flex;
@@ -978,28 +964,6 @@
         .goal-input::placeholder { color: rgba(255,255,255,0.25); }
 
         /* === MEMBER SWITCHER === */
-        .member-bar { display: flex; justify-content: center; padding: 2px 0 10px; }
-        .member-switcher { display: flex; gap: 6px; }
-        .member-tab {
-            background: transparent;
-            border: 1px solid rgba(0,242,255,0.2);
-            color: rgba(0,242,255,0.35);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.55rem;
-            font-weight: 900;
-            letter-spacing: 2px;
-            padding: 4px 12px;
-            cursor: pointer;
-            transition: 0.2s;
-            outline: none;
-            white-space: nowrap;
-        }
-        .member-tab.active {
-            background: rgba(0,242,255,0.1);
-            border-color: var(--stark-cyan);
-            color: var(--stark-cyan);
-            box-shadow: 0 0 12px rgba(0,242,255,0.3);
-        }
 
         /* === STRATEGIC PLAN === */
         .plan-list { display: flex; flex-direction: column; gap: 3px; }
@@ -1156,6 +1120,15 @@
             backdrop-filter: blur(15px);
             z-index: 1000;
         }
+        .member-input {
+            font-family: 'Orbitron', sans-serif; font-size: 0.4rem; font-weight: 700;
+            background: transparent; border: 1px solid rgba(0,242,255,0.3);
+            color: var(--stark-cyan); padding: 3px 8px; width: 60px;
+            letter-spacing: 1px; outline: none; text-align: center;
+            text-transform: uppercase;
+        }
+        .member-input:focus { border-color: var(--stark-cyan); box-shadow: 0 0 6px rgba(0,242,255,0.3); }
+        .member-input::placeholder { color: rgba(0,242,255,0.25); }
         .action-area {
             padding: 0.5rem;
             padding-bottom: 1rem;
@@ -1735,12 +1708,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.84</span></div>
-    <div class="member-selector" id="member-selector">
-        <button class="member-btn" data-member="dad" onclick="MemberModule.select('dad')">DAD</button>
-        <button class="member-btn" data-member="mom" onclick="MemberModule.select('mom')">MOM</button>
-        <button class="member-btn" data-member="kid" onclick="MemberModule.select('kid')">KID</button>
-    </div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.85</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -1766,9 +1734,6 @@
 </div>
 
 <main class="main-container">
-    <div class="member-bar">
-        <div id="member-switcher" class="member-switcher"></div>
-    </div>
     <div id="mission-clock-bar" class="mission-clock-bar" style="display:none;">
         <div class="mc-info">
             <div class="mc-label">MISSION CLOCK</div>
@@ -1800,8 +1765,6 @@
         <div class="card-header"><h2>[ 02 ] STRATEGIC_PLAN</h2></div>
         <div id="plan-container">
             <div id="plan-list-0" class="plan-list"></div>
-            <div id="plan-list-1" class="plan-list" style="display:none;"></div>
-            <div id="plan-list-2" class="plan-list" style="display:none;"></div>
         </div>
     </section>
     <section class="gpal-card">
@@ -1893,6 +1856,11 @@
     <div id="spotify-bar"></div>
     <div id="sp-lyrics-bar"></div>
     <div class="action-area">
+        <input id="member-input" class="member-input" 
+            placeholder="USER" maxlength="12"
+            title="你的用戶名（每台裝置設定一次）"
+            onchange="MemberModule.set(this.value)"
+            onblur="MemberModule.set(this.value)">
         <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
         <button class="btn-refresh-icon" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())" title="Refresh page">↺</button>
         <select id="jarvis-lang" class="jarvis-lang-sel" title="JARVIS voice language">
@@ -1940,7 +1908,7 @@ const State = {
     isOnline: navigator.onLine,
     currentData: null,
     dirty: false,
-    memberIdx: 0,
+    memberIdx: 0, // fixed — single member mode
 };
 
 // ---------- DOM CACHE ----------
@@ -1949,7 +1917,7 @@ const DOM = {
     datePicker: $('datePicker'),
     goalList: $('goal-list'),
     planContainer: $('plan-container'),
-    get planList() { return document.getElementById('plan-list-' + State.memberIdx); },
+    get planList() { return document.getElementById('plan-list-0'); },
     textAction: $('textAction'),
     textLearn: $('textLearn'),
     progressDisplay: $('progress-display'),
@@ -2102,13 +2070,13 @@ const GoalModule = {
     allData: ['', '', ''],
 
     saveCurrent() {
-        GoalModule.allData[State.memberIdx] = GoalModule.serializeCurrent();
+        GoalModule.allData[0] = GoalModule.serializeCurrent();
         GoalModule._lastRendered = null;
     },
 
     _lastRendered: null,
     renderCurrent() {
-        const raw = GoalModule.allData[State.memberIdx] || '';
+        const raw = GoalModule.allData[0] || '';
         if (raw === GoalModule._lastRendered) return;
         GoalModule._lastRendered = raw;
         GoalModule.parseSingle(raw);
@@ -2146,16 +2114,14 @@ const GoalModule = {
     parseAll(raw) {
         let planObj = null;
         if (raw) { try { const p = JSON.parse(raw); if (p && p.v === 2 && p.p) planObj = p; } catch {} }
-        GoalModule.allData = MemberMgr.names.map((name, i) =>
-            planObj ? (planObj.p[name] || '') : (i === 0 ? raw || '' : '')
-        );
+        GoalModule.allData = [planObj ? (planObj.p[MemberModule.current()] || '') : (raw || '')];
         GoalModule.renderCurrent();
     },
 
     serializeAll() {
         GoalModule.saveCurrent();
         const p = {};
-        MemberMgr.names.forEach((name, i) => { p[name] = GoalModule.allData[i] || ''; });
+        p[MemberModule.current()] = GoalModule.allData[0] || '';
         return JSON.stringify({ v: 2, p });
     },
 
@@ -2246,31 +2212,25 @@ const GoalModule = {
 // ---------- PLAN MODULE ----------
 const PlanModule = {
     _rawData: null,
-    _rendered: [false, false, false],
+    _rendered: [false],
 
     saveCurrent() {
-        if (PlanModule._rendered && PlanModule._rendered[State.memberIdx]) {
-            const listEl = document.getElementById('plan-list-' + State.memberIdx);
-            if (listEl && PlanModule._rawData) {
-                PlanModule._rawData[State.memberIdx] = PlanModule.serializeSingle(listEl);
-            }
+        const listEl = document.getElementById('plan-list-0');
+        if (listEl && PlanModule._rawData) {
+            PlanModule._rawData[0] = PlanModule.serializeSingle(listEl);
         }
     },
 
     _renderOne(idx) {
-        if (PlanModule._rendered && PlanModule._rendered[idx]) return;
-        const listEl = document.getElementById('plan-list-' + idx);
+        if (PlanModule._rendered && PlanModule._rendered[0]) return;
+        const listEl = document.getElementById('plan-list-0');
         if (!listEl || !PlanModule._rawData) return;
         PlanModule.parseSingle(PlanModule._rawData[idx] || '', listEl);
-        if (PlanModule._rendered) PlanModule._rendered[idx] = true;
+        if (PlanModule._rendered) PlanModule._rendered[0] = true;
     },
 
     renderCurrent() {
-        PlanModule._renderOne(State.memberIdx);
-        for (let i = 0; i < 3; i++) {
-            const el = document.getElementById('plan-list-' + i);
-            if (el) el.style.display = i === State.memberIdx ? 'flex' : 'none';
-        }
+        PlanModule._renderOne(0);
         PlanModule.checkTimeHighlight();
     },
 
@@ -2314,24 +2274,17 @@ const PlanModule = {
                 if (parsed && parsed.v === 2 && parsed.p) planObj = parsed;
             } catch {}
         }
-        PlanModule._rawData = MemberMgr.names.map((name, i) =>
-            planObj ? (planObj.p[name] || '') : (i === 0 ? raw || '' : '')
-        );
-        PlanModule._rendered = [false, false, false];
+        PlanModule._rawData = [planObj ? (planObj.p[MemberModule.current()] || '') : (raw || '')];
+        PlanModule._rendered = [false];
         PlanModule.renderCurrent();
     },
 
     serializeAll() {
         PlanModule.saveCurrent();
         const p = {};
-        MemberMgr.names.forEach((name, i) => {
-            if (!PlanModule._rendered[i]) {
-                p[name] = PlanModule._rawData[i] || '';
-            } else {
-                const listEl = document.getElementById('plan-list-' + i);
-                p[name] = listEl ? PlanModule.serializeSingle(listEl) : (PlanModule._rawData[i] || '');
-            }
-        });
+        const mn = MemberModule.current();
+        const listEl = document.getElementById('plan-list-0');
+        p[mn] = listEl ? PlanModule.serializeSingle(listEl) : (PlanModule._rawData[0] || '');
         return JSON.stringify({ v: 2, p });
     },
 
@@ -2473,9 +2426,8 @@ const PlanModule = {
         const cur = Utils.nowTimeStr();
         const today = Utils.todayISO();
         const isToday = DOM.datePicker.value === today;
-        for (let i = 0; i < 3; i++) {
-            const listEl = document.getElementById('plan-list-' + i);
-            if (!listEl) continue;
+        const listEl = document.getElementById('plan-list-0');
+        if (listEl) {
             listEl.querySelectorAll('.plan-row').forEach(row => {
                 row.classList.remove('active-now', 'past');
                 if (!isToday) return;
@@ -2687,11 +2639,11 @@ const ActionModule = {
     _lastRendered: null,
 
     saveCurrent() {
-        ActionModule.allData[State.memberIdx] = TradeModule.serialize();
+        ActionModule.allData[0] = TradeModule.serialize();
         ActionModule._lastRendered = null;
     },
     renderCurrent() {
-        const raw = ActionModule.allData[State.memberIdx] || '';
+        const raw = ActionModule.allData[0] || '';
         if (raw === ActionModule._lastRendered) return;
         ActionModule._lastRendered = raw;
         TradeModule.loadFromAction(raw);
@@ -2699,119 +2651,45 @@ const ActionModule = {
     parseAll(raw) {
         let planObj = null;
         if (raw) { try { const p = JSON.parse(raw); if (p && p.v === 2 && p.p) planObj = p; } catch {} }
-        ActionModule.allData = MemberMgr.names.map((name, i) =>
-            planObj ? (planObj.p[name] || '') : (i === 0 ? raw || '' : '')
-        );
+        ActionModule.allData = [planObj ? (planObj.p[MemberModule.current()] || '') : (raw || '')];
         ActionModule.renderCurrent();
     },
     serializeAll() {
         ActionModule.saveCurrent();
         const p = {};
-        MemberMgr.names.forEach((name, i) => { p[name] = ActionModule.allData[i] || ''; });
+        p[MemberModule.current()] = ActionModule.allData[0] || '';
         return JSON.stringify({ v: 2, p });
     },
 };
 
 // ---------- LEARN MODULE（多人）----------
 const LearnModule = {
-    allData: ['', '', ''],
-    saveCurrent() { LearnModule.allData[State.memberIdx] = DOM.textLearn.value; },
-    renderCurrent() { DOM.textLearn.value = LearnModule.allData[State.memberIdx] || ''; Utils.adjustHeight(DOM.textLearn); },
+    allData: [''],
+    saveCurrent() { LearnModule.allData[0] = DOM.textLearn.value; },
+    renderCurrent() { DOM.textLearn.value = LearnModule.allData[0] || ''; Utils.adjustHeight(DOM.textLearn); },
     parseAll(raw) {
         let planObj = null;
         if (raw) { try { const p = JSON.parse(raw); if (p && p.v === 2 && p.p) planObj = p; } catch {} }
-        LearnModule.allData = MemberMgr.names.map((name, i) =>
-            planObj ? (planObj.p[name] || '') : (i === 0 ? raw || '' : '')
-        );
+        LearnModule.allData = [planObj ? (planObj.p[MemberModule.current()] || '') : (raw || '')];
         LearnModule.renderCurrent();
     },
     serializeAll() {
         LearnModule.saveCurrent();
         const p = {};
-        MemberMgr.names.forEach((name, i) => { p[name] = LearnModule.allData[i] || ''; });
+        p[MemberModule.current()] = LearnModule.allData[0] || '';
         return JSON.stringify({ v: 2, p });
     },
 };
 
 // ---------- MEMBER MANAGER ----------
 const MemberMgr = {
-    KEY: 'gpal_members',
-    names: ['A', 'B', 'C'],
-    init() {
-        try {
-            const saved = JSON.parse(localStorage.getItem(this.KEY));
-            if (Array.isArray(saved) && saved.length === 3) this.names = saved;
-        } catch {}
-        if (!localStorage.getItem(this.KEY)) {
-            try {
-                const old = JSON.parse(localStorage.getItem('gpal_plan_members'));
-                if (Array.isArray(old) && old.length === 3) { this.names = old; localStorage.setItem(this.KEY, JSON.stringify(this.names)); }
-            } catch {}
-        }
-        this.renderSwitcher();
-    },
-    renderSwitcher() {
-        const container = document.getElementById('member-switcher');
-        if (!container) return;
-        container.innerHTML = '';
-        this.names.forEach((name, idx) => {
-            const btn = document.createElement('button');
-            const isActive = idx === State.memberIdx;
-            btn.className = 'member-tab' + (isActive ? ' active' : '');
-            btn.title = isActive ? 'Tap to rename' : name;
-
-            const span = document.createElement('span');
-            span.textContent = isActive ? name + ' ✎' : name;
-
-            const startRename = (e) => {
-                e.stopPropagation();
-                span.textContent = name;
-                const inp = document.createElement('input');
-                inp.className = 'tab-name-input';
-                inp.value = name;
-                inp.style.cssText = 'background:transparent;border:none;color:var(--stark-cyan);font:inherit;letter-spacing:2px;outline:none;text-align:center;width:80px;';
-                span.replaceWith(inp);
-                inp.focus(); inp.select();
-                const confirm = () => {
-                    const newName = inp.value.trim() || name;
-                    MemberMgr.names[idx] = newName;
-                    try { localStorage.setItem(MemberMgr.KEY, JSON.stringify(MemberMgr.names)); } catch {}
-                    MemberMgr.renderSwitcher();
-                };
-                inp.addEventListener('blur', confirm);
-                inp.addEventListener('keydown', (ke) => {
-                    if (ke.key === 'Enter') inp.blur();
-                    if (ke.key === 'Escape') MemberMgr.renderSwitcher();
-                });
-            };
-
-            btn.onclick = (e) => {
-                if (e.target.classList.contains('tab-name-input')) return;
-                if (isActive) startRename(e);
-                else switchMember(idx);
-            };
-
-            btn.appendChild(span);
-            container.appendChild(btn);
-        });
-    },
+    get names() { return [typeof MemberModule !== 'undefined' ? MemberModule.current() : 'dad']; },
+    init() {},
+    renderSwitcher() {},
 };
 
 function switchMember(idx) {
-    if (idx === State.memberIdx) return;
-    GoalModule.saveCurrent();
-    PlanModule.saveCurrent();
-    ActionModule.saveCurrent();
-    LearnModule.saveCurrent();
-    State.memberIdx = idx;
-    MemberMgr.renderSwitcher();
-    GoalModule.renderCurrent();
-    PlanModule.renderCurrent();
-    ActionModule.renderCurrent();
-    LearnModule.renderCurrent();
-    LongTermModule.render();
-    HabitModule.render();
-    StreakModule.render();
+    Sync.fetchData();
 }
 
 // ---------- LONGTERM GOAL MODULE ----------
@@ -2823,7 +2701,7 @@ const LongTermModule = {
     _dataVersion: 0,
 
     currentGoals() {
-        const name = MemberMgr.names[State.memberIdx];
+        const name = MemberModule.current();
         if (!Array.isArray(LongTermModule.data[name])) LongTermModule.data[name] = [];
         return LongTermModule.data[name];
     },
@@ -2884,7 +2762,7 @@ const LongTermModule = {
             }, 3000);
         }
 
-        const cacheKey = `${State.memberIdx}|${LongTermModule._dataVersion}`;
+        const cacheKey = `${MemberModule.current()}|${LongTermModule._dataVersion}`;
         if (cacheKey === LongTermModule._lastRenderedKey) return;
         LongTermModule._lastRenderedKey = cacheKey;
 
@@ -3017,7 +2895,7 @@ const GoalTemplateModule = {
 
     _extractGoals() {
         GoalModule.saveCurrent();
-        const raw = GoalModule.allData[State.memberIdx] || '';
+        const raw = GoalModule.allData[0] || '';
         return raw.split('\n').filter(l => l.trim() && /^\[[ x]\]/.test(l)).map(l => {
             const prioMatch = l.match(/\((P[1-3]|NONE)\)/);
             const text = l.replace(/^\[[ x]\]\s*\((P[1-3]|NONE)\)\s*/, '').replace(/^\[[ x]\]\s*/, '').trim();
@@ -3121,13 +2999,13 @@ const JarvisModule = {
     _buildReport() {
         const lang = JarvisModule._getLang(); const isEn = lang === 'en-US'; const isJa = lang === 'ja-JP';
         const date = (DOM.datePicker && DOM.datePicker.value) || Utils.todayISO();
-        const raw = GoalModule.allData[State.memberIdx] || '';
+        const raw = GoalModule.allData[0] || '';
         const lines = raw.split('\n').filter(l => l.trim() && /^\[[ x]\]/.test(l));
         const done = lines.filter(l => l.startsWith('[x]')); const pending = lines.filter(l => l.startsWith('[ ]'));
         const pct = lines.length ? Math.round(done.length / lines.length * 100) : 0;
         const clean = l => l.replace(/^\[[ x]\]\s*\((P[1-3]|NONE)\)\s*/, '').replace(/^\[[ x]\]\s*/, '').trim();
         const doneTexts = done.map(clean).filter(Boolean); const pendingTexts = pending.map(clean).filter(Boolean);
-        const d = new Date(date + 'T12:00:00'); const member = MemberMgr.names[State.memberIdx] || 'A';
+        const d = new Date(date + 'T12:00:00'); const member = MemberModule.current() || 'A';
         const w = window._gpalWeather; let report = '';
         if (isEn) {
             const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -3289,9 +3167,9 @@ const StreakModule = {
 
     checkAndUpdate(date) {
         if (!date || date !== Utils.todayISO()) return;
-        const name = MemberMgr.names[State.memberIdx];
+        const name = MemberModule.current();
         const s = StreakModule.getMember(name);
-        const raw = GoalModule.allData[State.memberIdx] || '';
+        const raw = GoalModule.allData[0] || '';
         const lines = raw.split('\n').filter(l => l.trim() && /^\[[ x]\]/.test(l));
         if (!lines.length) return;
         const doneCount = lines.filter(l => l.startsWith('[x]')).length;
@@ -3317,7 +3195,7 @@ const StreakModule = {
     render() {
         const el = document.getElementById('streak-display');
         if (!el) return;
-        const name = MemberMgr.names[State.memberIdx];
+        const name = MemberModule.current();
         const s = StreakModule.getMember(name);
         const c = s.current || 0;
         const wasMilestone = c === 7 || c === 30 || c === 100;
@@ -3340,7 +3218,7 @@ const HabitModule = {
     _lastRenderedKey: null,
 
     currentHabits() {
-        const name = MemberMgr.names[State.memberIdx];
+        const name = MemberModule.current();
         if (!Array.isArray(HabitModule.data[name])) HabitModule.data[name] = [];
         return HabitModule.data[name];
     },
@@ -3419,7 +3297,7 @@ const HabitModule = {
     render() {
         const listEl = document.getElementById('habit-list');
         if (!listEl) return;
-        const cacheKey = `${State.memberIdx}|${HabitModule._dataVersion}`;
+        const cacheKey = `${MemberModule.current()}|${HabitModule._dataVersion}`;
         if (cacheKey === HabitModule._lastRenderedKey) return;
         HabitModule._lastRenderedKey = cacheKey;
 
@@ -4044,44 +3922,58 @@ const SpotifyModule = {
 // ---------- MEMBER MODULE ----------
 const MemberModule = {
     LS_KEY: 'gpal_family_member',
-    MEMBERS: ['dad', 'mom', 'kid'],
 
     current() {
-        return localStorage.getItem(MemberModule.LS_KEY) || 'dad';
+        return (localStorage.getItem(MemberModule.LS_KEY) || '').trim().toLowerCase() || 'user';
     },
 
-    select(member) {
-        if (!MemberModule.MEMBERS.includes(member)) return;
-        const prev = MemberModule.current();
-        if (member === prev) return;
-        localStorage.setItem(MemberModule.LS_KEY, member);
+    set(name) {
+        const clean = name.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'user';
+        localStorage.setItem(MemberModule.LS_KEY, clean);
         MemberModule.updateUI();
-        // 清除本地緩存，重新從雲端載入新成員的數據
-        MemberModule.clearCache(prev);
-        Sync.fetchData();
-    },
-
-    clearCache(member) {
-        // 清除所有 localStorage 中的備份數據
+        // 清除本地備份快取，重新載入雲端數據
         Object.keys(localStorage)
             .filter(k => k.startsWith(CONFIG.LS_PREFIX))
             .forEach(k => localStorage.removeItem(k));
+        Sync.fetchData();
     },
 
     updateUI() {
-        const cur = MemberModule.current();
-        document.querySelectorAll('.member-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.member === cur);
-        });
-        // 更新 brand 顯示
-        const brand = document.querySelector('.brand-bold');
-        if (brand) brand.firstChild.textContent = `GPAL · ${cur.toUpperCase()} `;
+        const inp = document.getElementById('member-input');
+        if (inp) inp.value = MemberModule.current();
     },
 
     init() {
         MemberModule.updateUI();
+        // 首次使用若未設置，提示輸入
+        if (!localStorage.getItem(MemberModule.LS_KEY)) {
+            const inp = document.getElementById('member-input');
+            if (inp) inp.focus();
+        }
     },
 };
+
+
+// ── Global fetch interceptor: auto-inject member into every WEB_APP_URL call ──
+(function() {
+    const _origFetch = window.fetch.bind(window);
+    window.fetch = function(url, options = {}) {
+        if (typeof url === 'string' && typeof CONFIG !== 'undefined' &&
+            url.includes(CONFIG.WEB_APP_URL.split('?')[0])) {
+            const member = (typeof MemberModule !== 'undefined') ? MemberModule.current() : 'user';
+            const sep = url.includes('?') ? '&' : '?';
+            url = url + sep + 'member=' + encodeURIComponent(member);
+            if (options.method === 'POST' && options.body) {
+                try {
+                    const body = JSON.parse(options.body);
+                    if (!body.member) { body.member = member; options = { ...options, body: JSON.stringify(body) }; }
+                } catch {}
+            }
+        }
+        return _origFetch(url, options);
+    };
+})();
+
 
 // ---------- SYNC MODULE ----------
 const Sync = {
@@ -4098,7 +3990,7 @@ const Sync = {
             try {
                 const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${targetDate}`, {}, 1);
                 const data = await res.json();
-                localStorage.setItem(PREFETCH_KEY(targetDate), JSON.stringify({ data, ts: Date.now() }));
+                localStorage.setItem(PREFETCH_KEY(targetDate) + '_' + MemberModule.current(), JSON.stringify({ data, ts: Date.now() }));
             } catch(e) {}
             await new Promise(r => setTimeout(r, 300));
         }
@@ -4106,7 +3998,7 @@ const Sync = {
 
     loadFromCache(date) {
         try {
-            const raw = localStorage.getItem(`gpal_prefetch_${date}`);
+            const raw = localStorage.getItem(`gpal_prefetch_${date}_${MemberModule.current()}`);
             if (!raw) return false;
             const { data, ts } = JSON.parse(raw);
             if (Date.now() - ts > 86400000) return false;
@@ -4155,11 +4047,11 @@ const Sync = {
                         const parseGoalObj = (raw) => {
                             if (!raw) return null;
                             try { const p = JSON.parse(raw); if (p && p.v === 2 && p.p) return p.p; } catch {}
-                            return { [MemberMgr.names[0]]: raw };
+                            return { [MemberModule.current()]: raw };
                         };
                         const todayObj = parseGoalObj(goalRaw) || {};
                         const yObj    = parseGoalObj(yData.goal) || {};
-                        MemberMgr.names.forEach(name => {
+                        [MemberModule.current()].forEach(name => {
                             const yGoal    = yObj[name] || '';
                             const incomplete = yGoal.split('\n').filter(l => l.trim() && l.startsWith('[ ]'));
                             if (!incomplete.length) return;
@@ -4639,8 +4531,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchWeather, 15 * 60 * 1000);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    MemberMgr.init();
-    MemberModule.init();
+    MemberModule.init(); // MemberMgr.names now fixed to [dad/mom/kid]
     LongTermModule.init();
     HabitModule.init();
     GoalTemplateModule.init();
@@ -4665,7 +4556,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v1.84';
+    const CURRENT_VERSION = 'v1.85';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

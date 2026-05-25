@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v1.90">
+    <meta name="version" content="v1.91">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.90</title>
+    <title>GPAL FAMILY v1.91</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1723,7 +1723,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.90</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.91</span></div>
     <div class="member-selector" id="member-selector">
         <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
         <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
@@ -2277,9 +2277,12 @@ const PlanModule = {
     serializeSingle(listEl) {
         return Array.from(listEl.querySelectorAll('.plan-row'))
             .map(row => {
-                const txt = row.querySelector('input[data-role=text]').value.trim();
+                const txtEl = row.querySelector('input[data-role=text]');
+                if (!txtEl) return null;
+                const txt = txtEl.value.trim();
                 if (!txt) return null;
-                const loc = row.querySelector('[data-role=loc-edit]').value.trim();
+                const locEl = row.querySelector('[data-role=loc-edit]');
+                const loc = locEl ? locEl.value.trim() : '';
                 return `${row.dataset.start}-${row.dataset.end}|${txt}|${loc}`;
             }).filter(Boolean).join('\n');
     },
@@ -4564,7 +4567,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v1.90';
+    const CURRENT_VERSION = 'v1.91';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v1.87">
+    <meta name="version" content="v1.88">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.87</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.88</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2941,7 +2941,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.87</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.88</span></div>
         <div class="member-selector" id="member-selector">
             <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
             <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
@@ -3471,16 +3471,19 @@ const Utils = {
 
     // 安全 fetch：超時 + 重試 + AbortController + 自動加 member 參數
     async safeFetch(url, options = {}, retries = CONFIG.MAX_RETRIES) {
-        // 自動在 WEB_APP_URL 請求裡加 member 參數
-        if (url.includes(CONFIG.WEB_APP_URL.split('?')[0])) {
+        // 自動在 WEB_APP_URL 請求裡加 member 參數（shared data 除外）
+        const _SHARED = /type=(portfolio|expense|watchlist|weather|trade)/;
+        if (url.includes(CONFIG.WEB_APP_URL.split('?')[0]) && !_SHARED.test(url)) {
             const member = MemberModule.current();
             const sep = url.includes('?') ? '&' : '?';
             url = url + sep + 'member=' + encodeURIComponent(member);
             if (options.method === 'POST' && options.body) {
                 try {
                     const body = JSON.parse(options.body);
-                    body.member = member;
-                    options = { ...options, body: JSON.stringify(body) };
+                    if (!body.type || !_SHARED.test('type=' + body.type)) {
+                        body.member = member;
+                        options = { ...options, body: JSON.stringify(body) };
+                    }
                 } catch {}
             }
         }
@@ -5922,15 +5925,18 @@ const MemberModule = {
 };
 
 
-// ── Global fetch interceptor: auto-inject member into every WEB_APP_URL call ──
+// ── Global fetch interceptor: auto-inject member (skip shared data types) ──
 (function() {
     const _origFetch = window.fetch.bind(window);
+    const _SHARED_RE = /type=(portfolio|expense|watchlist|weather|trade)/;
     window.fetch = function(url, options = {}) {
         if (typeof url === 'string' && typeof CONFIG !== 'undefined' &&
-            url.includes(CONFIG.WEB_APP_URL.split('?')[0])) {
-            const member = (typeof MemberModule !== 'undefined') ? MemberModule.current() : 'user';
+            url.includes(CONFIG.WEB_APP_URL.split('?')[0]) &&
+            !_SHARED_RE.test(url) &&
+            !(options.body && _SHARED_RE.test(options.body))) {
+            const member = (typeof MemberModule !== 'undefined') ? MemberModule.current() : 'dad';
             const sep = url.includes('?') ? '&' : '?';
-            url = url + sep + 'member=' + encodeURIComponent(member);
+            if (!url.includes('member=')) url = url + sep + 'member=' + encodeURIComponent(member);
             if (options.method === 'POST' && options.body) {
                 try {
                     const body = JSON.parse(options.body);
@@ -7805,7 +7811,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v1.87';
+    const CURRENT_VERSION = 'v1.88';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

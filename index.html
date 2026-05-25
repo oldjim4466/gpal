@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="version" content="202605230800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.70</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.71</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2956,7 +2956,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.70</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.71</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5666,12 +5666,20 @@ const SpotifyModule = {
             SpotifyModule._tracks = data.items.filter(i => i?.track?.id).map(i => i.track);
             SpotifyModule._tracksStatus = SpotifyModule._tracks.length ? 'loaded' : 'empty';
         } else {
-            SpotifyModule._tracksStatus = 'error';
             const st = SpotifyModule._lastStatus;
-            if (st === 403) SpotifyModule._tracksError = `Spotify says: "${SpotifyModule._lastError}" · This playlist may be Spotify-generated (Daily Mix etc.) and cannot be accessed via API, or your token is missing the playlist-read-private scope — try disconnecting and reconnecting`;
-            else if (st === 404) SpotifyModule._tracksError = 'Playlist not found (404)';
-            else if (st === 0)   SpotifyModule._tracksError = 'Network error · check connection';
-            else SpotifyModule._tracksError = `API error ${st}: ${SpotifyModule._lastError}`;
+            const msg = SpotifyModule._lastError || '';
+            if (st === 403) {
+                SpotifyModule._tracksStatus = 'forbidden'; // Spotify-generated playlist
+            } else if (st === 404) {
+                SpotifyModule._tracksError = 'Playlist not found (404)';
+                SpotifyModule._tracksStatus = 'error';
+            } else if (st === 0) {
+                SpotifyModule._tracksError = 'Network error · check connection';
+                SpotifyModule._tracksStatus = 'error';
+            } else {
+                SpotifyModule._tracksError = `API error ${st}: ${msg}`;
+                SpotifyModule._tracksStatus = 'error';
+            }
         }
         SpotifyModule.renderPanel();
     },
@@ -5783,10 +5791,23 @@ const SpotifyModule = {
     _renderTracks() {
         const st = SpotifyModule._tracksStatus;
         if (st === 'loading')
-            return `<div class="sp-pl-header" style="gap:8px;"><span>⟳ LOADING TRACKS...</span></div>`;
+            return `<div class="sp-pl-header"><span>⟳ LOADING TRACKS...</span></div>`;
+        if (st === 'forbidden')
+            return `<div style="padding:16px 14px;text-align:center;">
+                <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:rgba(255,180,0,0.7);letter-spacing:1px;margin-bottom:6px;">
+                    ⚠ SPOTIFY RESTRICTED PLAYLIST
+                </div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:14px;line-height:1.4;">
+                    Daily Mix, Discover Weekly and other Spotify-generated<br>playlists cannot show tracks via API.<br>You can still play the whole playlist.
+                </div>
+                <button class="sp-btn" style="font-size:12px;padding:8px 24px;"
+                    onclick="SpotifyModule.playPlaylist('${SpotifyModule._currentPlaylistUri}');SpotifyModule.closePlaylistPanel();">
+                    ▷ PLAY ALL
+                </button>
+            </div>`;
         if (st === 'error')
             return `<div style="padding:14px;">
-                <div class="sp-pl-header" style="color:rgba(255,100,100,0.8);border-color:rgba(255,100,100,0.2);">
+                <div class="sp-pl-header" style="color:rgba(255,80,80,0.8);border-color:rgba(255,80,80,0.2);">
                     <span>✕ ${SpotifyModule._tracksError}</span>
                 </div>
                 <div style="margin-top:10px;">

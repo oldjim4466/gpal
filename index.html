@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="version" content="202605230800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.76</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.77</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -591,7 +591,7 @@
         /* === SPOTIFY BAR === */
         #spotify-bar {
             background: rgba(0,0,0,0.5);
-            border-top: 2px solid rgba(29,185,84,0.3);
+            border-top: 1px solid rgba(29,185,84,0.2);
             border-bottom: 1px solid rgba(29,185,84,0.15);
             padding: 10px 14px;
             min-height: 64px;
@@ -1381,9 +1381,11 @@
 
         /* === HEALTH TRACKER === */
         .health-row {
-            padding: 6px 8px 5px;
-            background: rgba(0,0,0,0.5);
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.35);
+            border-top: 1px solid rgba(0,242,255,0.08);
             border-bottom: 1px solid rgba(0,242,255,0.08);
+            margin-bottom: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2931,7 +2933,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.76</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.77</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3283,10 +3285,6 @@
         </div>
         <div id="habit-list" class="habit-list"></div>
     </section>
-</main>
-<footer>
-    <div id="spotify-bar"></div>
-    <div id="sp-lyrics-bar"></div>
     <div class="health-row" id="health-row">
         <div class="health-row-top">
             <!-- Water -->
@@ -3317,11 +3315,15 @@
             </div>
         </div>
     </div>
+</main>
+<footer>
     <div class="hud-row">
         <div class="portfolio-hud">
             <div id="portfolio-display">NET WORTH: SYNCING...</div>
         </div>
     </div>
+    <div id="spotify-bar"></div>
+    <div id="sp-lyrics-bar"></div>
     <div class="action-area">
         <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
         <button class="btn-refresh-icon" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())" title="Refresh page">↺</button>

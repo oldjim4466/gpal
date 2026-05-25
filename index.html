@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="version" content="202605230800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.67</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.68</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2956,7 +2956,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.67</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.68</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5461,6 +5461,13 @@ const SpotifyModule = {
             localStorage.setItem(SpotifyModule.LS_CONFIG, JSON.stringify(DEFAULT_CONFIG));
         }
 
+        // Scope 版本檢查：SCOPES 改變時自動清除舊 token，強制重新授權
+        const savedScope = localStorage.getItem('gpal_spotify_scope');
+        if (savedScope !== SpotifyModule.SCOPES) {
+            localStorage.removeItem(SpotifyModule.LS_TOKEN);   // 清除舊 token
+            localStorage.setItem('gpal_spotify_scope', SpotifyModule.SCOPES);
+        }
+
         // 載入 config + token
         try {
             const tok = JSON.parse(localStorage.getItem(SpotifyModule.LS_TOKEN) || 'null');
@@ -5526,6 +5533,7 @@ const SpotifyModule = {
         if (data.refresh_token) SpotifyModule._refreshToken = data.refresh_token;
         SpotifyModule._expiry = Date.now() + (data.expires_in - 60) * 1000;
         localStorage.setItem(SpotifyModule.LS_TOKEN, JSON.stringify({ a: SpotifyModule._token, r: SpotifyModule._refreshToken, e: SpotifyModule._expiry }));
+        localStorage.setItem('gpal_spotify_scope', SpotifyModule.SCOPES); // 記錄已授權的 scope
     },
 
     async _ensureToken() {

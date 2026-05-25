@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="version" content="202605230800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.71</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.72</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -745,18 +745,17 @@
         .sp-controls { display: flex; align-items: center; gap: 5px; }
         .sp-ctrl-btn {
             font-family: 'Orbitron', sans-serif;
-            font-size: 11px; font-weight: 700;
+            font-size: 9px; font-weight: 700;
             color: rgba(29,185,84,0.55);
             border: 1px solid rgba(29,185,84,0.25);
             background: transparent;
-            padding: 6px 11px;
-            cursor: pointer; outline: none;
-            transition: all 0.2s; letter-spacing: 1px;
+            padding: 4px 8px;
+            cursor: pointer; transition: all 0.2s; outline: none; letter-spacing: 1px;
             user-select: none; -webkit-tap-highlight-color: transparent;
         }
-        .sp-ctrl-btn:hover, .sp-ctrl-btn:active { color: #1DB954; border-color: rgba(29,185,84,0.7); box-shadow: 0 0 8px rgba(29,185,84,0.3); }
+        .sp-ctrl-btn:hover, .sp-ctrl-btn:active { color: #1DB954; border-color: rgba(29,185,84,0.7); box-shadow: 0 0 6px rgba(29,185,84,0.25); }
         .sp-play-btn {
-            font-size: 14px; padding: 8px 20px;
+            font-size: 11px; padding: 5px 14px;
             color: rgba(29,185,84,0.9);
             border: 1px solid rgba(29,185,84,0.5);
             clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
@@ -764,7 +763,20 @@
         }
         .sp-play-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg,transparent,rgba(29,185,84,0.3),transparent); transition: left 0.4s; }
         .sp-play-btn:hover::before { left: 200%; }
-        .sp-play-btn:hover { box-shadow: 0 0 14px rgba(29,185,84,0.45) !important; }
+        .sp-play-btn:hover { box-shadow: 0 0 12px rgba(29,185,84,0.4) !important; }
+        /* lyrics bar */
+        #sp-lyrics-bar {
+            background: rgba(0,0,0,0.35);
+            border-bottom: 1px solid rgba(29,185,84,0.08);
+            padding: 5px 14px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px; font-style: italic;
+            color: rgba(255,255,255,0.5);
+            text-align: center; min-height: 26px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transition: opacity 0.25s ease;
+            display: none;
+        }
 
         /* progress + disconnect */
         .sp-progress-wrap { width: 90px; height: 2px; background: rgba(29,185,84,0.12); }
@@ -2956,7 +2968,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.71</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.72</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -2966,6 +2978,7 @@
     </div>
 </nav>
 <div id="spotify-bar"></div>
+<div id="sp-lyrics-bar"></div>
 </div>
 
 <div class="header-section">
@@ -5452,6 +5465,7 @@ const SpotifyModule = {
     _audioAnalysis: null, _eqTimer: null,
     _progressBase: 0, _progressTimestamp: 0, _lastTrackId: null,
     _peaks: new Array(12).fill(3),
+    _lyrics: [], _lyricsTimer: null, _lastLyricIdx: -1,
 
     // ─── Init ───────────────────────────────────────────────────────────────
     init() {
@@ -5585,6 +5599,7 @@ const SpotifyModule = {
                 id: trackId,
                 name: data.item.name,
                 artist: data.item.artists?.map(a => a.name).join(', ') || '',
+                album: data.item.album?.name || '',
                 art: data.item.album?.images?.[2]?.url || data.item.album?.images?.[0]?.url || '',
                 duration: data.item.duration_ms || 0,
                 progress: data.progress_ms || 0,
@@ -5597,7 +5612,11 @@ const SpotifyModule = {
             if (trackId !== SpotifyModule._lastTrackId) {
                 SpotifyModule._lastTrackId = trackId;
                 SpotifyModule._audioAnalysis = null;
+                SpotifyModule._lyrics = []; SpotifyModule._lastLyricIdx = -1;
+                const lb = document.getElementById('sp-lyrics-bar');
+                if (lb) lb.textContent = '';
                 SpotifyModule._fetchAnalysis(trackId);
+                SpotifyModule._fetchLyrics(SpotifyModule._track.name, SpotifyModule._track.artist, SpotifyModule._track.album);
             }
         }
         SpotifyModule._updateUI();
@@ -5667,19 +5686,14 @@ const SpotifyModule = {
             SpotifyModule._tracksStatus = SpotifyModule._tracks.length ? 'loaded' : 'empty';
         } else {
             const st = SpotifyModule._lastStatus;
-            const msg = SpotifyModule._lastError || '';
             if (st === 403) {
-                SpotifyModule._tracksStatus = 'forbidden'; // Spotify-generated playlist
-            } else if (st === 404) {
-                SpotifyModule._tracksError = 'Playlist not found (404)';
-                SpotifyModule._tracksStatus = 'error';
-            } else if (st === 0) {
-                SpotifyModule._tracksError = 'Network error · check connection';
-                SpotifyModule._tracksStatus = 'error';
-            } else {
-                SpotifyModule._tracksError = `API error ${st}: ${msg}`;
-                SpotifyModule._tracksStatus = 'error';
+                // Spotify-generated playlist: just play it directly
+                SpotifyModule.closePlaylistPanel();
+                SpotifyModule.playPlaylist(SpotifyModule._currentPlaylistUri);
+                return;
             }
+            SpotifyModule._tracksError = st === 404 ? 'Playlist not found (404)' : st === 0 ? 'Network error' : `API error ${st}: ${SpotifyModule._lastError}`;
+            SpotifyModule._tracksStatus = 'error';
         }
         SpotifyModule.renderPanel();
     },
@@ -5836,9 +5850,13 @@ const SpotifyModule = {
     disconnect() {
         clearInterval(SpotifyModule._pollTimer);
         SpotifyModule._stopEQTimer();
+        clearInterval(SpotifyModule._lyricsTimer); SpotifyModule._lyricsTimer = null;
         SpotifyModule._token = null; SpotifyModule._refreshToken = null;
         SpotifyModule._track = null; SpotifyModule._playing = false;
         SpotifyModule._audioAnalysis = null; SpotifyModule._lastTrackId = null;
+        SpotifyModule._lyrics = [];
+        const lb = document.getElementById('sp-lyrics-bar');
+        if (lb) { lb.style.display = 'none'; lb.textContent = ''; }
         localStorage.removeItem(SpotifyModule.LS_TOKEN);
         SpotifyModule.render();
     },
@@ -5848,6 +5866,59 @@ const SpotifyModule = {
         SpotifyModule.fetchNowPlaying();
         SpotifyModule._pollTimer = setInterval(SpotifyModule.fetchNowPlaying, 5000);
         SpotifyModule._startEQTimer();
+        clearInterval(SpotifyModule._lyricsTimer);
+        SpotifyModule._lyricsTimer = setInterval(SpotifyModule._tickLyrics, 500);
+    },
+
+    // ─── Lyrics ───────────────────────────────────────────────────────────────
+    async _fetchLyrics(trackName, artistName, albumName) {
+        try {
+            const params = new URLSearchParams({ track_name: trackName, artist_name: artistName, album_name: albumName || '' });
+            const res = await fetch(`https://lrclib.net/api/get?${params}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.syncedLyrics) {
+                SpotifyModule._lyrics = SpotifyModule._parseLRC(data.syncedLyrics);
+                const lb = document.getElementById('sp-lyrics-bar');
+                if (lb) lb.style.display = 'block';
+            }
+        } catch {}
+    },
+
+    _parseLRC(lrc) {
+        const lines = [];
+        for (const line of lrc.split('\n')) {
+            const m = line.match(/^\[(\d+):(\d{2})\.(\d+)\]\s*(.*)/);
+            if (m) {
+                const time = parseInt(m[1]) * 60 + parseInt(m[2]) + parseInt(m[3]) / 100;
+                const text = m[4].trim();
+                if (text) lines.push({ time, text });
+            }
+        }
+        return lines.sort((a, b) => a.time - b.time);
+    },
+
+    _tickLyrics() {
+        const lb = document.getElementById('sp-lyrics-bar');
+        if (!lb) return;
+        if (!SpotifyModule._playing || !SpotifyModule._lyrics.length) return;
+
+        const sec = SpotifyModule._estimateProgress() / 1000;
+        let idx = 0;
+        for (let i = 0; i < SpotifyModule._lyrics.length; i++) {
+            if (SpotifyModule._lyrics[i].time <= sec) idx = i;
+            else break;
+        }
+
+        if (idx !== SpotifyModule._lastLyricIdx) {
+            SpotifyModule._lastLyricIdx = idx;
+            const text = SpotifyModule._lyrics[idx]?.text || '';
+            lb.style.opacity = '0';
+            setTimeout(() => {
+                lb.textContent = text;
+                lb.style.opacity = '1';
+            }, 150);
+        }
     },
 
     // ─── Audio Analysis / EQ ──────────────────────────────────────────────────
@@ -5932,12 +6003,13 @@ const SpotifyModule = {
         const bar = document.getElementById('spotify-bar');
         if (!bar) return;
         if (!SpotifyModule._token) {
-            const cfg = JSON.parse(localStorage.getItem(SpotifyModule.LS_CONFIG) || 'null');
             bar.innerHTML = `<div class="sp-connect-row">
                 <span class="sp-label">♬ SPOTIFY</span>
                 <input id="sp-client-id" class="sp-input" placeholder="Spotify Client ID" type="text" value="${cfg?.clientId || ''}">
                 <button class="sp-btn" onclick="SpotifyModule.authorize()">CONNECT</button>
             </div>`;
+            const lb = document.getElementById('sp-lyrics-bar');
+            if (lb) { lb.style.display = 'none'; lb.textContent = ''; }
         } else {
             const playing = SpotifyModule._playing;
             bar.innerHTML = `<div class="sp-player">

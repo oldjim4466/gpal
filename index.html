@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="version" content="202605230800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.69</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.70</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2956,7 +2956,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.69</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.70</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5564,9 +5564,15 @@ const SpotifyModule = {
             SpotifyModule._lastStatus = res.status;
             if (res.status === 401) { SpotifyModule.disconnect(); return null; }
             if (res.status === 204 || res.status === 202) return {};
-            if (!res.ok) return null;
+            if (!res.ok) {
+                try {
+                    const err = await res.json();
+                    SpotifyModule._lastError = err?.error?.message || `HTTP ${res.status}`;
+                } catch { SpotifyModule._lastError = `HTTP ${res.status}`; }
+                return null;
+            }
             return res.json();
-        } catch { SpotifyModule._lastStatus = 0; return null; }
+        } catch(e) { SpotifyModule._lastStatus = 0; SpotifyModule._lastError = 'Network error'; return null; }
     },
 
     async fetchNowPlaying() {
@@ -5662,10 +5668,10 @@ const SpotifyModule = {
         } else {
             SpotifyModule._tracksStatus = 'error';
             const st = SpotifyModule._lastStatus;
-            if (st === 403) SpotifyModule._tracksError = 'Permission denied (403) · Disconnect and reconnect Spotify to grant playlist access';
+            if (st === 403) SpotifyModule._tracksError = `Spotify says: "${SpotifyModule._lastError}" · This playlist may be Spotify-generated (Daily Mix etc.) and cannot be accessed via API, or your token is missing the playlist-read-private scope — try disconnecting and reconnecting`;
             else if (st === 404) SpotifyModule._tracksError = 'Playlist not found (404)';
             else if (st === 0)   SpotifyModule._tracksError = 'Network error · check connection';
-            else SpotifyModule._tracksError = `API error ${st}`;
+            else SpotifyModule._tracksError = `API error ${st}: ${SpotifyModule._lastError}`;
         }
         SpotifyModule.renderPanel();
     },

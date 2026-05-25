@@ -5,7 +5,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605230300">
+    <meta name="version" content="202605230400">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GPAL MK-VII // OPTIMIZED v1.56</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2834,7 +2834,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.56</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.57</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3663,11 +3663,12 @@ const PlanModule = {
         PlanModule.saveCurrent(); // 確保當前 DOM 存回 _rawData
         const p = {};
         MemberMgr.names.forEach((name, i) => {
-            if (PlanModule._rawData && !PlanModule._rendered[i]) {
+            if (!PlanModule._rendered[i]) {
                 p[name] = PlanModule._rawData[i] || ''; // 未渲染，用原始字串
             } else {
                 const listEl = document.getElementById('plan-list-' + i);
-                p[name] = listEl ? PlanModule.serializeSingle(listEl) : '';
+                // DOM 存在：從 DOM 序列化；不存在：fallback 到 rawData（防止資料遺失）
+                p[name] = listEl ? PlanModule.serializeSingle(listEl) : (PlanModule._rawData[i] || '');
             }
         });
         return JSON.stringify({ v: 2, p });
@@ -5674,13 +5675,15 @@ const Sync = {
                 } catch(e) { /* 昨天資料抓不到就算了 */ }
             }
 
-            // 若緩存命中且雲端資料與緩存一致，跳過重渲染（避免閃爍）
-            const cloudSnapshot = JSON.stringify(data);
+            // rollover 是否修改了 goalRaw（昨天未完成 goals 被加入）
+            const rolledOver = goalRaw !== (data.goal || '');
+
+            // 若快取命中且雲端資料與快取一致（且無 rollover），跳過重渲染（避免閃爍）
             const cacheData = cacheSnapshot ? JSON.parse(cacheSnapshot).data : null;
-            const dataChanged = !cacheData ||
-                cacheData.goal  !== data.goal  ||
-                cacheData.plan  !== data.plan  ||
-                cacheData.learn !== data.learn ||
+            const dataChanged = rolledOver || !cacheData ||
+                cacheData.goal   !== data.goal   ||
+                cacheData.plan   !== data.plan   ||
+                cacheData.learn  !== data.learn  ||
                 cacheData.action !== data.action;
 
             if (dataChanged || !cacheHit) {
@@ -5731,12 +5734,14 @@ const Sync = {
                 PlanModule.parseAll(p.plan || '');
                 ActionModule.parseAll(p.action || '');
                 LearnModule.parseAll(p.learn || '');
-            } else {
+            } else if (!cacheHit) {
+                // 只有在完全沒有任何數據源時才清空（避免覆蓋已加載的快取數據）
                 GoalModule.parseAll('');
                 PlanModule.parseAll('');
                 ActionModule.parseAll('');
                 LearnModule.parseAll('');
             }
+            // cacheHit=true 時：快取已在 loadFromCache 加載，不需要額外處理
         } finally {
             const syncBtn = document.getElementById('btn-nav-sync');
             if (syncBtn) syncBtn.classList.remove('spinning');
@@ -5830,7 +5835,7 @@ const Sync = {
 
                 // 分隔線
                 const div1 = document.createElement('span');
-                div1.56className = 'pf-divider';
+                div1.className = 'pf-divider';
 
                 // P/L 區塊
                 const plGroup = document.createElement('span');
@@ -7406,7 +7411,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605230300';
+    const CURRENT_VERSION = '202605230400';
     async function checkVersion() {
         try {
             // 只抓前 500 字節（version tag 在 <head> 裡），比下載整頁快 10x+

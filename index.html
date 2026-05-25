@@ -5,7 +5,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605230800">
+    <meta name="version" content="202605230700">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GPAL MK-VII // OPTIMIZED v1.56</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -612,42 +612,23 @@
         .sp-art { width: 44px; height: 44px; border-radius: 2px; object-fit: cover; border: 1px solid rgba(29,185,84,0.25); flex-shrink: 0; }
         .sp-art[src=""] { display: none; }
 
-        /* EQ */
-        .sp-eq { display: flex; align-items: flex-end; gap: 2px; height: 26px; flex-shrink: 0; border-bottom: 1px solid rgba(29,185,84,0.2); padding-bottom: 1px; }
-        .sp-eq-slot { position: relative; width: 2px; height: 25px; flex-shrink: 0; }
-        .sp-eq-fill {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 5px;
-            background: linear-gradient(to top, #1DB954 0%, #00e5cc 60%, #00f2ff 100%);
-            border-radius: 1px 1px 0 0;
-            transition: height 0.09s ease;
-            box-shadow: 0 0 4px rgba(29,185,84,0.5);
-        }
-        .sp-eq-peak {
-            position: absolute; left: 0; width: 100%; height: 2px;
-            background: rgba(255,255,255,0.85);
-            border-radius: 1px;
-            box-shadow: 0 0 4px rgba(255,255,255,0.7), 0 0 8px rgba(0,242,255,0.5);
-            transition: bottom 0.12s ease;
-            bottom: 5px;
-        }
-        /* fallback animation before analysis loads */
-        .sp-eq.loading .sp-eq-fill { animation: sp-eq-fallback 0.7s ease-in-out infinite alternate; }
-        .sp-eq.loading .sp-eq-slot:nth-child(1)  .sp-eq-fill { animation-duration: 0.55s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(2)  .sp-eq-fill { animation-duration: 0.70s; animation-delay: 0.05s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(3)  .sp-eq-fill { animation-duration: 0.60s; animation-delay: 0.10s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(4)  .sp-eq-fill { animation-duration: 0.80s; animation-delay: 0.15s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(5)  .sp-eq-fill { animation-duration: 0.45s; animation-delay: 0.08s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(6)  .sp-eq-fill { animation-duration: 0.65s; animation-delay: 0.20s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(7)  .sp-eq-fill { animation-duration: 0.75s; animation-delay: 0.03s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(8)  .sp-eq-fill { animation-duration: 0.50s; animation-delay: 0.12s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(9)  .sp-eq-fill { animation-duration: 0.85s; animation-delay: 0.18s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(10) .sp-eq-fill { animation-duration: 0.58s; animation-delay: 0.07s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(11) .sp-eq-fill { animation-duration: 0.72s; animation-delay: 0.22s; }
-        .sp-eq.loading .sp-eq-slot:nth-child(12) .sp-eq-fill { animation-duration: 0.48s; animation-delay: 0.14s; }
-        .sp-eq.loading .sp-eq-peak { display: none; }
-        @keyframes sp-eq-fallback { 0% { height: 3px; } 100% { height: 24px; } }
-        .sp-eq.paused .sp-eq-fill { animation: none; height: 3px !important; box-shadow: none; opacity: 0.3; transition: none; }
-        .sp-eq.paused .sp-eq-peak { opacity: 0; transition: none; }
+        /* EQ bars */
+        .sp-eq { display: flex; align-items: flex-end; gap: 1.5px; height: 22px; flex-shrink: 0; }
+        .sp-eq-bar { width: 2px; height: 5px; background: #1DB954; border-radius: 1px 1px 0 0; opacity: 0.85; transition: height 0.1s ease; animation: sp-eq-fallback 0.7s ease-in-out infinite alternate; }
+        .sp-eq-bar:nth-child(1)  { animation-duration: 0.55s; animation-delay: 0.00s; }
+        .sp-eq-bar:nth-child(2)  { animation-duration: 0.70s; animation-delay: 0.05s; }
+        .sp-eq-bar:nth-child(3)  { animation-duration: 0.60s; animation-delay: 0.10s; }
+        .sp-eq-bar:nth-child(4)  { animation-duration: 0.80s; animation-delay: 0.15s; }
+        .sp-eq-bar:nth-child(5)  { animation-duration: 0.45s; animation-delay: 0.08s; }
+        .sp-eq-bar:nth-child(6)  { animation-duration: 0.65s; animation-delay: 0.20s; }
+        .sp-eq-bar:nth-child(7)  { animation-duration: 0.75s; animation-delay: 0.03s; }
+        .sp-eq-bar:nth-child(8)  { animation-duration: 0.50s; animation-delay: 0.12s; }
+        .sp-eq-bar:nth-child(9)  { animation-duration: 0.85s; animation-delay: 0.18s; }
+        .sp-eq-bar:nth-child(10) { animation-duration: 0.58s; animation-delay: 0.07s; }
+        .sp-eq-bar:nth-child(11) { animation-duration: 0.72s; animation-delay: 0.22s; }
+        .sp-eq-bar:nth-child(12) { animation-duration: 0.48s; animation-delay: 0.14s; }
+        @keyframes sp-eq-fallback { 0% { height: 3px; } 100% { height: 22px; } }
+        .sp-eq.paused .sp-eq-bar { animation: none; opacity: 0.3; }
 
         /* track info */
         .sp-info { flex: 1; min-width: 0; }
@@ -2870,7 +2851,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.62</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.61</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5365,7 +5346,6 @@ const SpotifyModule = {
     _pollTimer: null,
     _audioAnalysis: null, _eqTimer: null,
     _progressBase: 0, _progressTimestamp: 0, _lastTrackId: null,
-    _peaks: new Array(12).fill(3),
 
     // ─── Init ───────────────────────────────────────────────────────────────
     init() {
@@ -5563,22 +5543,20 @@ const SpotifyModule = {
     },
 
     _tickEQ() {
-        const eq = document.getElementById('sp-eq');
-        const slots = eq ? eq.querySelectorAll('.sp-eq-slot') : [];
-        if (!slots.length || !SpotifyModule._playing) return;
+        const bars = document.querySelectorAll('.sp-eq-bar');
+        if (!bars.length || !SpotifyModule._playing) return;
 
         const analysis = SpotifyModule._audioAnalysis;
         if (!analysis) {
-            // 分析尚未載入：CSS fallback 動畫
-            if (eq && !eq.classList.contains('loading')) eq.classList.add('loading');
+            // 分析尚未載入：清除 inline style，交回 CSS 動畫
+            bars.forEach(b => { b.style.height = ''; });
             return;
         }
-        if (eq) eq.classList.remove('loading');
 
         const progressSec = SpotifyModule._estimateProgress() / 1000;
         const segs = analysis.segments;
 
-        // Binary search
+        // Binary search 找當前 segment
         let lo = 0, hi = segs.length - 1, seg = segs[segs.length - 1];
         while (lo <= hi) {
             const mid = (lo + hi) >> 1;
@@ -5590,30 +5568,11 @@ const SpotifyModule = {
         if (!seg?.pitches) return;
 
         const loud = Math.max(0, Math.min(1, (seg.loudness_max + 60) / 60));
-        const p = seg.pitches; // C C# D D# E F F# G G# A A# B
+        const p = seg.pitches; // 12 chroma values (C C# D D# E F F# G G# A A# B), each 0~1
 
-        slots.forEach((slot, i) => {
-            const fill = slot.querySelector('.sp-eq-fill');
-            const peak = slot.querySelector('.sp-eq-peak');
-            const h = 3 + (p[i] || 0) * loud * 22;
-
-            if (fill) {
-                fill.style.height = h.toFixed(1) + 'px';
-                const glow = ((p[i] || 0) * loud);
-                fill.style.boxShadow = glow > 0.25
-                    ? `0 0 ${(glow * 6).toFixed(0)}px rgba(0,242,255,0.6), 0 0 ${(glow * 3).toFixed(0)}px rgba(29,185,84,0.8)`
-                    : '0 0 3px rgba(29,185,84,0.3)';
-            }
-
-            if (peak) {
-                // 峰值：上升即時更新，下降緩慢衰減
-                if (h > SpotifyModule._peaks[i]) {
-                    SpotifyModule._peaks[i] = h;
-                } else {
-                    SpotifyModule._peaks[i] = Math.max(3, SpotifyModule._peaks[i] - 0.6);
-                }
-                peak.style.bottom = (SpotifyModule._peaks[i] + 1).toFixed(1) + 'px';
-            }
+        // 直接映射 12 個音符 → 12 個 EQ bar
+        bars.forEach((bar, i) => {
+            bar.style.height = (3 + (p[i] || 0) * loud * 19).toFixed(1) + 'px';
         });
     },
 
@@ -5641,11 +5600,14 @@ const SpotifyModule = {
             const playing = SpotifyModule._playing;
             bar.innerHTML = `<div class="sp-player">
                 <img id="sp-art" class="sp-art" src="" alt="">
-                <div class="sp-eq loading ${playing ? '' : 'paused'}" id="sp-eq">${
-                    Array.from({length:12}, () =>
-                        `<div class="sp-eq-slot"><div class="sp-eq-fill"></div><div class="sp-eq-peak"></div></div>`
-                    ).join('')
-                }</div>
+                <div class="sp-eq ${playing ? '' : 'paused'}" id="sp-eq">
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                </div>
                 <div class="sp-info">
                     <div id="sp-track" class="sp-track">—</div>
                     <div id="sp-artist" class="sp-artist">—</div>
@@ -5690,9 +5652,7 @@ const SpotifyModule = {
         if (eq) {
             eq.classList.toggle('paused', !SpotifyModule._playing);
             if (!SpotifyModule._playing) {
-                SpotifyModule._peaks.fill(3);
-                eq.querySelectorAll('.sp-eq-fill').forEach(b => { b.style.height = '3px'; b.style.boxShadow = ''; });
-                eq.querySelectorAll('.sp-eq-peak').forEach(b => { b.style.bottom = '3px'; });
+                eq.querySelectorAll('.sp-eq-bar').forEach(b => { b.style.height = '5px'; });
             }
         }
     },
@@ -7556,7 +7516,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605230800';
+    const CURRENT_VERSION = '202605230700';
     async function checkVersion() {
         try {
             // 只抓前 500 字節（version tag 在 <head> 裡），比下載整頁快 10x+

@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="version" content="202605230800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.63</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.64</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -634,6 +634,19 @@
         .sp-pl-active .sp-pl-name { color: #1DB954; }
         .sp-pl-count { font-family: 'Orbitron', sans-serif; font-size: 9px; color: rgba(255,255,255,0.2); flex-shrink: 0; }
         .sp-pl-img { width: 28px; height: 28px; object-fit: cover; border: 1px solid rgba(29,185,84,0.15); flex-shrink: 0; }
+        /* panel tabs */
+        .sp-panel-tabs { display: flex; border-bottom: 1px solid rgba(29,185,84,0.15); background: rgba(0,0,0,0.3); flex-shrink: 0; }
+        .sp-tab-btn { font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; color: rgba(29,185,84,0.35); background: transparent; border: none; border-bottom: 2px solid transparent; padding: 8px 14px; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; outline: none; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sp-tab-btn.active { color: #1DB954; border-bottom-color: #1DB954; }
+        .sp-tab-btn:hover:not(.active) { color: rgba(29,185,84,0.65); }
+        .sp-panel-content { max-height: 260px; overflow-y: auto; }
+        .sp-panel-content::-webkit-scrollbar { width: 3px; }
+        .sp-panel-content::-webkit-scrollbar-thumb { background: rgba(29,185,84,0.3); }
+        /* track items */
+        .sp-track-num { font-family: 'Orbitron'; font-size: 9px; color: rgba(255,255,255,0.2); flex-shrink: 0; width: 22px; text-align: right; }
+        .sp-track-info { flex: 1; min-width: 0; }
+        .sp-track-artist { font-family: 'Orbitron'; font-size: 9px; color: rgba(29,185,84,0.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+        .sp-pl-item:hover .sp-track-artist { color: rgba(29,185,84,0.7); }
         .sp-connect-row { display: flex; align-items: center; gap: 10px; width: 100%; }
         .sp-label { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; color: rgba(29,185,84,0.7); letter-spacing: 2px; white-space: nowrap; flex-shrink: 0; }
         .sp-input { flex: 1; min-width: 0; background: transparent; border: none; border-bottom: 1px solid rgba(29,185,84,0.35); color: rgba(29,185,84,0.9); font-family: 'Orbitron', sans-serif; font-size: 11px; padding: 6px 4px; outline: none; transition: border-color 0.2s; }
@@ -2907,7 +2920,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.63</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.64</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5571,12 +5584,46 @@ const SpotifyModule = {
 
     // ─── Playlists ────────────────────────────────────────────────────────────
     _playlists: [],
+    _tracks: [],
+    _panelTab: 'playlists',
+    _currentPlaylistId: null,
+    _currentPlaylistName: '',
+    _currentPlaylistUri: null,
 
     async fetchPlaylists() {
         const data = await SpotifyModule._api('/me/playlists?limit=50');
         if (!data?.items) return [];
         SpotifyModule._playlists = data.items.filter(Boolean);
         return SpotifyModule._playlists;
+    },
+
+    async selectPlaylist(id, name, uri) {
+        SpotifyModule._currentPlaylistId = id;
+        SpotifyModule._currentPlaylistName = name;
+        SpotifyModule._currentPlaylistUri = uri;
+        SpotifyModule._tracks = [];
+        SpotifyModule._panelTab = 'tracks';
+        SpotifyModule.renderPanel(); // show loading
+        const data = await SpotifyModule._api(
+            `/playlists/${id}/tracks?limit=50&fields=items(track(id,name,artists,duration_ms,uri))`
+        );
+        if (data?.items) {
+            SpotifyModule._tracks = data.items.filter(i => i?.track).map(i => i.track);
+        }
+        SpotifyModule.renderPanel();
+    },
+
+    async playTrack(position) {
+        const res = await SpotifyModule._api('/me/player/play', 'PUT', {
+            context_uri: SpotifyModule._currentPlaylistUri,
+            offset: { position }
+        });
+        if (res !== null) {
+            SpotifyModule._playing = true;
+            SpotifyModule._updatePlayBtn();
+            setTimeout(SpotifyModule.fetchNowPlaying, 600);
+        }
+        SpotifyModule.closePlaylistPanel();
     },
 
     async playPlaylist(uri) {
@@ -5586,27 +5633,27 @@ const SpotifyModule = {
             SpotifyModule._playing = true;
             SpotifyModule._updatePlayBtn();
             setTimeout(SpotifyModule.fetchNowPlaying, 600);
-        } else {
-            // 沒有活躍設備，嘗試找設備
-            await SpotifyModule._resumeOrStart();
         }
+    },
+
+    switchTab(tab) {
+        SpotifyModule._panelTab = tab;
+        SpotifyModule.renderPanel();
     },
 
     async togglePlaylistPanel() {
         const panel = document.getElementById('sp-playlist-panel');
         const btn   = document.getElementById('sp-list-btn');
         if (!panel) return;
-        const isOpen = panel.style.display !== 'none';
-        if (isOpen) { SpotifyModule.closePlaylistPanel(); return; }
-
-        panel.style.display = 'block';
+        if (panel.style.display !== 'none') { SpotifyModule.closePlaylistPanel(); return; }
+        panel.style.display = 'flex';
+        panel.style.flexDirection = 'column';
         if (btn) btn.classList.add('active');
-        panel.innerHTML = `<div class="sp-pl-header"><span>♪ LOADING...</span></div>`;
-
-        const playlists = SpotifyModule._playlists.length
-            ? SpotifyModule._playlists
-            : await SpotifyModule.fetchPlaylists();
-        SpotifyModule.renderPlaylistPanel(playlists);
+        if (!SpotifyModule._playlists.length) {
+            panel.innerHTML = `<div class="sp-pl-header"><span>♪ LOADING...</span></div>`;
+            await SpotifyModule.fetchPlaylists();
+        }
+        SpotifyModule.renderPanel();
     },
 
     closePlaylistPanel() {
@@ -5616,31 +5663,52 @@ const SpotifyModule = {
         if (btn)   btn.classList.remove('active');
     },
 
-    renderPlaylistPanel(playlists) {
+    renderPanel() {
         const panel = document.getElementById('sp-playlist-panel');
-        if (!panel) return;
-        if (!playlists.length) {
-            panel.innerHTML = `<div class="sp-pl-header"><span>NO_PLAYLISTS · RECONNECT SPOTIFY</span></div>`;
-            return;
+        if (!panel || panel.style.display === 'none') return;
+        const tab = SpotifyModule._panelTab;
+        const plName = SpotifyModule._currentPlaylistName || 'TRACKS';
+
+        const tabsHTML = `<div class="sp-panel-tabs">
+            <button class="sp-tab-btn ${tab==='playlists'?'active':''}" onclick="SpotifyModule.switchTab('playlists')">PLAYLISTS</button>
+            <button class="sp-tab-btn ${tab==='tracks'?'active':''}" onclick="SpotifyModule.switchTab('tracks')" title="${plName}">${plName}</button>
+        </div>`;
+
+        let content = '';
+        if (tab === 'playlists') {
+            if (!SpotifyModule._playlists.length) {
+                content = `<div class="sp-pl-header"><span>NO_PLAYLISTS · RECONNECT SPOTIFY</span></div>`;
+            } else {
+                content = SpotifyModule._playlists.map(p => `
+                    <div class="sp-pl-item" onclick="SpotifyModule.selectPlaylist('${p.id}','${p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${p.uri}')">
+                        ${p.images?.[0]?.url
+                            ? `<img class="sp-pl-img" src="${p.images[0].url}" alt="">`
+                            : `<div class="sp-pl-img" style="background:rgba(29,185,84,0.08);display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(29,185,84,0.35)">♪</div>`}
+                        <span class="sp-pl-name">${p.name}</span>
+                        <span class="sp-pl-count">${p.tracks?.total??''}</span>
+                    </div>`).join('');
+            }
+        } else {
+            if (!SpotifyModule._tracks.length) {
+                content = `<div class="sp-pl-header"><span>LOADING TRACKS...</span></div>`;
+            } else {
+                content = SpotifyModule._tracks.map((t, i) => {
+                    const m = Math.floor(t.duration_ms/60000);
+                    const s = String(Math.floor((t.duration_ms%60000)/1000)).padStart(2,'0');
+                    const artist = t.artists?.map(a=>a.name).join(', ')||'';
+                    return `<div class="sp-pl-item" onclick="SpotifyModule.playTrack(${i})">
+                        <span class="sp-track-num">${i+1}</span>
+                        <div class="sp-track-info">
+                            <div class="sp-pl-name">${t.name}</div>
+                            <div class="sp-track-artist">${artist}</div>
+                        </div>
+                        <span class="sp-pl-count">${m}:${s}</span>
+                    </div>`;
+                }).join('');
+            }
         }
-        const currentUri = SpotifyModule._currentPlaylistUri || '';
-        panel.innerHTML = `
-            <div class="sp-pl-header">
-                <span>♪ MY PLAYLISTS</span>
-                <span style="font-size:9px;opacity:0.4;">${playlists.length} LISTS</span>
-            </div>
-            ${playlists.map(p => `
-                <div class="sp-pl-item ${p.uri === currentUri ? 'sp-pl-active' : ''}"
-                     onclick="SpotifyModule.playPlaylist('${p.uri}')">
-                    ${p.images?.[0]?.url
-                        ? `<img class="sp-pl-img" src="${p.images[0].url}" alt="">`
-                        : `<div class="sp-pl-img" style="background:rgba(29,185,84,0.1);display:flex;align-items:center;justify-content:center;font-size:10px;">♪</div>`
-                    }
-                    <span class="sp-pl-name">${p.name}</span>
-                    <span class="sp-pl-count">${p.tracks?.total ?? ''}</span>
-                </div>
-            `).join('')}
-        `;
+
+        panel.innerHTML = tabsHTML + `<div class="sp-panel-content">${content}</div>`;
     },
 
     disconnect() {

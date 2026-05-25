@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v1.86">
+    <meta name="version" content="v1.87">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.86</title>
+    <title>GPAL FAMILY v1.87</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1723,7 +1723,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.86</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.87</span></div>
     <div class="member-selector" id="member-selector">
         <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
         <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
@@ -2285,25 +2285,17 @@ const PlanModule = {
     },
 
     parseAll(raw) {
-        let planObj = null;
-        if (raw) {
-            try {
-                const parsed = JSON.parse(raw);
-                if (parsed && parsed.v === 2 && parsed.p) planObj = parsed;
-            } catch {}
-        }
-        PlanModule._rawData = [planObj ? (planObj.p[MemberModule.current()] || '') : (raw || '')];
+        let text = raw || '';
+        try { const p = JSON.parse(text); if (p?.v === 2 && p?.p) text = p.p[MemberModule.current()] || ''; } catch {}
+        PlanModule._rawData = [text];
         PlanModule._rendered = [false];
         PlanModule.renderCurrent();
     },
 
     serializeAll() {
         PlanModule.saveCurrent();
-        const p = {};
-        const mn = MemberModule.current();
         const listEl = document.getElementById('plan-list-0');
-        p[mn] = listEl ? PlanModule.serializeSingle(listEl) : (PlanModule._rawData[0] || '');
-        return JSON.stringify({ v: 2, p });
+        return listEl ? PlanModule.serializeSingle(listEl) : (PlanModule._rawData[0] || '');
     },
 
     createTimeSelect(val) {
@@ -4570,7 +4562,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v1.86';
+    const CURRENT_VERSION = 'v1.87';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

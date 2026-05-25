@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="version" content="202605230800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.64</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.65</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -634,12 +634,48 @@
         .sp-pl-active .sp-pl-name { color: #1DB954; }
         .sp-pl-count { font-family: 'Orbitron', sans-serif; font-size: 9px; color: rgba(255,255,255,0.2); flex-shrink: 0; }
         .sp-pl-img { width: 28px; height: 28px; object-fit: cover; border: 1px solid rgba(29,185,84,0.15); flex-shrink: 0; }
-        /* panel tabs */
-        .sp-panel-tabs { display: flex; border-bottom: 1px solid rgba(29,185,84,0.15); background: rgba(0,0,0,0.3); flex-shrink: 0; }
-        .sp-tab-btn { font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; color: rgba(29,185,84,0.35); background: transparent; border: none; border-bottom: 2px solid transparent; padding: 8px 14px; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; outline: none; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* playlist modal */
+        .sp-modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.72);
+            z-index: 800;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(3px);
+            animation: sp-fade-in 0.15s ease;
+        }
+        @keyframes sp-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .sp-modal {
+            background: rgba(4,14,22,0.98);
+            border: 1px solid rgba(29,185,84,0.35);
+            border-top: 2px solid #1DB954;
+            width: min(440px, 92vw);
+            max-height: 72vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 0 60px rgba(29,185,84,0.12), 0 0 20px rgba(0,0,0,0.8);
+            animation: sp-slide-up 0.18s ease;
+        }
+        @keyframes sp-slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .sp-modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px 0;
+        }
+        .sp-modal-title {
+            font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+            color: rgba(29,185,84,0.7); letter-spacing: 2px;
+        }
+        .sp-modal-close {
+            font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+            color: rgba(255,255,255,0.2); background: transparent;
+            border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
+            padding: 3px 8px; transition: all 0.2s; outline: none;
+        }
+        .sp-modal-close:hover { color: rgba(255,80,80,0.8); border-color: rgba(255,80,80,0.4); }
+        /* tabs */
+        .sp-panel-tabs { display: flex; border-bottom: 1px solid rgba(29,185,84,0.15); margin-top: 8px; }
+        .sp-tab-btn { font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; color: rgba(29,185,84,0.35); background: transparent; border: none; border-bottom: 2px solid transparent; padding: 8px 16px; cursor: pointer; letter-spacing: 1px; transition: all 0.2s; outline: none; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .sp-tab-btn.active { color: #1DB954; border-bottom-color: #1DB954; }
         .sp-tab-btn:hover:not(.active) { color: rgba(29,185,84,0.65); }
-        .sp-panel-content { max-height: 260px; overflow-y: auto; }
+        .sp-panel-content { flex: 1; overflow-y: auto; }
         .sp-panel-content::-webkit-scrollbar { width: 3px; }
         .sp-panel-content::-webkit-scrollbar-thumb { background: rgba(29,185,84,0.3); }
         /* track items */
@@ -2920,7 +2956,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.64</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.65</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5642,73 +5678,82 @@ const SpotifyModule = {
     },
 
     async togglePlaylistPanel() {
-        const panel = document.getElementById('sp-playlist-panel');
-        const btn   = document.getElementById('sp-list-btn');
-        if (!panel) return;
-        if (panel.style.display !== 'none') { SpotifyModule.closePlaylistPanel(); return; }
-        panel.style.display = 'flex';
-        panel.style.flexDirection = 'column';
+        if (document.getElementById('sp-modal-backdrop')) { SpotifyModule.closePlaylistPanel(); return; }
+        const btn = document.getElementById('sp-list-btn');
         if (btn) btn.classList.add('active');
+        // 建立 backdrop + modal
+        const backdrop = document.createElement('div');
+        backdrop.className = 'sp-modal-backdrop';
+        backdrop.id = 'sp-modal-backdrop';
+        backdrop.addEventListener('click', e => { if (e.target === backdrop) SpotifyModule.closePlaylistPanel(); });
+        const modal = document.createElement('div');
+        modal.className = 'sp-modal';
+        modal.id = 'sp-modal';
+        backdrop.appendChild(modal);
+        document.body.appendChild(backdrop);
         if (!SpotifyModule._playlists.length) {
-            panel.innerHTML = `<div class="sp-pl-header"><span>♪ LOADING...</span></div>`;
+            modal.innerHTML = `<div class="sp-modal-header"><span class="sp-modal-title">♪ SPOTIFY</span><button class="sp-modal-close" onclick="SpotifyModule.closePlaylistPanel()">✕</button></div><div class="sp-panel-content" style="padding:14px;"><div class="sp-pl-header">LOADING...</div></div>`;
             await SpotifyModule.fetchPlaylists();
         }
         SpotifyModule.renderPanel();
     },
 
     closePlaylistPanel() {
-        const panel = document.getElementById('sp-playlist-panel');
-        const btn   = document.getElementById('sp-list-btn');
-        if (panel) panel.style.display = 'none';
-        if (btn)   btn.classList.remove('active');
+        const backdrop = document.getElementById('sp-modal-backdrop');
+        if (backdrop) backdrop.remove();
+        const btn = document.getElementById('sp-list-btn');
+        if (btn) btn.classList.remove('active');
     },
 
     renderPanel() {
-        const panel = document.getElementById('sp-playlist-panel');
-        if (!panel || panel.style.display === 'none') return;
+        const modal = document.getElementById('sp-modal');
+        if (!modal) return;
         const tab = SpotifyModule._panelTab;
         const plName = SpotifyModule._currentPlaylistName || 'TRACKS';
 
-        const tabsHTML = `<div class="sp-panel-tabs">
-            <button class="sp-tab-btn ${tab==='playlists'?'active':''}" onclick="SpotifyModule.switchTab('playlists')">PLAYLISTS</button>
-            <button class="sp-tab-btn ${tab==='tracks'?'active':''}" onclick="SpotifyModule.switchTab('tracks')" title="${plName}">${plName}</button>
-        </div>`;
+        modal.innerHTML = `
+            <div class="sp-modal-header">
+                <span class="sp-modal-title">♪ SPOTIFY</span>
+                <button class="sp-modal-close" onclick="SpotifyModule.closePlaylistPanel()">✕</button>
+            </div>
+            <div class="sp-panel-tabs">
+                <button class="sp-tab-btn ${tab==='playlists'?'active':''}" onclick="SpotifyModule.switchTab('playlists')">PLAYLISTS</button>
+                <button class="sp-tab-btn ${tab==='tracks'?'active':''}" onclick="SpotifyModule.switchTab('tracks')" title="${plName}">${plName}</button>
+            </div>
+            <div class="sp-panel-content">
+                ${tab === 'playlists' ? SpotifyModule._renderPlaylists() : SpotifyModule._renderTracks()}
+            </div>`;
+    },
 
-        let content = '';
-        if (tab === 'playlists') {
-            if (!SpotifyModule._playlists.length) {
-                content = `<div class="sp-pl-header"><span>NO_PLAYLISTS · RECONNECT SPOTIFY</span></div>`;
-            } else {
-                content = SpotifyModule._playlists.map(p => `
-                    <div class="sp-pl-item" onclick="SpotifyModule.selectPlaylist('${p.id}','${p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${p.uri}')">
-                        ${p.images?.[0]?.url
-                            ? `<img class="sp-pl-img" src="${p.images[0].url}" alt="">`
-                            : `<div class="sp-pl-img" style="background:rgba(29,185,84,0.08);display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(29,185,84,0.35)">♪</div>`}
-                        <span class="sp-pl-name">${p.name}</span>
-                        <span class="sp-pl-count">${p.tracks?.total??''}</span>
-                    </div>`).join('');
-            }
-        } else {
-            if (!SpotifyModule._tracks.length) {
-                content = `<div class="sp-pl-header"><span>LOADING TRACKS...</span></div>`;
-            } else {
-                content = SpotifyModule._tracks.map((t, i) => {
-                    const m = Math.floor(t.duration_ms/60000);
-                    const s = String(Math.floor((t.duration_ms%60000)/1000)).padStart(2,'0');
-                    const artist = t.artists?.map(a=>a.name).join(', ')||'';
-                    return `<div class="sp-pl-item" onclick="SpotifyModule.playTrack(${i})">
-                        <span class="sp-track-num">${i+1}</span>
-                        <div class="sp-track-info">
-                            <div class="sp-pl-name">${t.name}</div>
-                            <div class="sp-track-artist">${artist}</div>
-                        </div>
-                        <span class="sp-pl-count">${m}:${s}</span>
-                    </div>`;
-                }).join('');
-            }
-        }
+    _renderPlaylists() {
+        if (!SpotifyModule._playlists.length)
+            return `<div class="sp-pl-header"><span>NO_PLAYLISTS · RECONNECT SPOTIFY</span></div>`;
+        return SpotifyModule._playlists.map(p => `
+            <div class="sp-pl-item" onclick="SpotifyModule.selectPlaylist('${p.id}','${p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${p.uri}')">
+                ${p.images?.[0]?.url
+                    ? `<img class="sp-pl-img" src="${p.images[0].url}" alt="">`
+                    : `<div class="sp-pl-img" style="background:rgba(29,185,84,0.08);display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(29,185,84,0.35)">♪</div>`}
+                <span class="sp-pl-name">${p.name}</span>
+                <span class="sp-pl-count">${p.tracks?.total??''}</span>
+            </div>`).join('');
+    },
 
-        panel.innerHTML = tabsHTML + `<div class="sp-panel-content">${content}</div>`;
+    _renderTracks() {
+        if (!SpotifyModule._tracks.length)
+            return `<div class="sp-pl-header"><span>LOADING TRACKS...</span></div>`;
+        return SpotifyModule._tracks.map((t, i) => {
+            const m = Math.floor(t.duration_ms/60000);
+            const s = String(Math.floor((t.duration_ms%60000)/1000)).padStart(2,'0');
+            const artist = t.artists?.map(a=>a.name).join(', ')||'';
+            return `<div class="sp-pl-item" onclick="SpotifyModule.playTrack(${i})">
+                <span class="sp-track-num">${i+1}</span>
+                <div class="sp-track-info">
+                    <div class="sp-pl-name">${t.name}</div>
+                    <div class="sp-track-artist">${artist}</div>
+                </div>
+                <span class="sp-pl-count">${m}:${s}</span>
+            </div>`;
+        }).join('');
     },
 
     disconnect() {
@@ -5839,8 +5884,7 @@ const SpotifyModule = {
                 </div>
                 <button class="sp-list-btn" id="sp-list-btn" onclick="SpotifyModule.togglePlaylistPanel()" title="My Playlists">≡</button>
                 <button class="sp-disconnect-btn" onclick="SpotifyModule.disconnect()" title="Disconnect">✕</button>
-            </div>
-            <div id="sp-playlist-panel" class="sp-playlist-panel" style="display:none;"></div>`;
+            </div>`;
             SpotifyModule._updateUI();
         }
     },
@@ -6362,12 +6406,6 @@ const Events = {
                 Utils.adjustHeight(el);
                 SaveQueue.trigger();
             });
-        });
-
-        // Spotify 播放清單：點擊外部關閉
-        document.addEventListener('click', e => {
-            const bar = document.getElementById('spotify-bar');
-            if (bar && !bar.contains(e.target)) SpotifyModule.closePlaylistPanel?.();
         });
 
         // GOAL TEMPLATE 事件

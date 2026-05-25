@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v1.88">
+    <meta name="version" content="v1.89">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.88</title>
+    <title>GPAL FAMILY v1.89</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1723,7 +1723,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.88</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.89</span></div>
     <div class="member-selector" id="member-selector">
         <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
         <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
@@ -2700,8 +2700,7 @@ function switchMember(idx) {
 
 // ---------- LONGTERM GOAL MODULE ----------
 const LongTermModule = {
-    LS_KEY: 'gpal_longterm',
-    data: {},
+    data: [],
     _saveTimer: null,
     _lastRenderedKey: null,
     _dataVersion: 0,
@@ -2725,7 +2724,7 @@ const LongTermModule = {
                 if (json.found !== false) {
                     LongTermModule.data = json.goals;
                     LongTermModule._dataVersion++;
-                    try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
+                    try { localStorage.setItem(LongTermModule._lsKey(), JSON.stringify(LongTermModule.data)); } catch {}
                     LongTermModule.render();
                 }
             }
@@ -2761,7 +2760,7 @@ const LongTermModule = {
         if (autoChanged) {
             goals.forEach(g => { if (!g.done && g.deadline && g.deadline <= today) g.done = true; });
             LongTermModule._dataVersion++;
-            try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
+            try { localStorage.setItem(LongTermModule._lsKey(), JSON.stringify(LongTermModule.data)); } catch {}
             if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
             LongTermModule._saveTimer = setTimeout(async () => {
                 try { const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'longterm', data: LongTermModule.data }) }); const json = await res.json(); if (!json.success) throw new Error('save failed'); } catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
@@ -3223,11 +3222,8 @@ const HabitModule = {
     _dataVersion: 0,
     _lastRenderedKey: null,
 
-    currentHabits() {
-        const name = MemberModule.current();
-        if (!Array.isArray(HabitModule.data[name])) HabitModule.data[name] = [];
-        return HabitModule.data[name];
-    },
+    currentHabits() { return HabitModule.data; },
+    _lsKey() { return 'gpal_habits_' + MemberModule.current(); },
 
     _recentDays(n = 7) {
         const today = Utils.todayISO();
@@ -3261,18 +3257,19 @@ const HabitModule = {
     },
 
     async init() {
-        try {
-            const cached = JSON.parse(localStorage.getItem(HabitModule.LS_KEY) || 'null');
-            if (cached && typeof cached === 'object') HabitModule.data = cached;
-        } catch {}
+        HabitModule.data = [];
+        try { const c = JSON.parse(localStorage.getItem(HabitModule._lsKey()) || 'null'); if (Array.isArray(c)) HabitModule.data = c; } catch {}
         HabitModule.render();
         try {
             const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=habit`);
             const json = await res.json();
-            if (json.habits && typeof json.habits === 'object' && json.found !== false) {
-                HabitModule.data = json.habits;
+            let incoming = json.habits;
+            // migrate old format {member:[...]} → extract current member's array
+            if (!Array.isArray(incoming) && incoming && typeof incoming === 'object') incoming = incoming[MemberModule.current()] || [];
+            if (Array.isArray(incoming) && json.found !== false) {
+                HabitModule.data = incoming;
                 HabitModule._dataVersion++;
-                try { localStorage.setItem(HabitModule.LS_KEY, JSON.stringify(HabitModule.data)); } catch {}
+                try { localStorage.setItem(HabitModule._lsKey(), JSON.stringify(incoming)); } catch {}
                 HabitModule.render();
             }
         } catch {}
@@ -3285,7 +3282,7 @@ const HabitModule = {
     },
 
     _scheduleSave() {
-        try { localStorage.setItem(HabitModule.LS_KEY, JSON.stringify(HabitModule.data)); } catch {}
+        try { localStorage.setItem(HabitModule._lsKey(), JSON.stringify(HabitModule.data)); } catch {}
         if (HabitModule._saveTimer) clearTimeout(HabitModule._saveTimer);
         HabitModule._saveTimer = setTimeout(async () => {
             try {
@@ -3942,6 +3939,8 @@ const MemberModule = {
         Object.keys(localStorage)
             .filter(k => k.startsWith(CONFIG.LS_PREFIX) || k.startsWith('gpal_prefetch_'))
             .forEach(k => localStorage.removeItem(k));
+        LongTermModule.init();
+        HabitModule.init();
         Sync.fetchData();
     },
 
@@ -4565,7 +4564,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v1.88';
+    const CURRENT_VERSION = 'v1.89';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

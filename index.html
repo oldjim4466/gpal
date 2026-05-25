@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="version" content="202605230800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.74</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.75</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2931,7 +2931,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.74</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.75</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5828,6 +5828,11 @@ const SpotifyModule = {
     },
 
     // ─── Lyrics ───────────────────────────────────────────────────────────────
+    _estimateProgress() {
+        if (!SpotifyModule._playing) return SpotifyModule._progressBase;
+        return SpotifyModule._progressBase + (Date.now() - SpotifyModule._progressTimestamp);
+    },
+
     async _fetchLyrics(trackName, artistName, albumName) {
         try {
             const params = new URLSearchParams({ track_name: trackName, artist_name: artistName, album_name: albumName || '' });

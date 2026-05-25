@@ -159,6 +159,21 @@
             z-index: 1;
         }
 
+
+        /* member selector */
+        .member-selector { display: flex; gap: 4px; align-items: center; }
+        .mbr-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
+            padding: 3px 8px; border: 1px solid rgba(0,242,255,0.25);
+            background: transparent; color: rgba(0,242,255,0.4);
+            cursor: pointer; transition: all 0.2s; outline: none; letter-spacing: 1px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mbr-btn:hover { color: var(--stark-cyan); border-color: rgba(0,242,255,0.6); }
+        .mbr-btn.active {
+            color: var(--stark-dark); background: var(--stark-cyan);
+            border-color: var(--stark-cyan); box-shadow: 0 0 8px rgba(0,242,255,0.4);
+        }
         .btn-update-now {
             background: rgba(255,204,0,0.15);
             border: 1px solid var(--stark-gold);
@@ -1709,6 +1724,11 @@
 
 <nav>
     <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.85</span></div>
+    <div class="member-selector" id="member-selector">
+        <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
+        <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
+        <button class="mbr-btn" data-mbr="kid" onclick="MemberModule.select('kid')">KID</button>
+    </div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3922,34 +3942,34 @@ const SpotifyModule = {
 // ---------- MEMBER MODULE ----------
 const MemberModule = {
     LS_KEY: 'gpal_family_member',
+    MEMBERS: ['dad', 'mom', 'kid'],
 
     current() {
-        return (localStorage.getItem(MemberModule.LS_KEY) || '').trim().toLowerCase() || 'user';
+        const v = (localStorage.getItem(MemberModule.LS_KEY) || '').toLowerCase();
+        return MemberModule.MEMBERS.includes(v) ? v : 'dad';
     },
 
-    set(name) {
-        const clean = name.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'user';
-        localStorage.setItem(MemberModule.LS_KEY, clean);
+    select(name) {
+        if (!MemberModule.MEMBERS.includes(name)) return;
+        localStorage.setItem(MemberModule.LS_KEY, name);
         MemberModule.updateUI();
-        // 清除本地備份快取，重新載入雲端數據
         Object.keys(localStorage)
-            .filter(k => k.startsWith(CONFIG.LS_PREFIX))
+            .filter(k => k.startsWith(CONFIG.LS_PREFIX) || k.startsWith('gpal_prefetch_'))
             .forEach(k => localStorage.removeItem(k));
         Sync.fetchData();
     },
 
     updateUI() {
-        const inp = document.getElementById('member-input');
-        if (inp) inp.value = MemberModule.current();
+        const cur = MemberModule.current();
+        document.querySelectorAll('.mbr-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mbr === cur);
+        });
     },
 
     init() {
+        if (!localStorage.getItem(MemberModule.LS_KEY))
+            localStorage.setItem(MemberModule.LS_KEY, 'dad');
         MemberModule.updateUI();
-        // 首次使用若未設置，提示輸入
-        if (!localStorage.getItem(MemberModule.LS_KEY)) {
-            const inp = document.getElementById('member-input');
-            if (inp) inp.focus();
-        }
     },
 };
 

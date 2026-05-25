@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605230600">
+    <meta name="version" content="202605230700">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.56</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.61</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -613,13 +613,20 @@
         .sp-art[src=""] { display: none; }
 
         /* EQ bars */
-        .sp-eq { display: flex; align-items: flex-end; gap: 2px; height: 22px; flex-shrink: 0; }
-        .sp-eq-bar { width: 3px; height: 5px; background: #1DB954; border-radius: 1px 1px 0 0; opacity: 0.85; transition: height 0.1s ease; animation: sp-eq-fallback 0.7s ease-in-out infinite alternate; }
-        .sp-eq-bar:nth-child(1) { animation-duration: 0.55s; }
-        .sp-eq-bar:nth-child(2) { animation-duration: 0.75s; animation-delay: 0.1s; }
-        .sp-eq-bar:nth-child(3) { animation-duration: 0.45s; animation-delay: 0.25s; }
-        .sp-eq-bar:nth-child(4) { animation-duration: 0.65s; animation-delay: 0.05s; }
-        .sp-eq-bar:nth-child(5) { animation-duration: 0.85s; animation-delay: 0.15s; }
+        .sp-eq { display: flex; align-items: flex-end; gap: 1.5px; height: 22px; flex-shrink: 0; }
+        .sp-eq-bar { width: 2px; height: 5px; background: #1DB954; border-radius: 1px 1px 0 0; opacity: 0.85; transition: height 0.1s ease; animation: sp-eq-fallback 0.7s ease-in-out infinite alternate; }
+        .sp-eq-bar:nth-child(1)  { animation-duration: 0.55s; animation-delay: 0.00s; }
+        .sp-eq-bar:nth-child(2)  { animation-duration: 0.70s; animation-delay: 0.05s; }
+        .sp-eq-bar:nth-child(3)  { animation-duration: 0.60s; animation-delay: 0.10s; }
+        .sp-eq-bar:nth-child(4)  { animation-duration: 0.80s; animation-delay: 0.15s; }
+        .sp-eq-bar:nth-child(5)  { animation-duration: 0.45s; animation-delay: 0.08s; }
+        .sp-eq-bar:nth-child(6)  { animation-duration: 0.65s; animation-delay: 0.20s; }
+        .sp-eq-bar:nth-child(7)  { animation-duration: 0.75s; animation-delay: 0.03s; }
+        .sp-eq-bar:nth-child(8)  { animation-duration: 0.50s; animation-delay: 0.12s; }
+        .sp-eq-bar:nth-child(9)  { animation-duration: 0.85s; animation-delay: 0.18s; }
+        .sp-eq-bar:nth-child(10) { animation-duration: 0.58s; animation-delay: 0.07s; }
+        .sp-eq-bar:nth-child(11) { animation-duration: 0.72s; animation-delay: 0.22s; }
+        .sp-eq-bar:nth-child(12) { animation-duration: 0.48s; animation-delay: 0.14s; }
         @keyframes sp-eq-fallback { 0% { height: 3px; } 100% { height: 22px; } }
         .sp-eq.paused .sp-eq-bar { animation: none; opacity: 0.3; }
 
@@ -2844,7 +2851,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.60</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.61</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5560,21 +5567,12 @@ const SpotifyModule = {
         }
         if (!seg?.pitches) return;
 
-        // loudness 映射（-60~0 dB → 0~1）
         const loud = Math.max(0, Math.min(1, (seg.loudness_max + 60) / 60));
-        const p = seg.pitches; // 12 chroma values (C → B), each 0~1
+        const p = seg.pitches; // 12 chroma values (C C# D D# E F F# G G# A A# B), each 0~1
 
-        // 5個 EQ bar：低 → 高音（chromatic grouping）
-        const groups = [
-            (p[0] + p[1]) / 2,                  // Bass:    C, C#
-            (p[2] + p[3] + p[4]) / 3,            // Low-mid: D, D#, E
-            (p[5] + p[6]) / 2,                   // Mid:     F, F#
-            (p[7] + p[8] + p[9]) / 3,            // Hi-mid:  G, G#, A
-            (p[10] + p[11]) / 2,                 // Treble:  A#, B
-        ];
-
+        // 直接映射 12 個音符 → 12 個 EQ bar
         bars.forEach((bar, i) => {
-            bar.style.height = (3 + groups[i] * loud * 19).toFixed(1) + 'px';
+            bar.style.height = (3 + (p[i] || 0) * loud * 19).toFixed(1) + 'px';
         });
     },
 
@@ -5603,11 +5601,12 @@ const SpotifyModule = {
             bar.innerHTML = `<div class="sp-player">
                 <img id="sp-art" class="sp-art" src="" alt="">
                 <div class="sp-eq ${playing ? '' : 'paused'}" id="sp-eq">
-                    <div class="sp-eq-bar"></div>
-                    <div class="sp-eq-bar"></div>
-                    <div class="sp-eq-bar"></div>
-                    <div class="sp-eq-bar"></div>
-                    <div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
+                    <div class="sp-eq-bar"></div><div class="sp-eq-bar"></div>
                 </div>
                 <div class="sp-info">
                     <div id="sp-track" class="sp-track">—</div>
@@ -7517,7 +7516,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605230600';
+    const CURRENT_VERSION = '202605230700';
     async function checkVersion() {
         try {
             // 只抓前 500 字節（version tag 在 <head> 裡），比下載整頁快 10x+

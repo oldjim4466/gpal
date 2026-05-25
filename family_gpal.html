@@ -201,6 +201,20 @@
             color: var(--stark-gold);
             border-color: var(--stark-gold);
         }
+        /* member selector */
+        .member-selector { display: flex; gap: 4px; align-items: center; }
+        .member-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
+            padding: 3px 8px; border: 1px solid rgba(0,242,255,0.25);
+            background: transparent; color: rgba(0,242,255,0.4);
+            cursor: pointer; transition: all 0.2s; outline: none; letter-spacing: 1px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .member-btn:hover { color: var(--stark-cyan); border-color: rgba(0,242,255,0.6); }
+        .member-btn.active {
+            color: var(--stark-dark); background: var(--stark-cyan);
+            border-color: var(--stark-cyan); box-shadow: 0 0 8px rgba(0,242,255,0.5);
+        }
         .conn-indicator {
             display: flex;
             align-items: center;
@@ -1722,6 +1736,11 @@
 
 <nav>
     <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.84</span></div>
+    <div class="member-selector" id="member-selector">
+        <button class="member-btn" data-member="dad" onclick="MemberModule.select('dad')">DAD</button>
+        <button class="member-btn" data-member="mom" onclick="MemberModule.select('mom')">MOM</button>
+        <button class="member-btn" data-member="kid" onclick="MemberModule.select('kid')">KID</button>
+    </div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -1998,8 +2017,22 @@ const Utils = {
         DOM.connText.textContent = state.toUpperCase();
     },
 
-    // 安全 fetch：超時 + 重試 + AbortController
+    // 安全 fetch：超時 + 重試 + AbortController + 自動加 member 參數
     async safeFetch(url, options = {}, retries = CONFIG.MAX_RETRIES) {
+        // 自動在 WEB_APP_URL 請求裡加 member 參數
+        if (url.includes(CONFIG.WEB_APP_URL.split('?')[0])) {
+            const member = MemberModule.current();
+            const sep = url.includes('?') ? '&' : '?';
+            url = url + sep + 'member=' + encodeURIComponent(member);
+            // POST 請求：在 body 裡也加 member
+            if (options.method === 'POST' && options.body) {
+                try {
+                    const body = JSON.parse(options.body);
+                    body.member = member;
+                    options = { ...options, body: JSON.stringify(body) };
+                } catch {}
+            }
+        }
         for (let attempt = 0; attempt <= retries; attempt++) {
             const ctrl = new AbortController();
             const timer = setTimeout(() => ctrl.abort(), CONFIG.FETCH_TIMEOUT);
@@ -4008,6 +4041,48 @@ const SpotifyModule = {
     },
 };
 
+// ---------- MEMBER MODULE ----------
+const MemberModule = {
+    LS_KEY: 'gpal_family_member',
+    MEMBERS: ['dad', 'mom', 'kid'],
+
+    current() {
+        return localStorage.getItem(MemberModule.LS_KEY) || 'dad';
+    },
+
+    select(member) {
+        if (!MemberModule.MEMBERS.includes(member)) return;
+        const prev = MemberModule.current();
+        if (member === prev) return;
+        localStorage.setItem(MemberModule.LS_KEY, member);
+        MemberModule.updateUI();
+        // 清除本地緩存，重新從雲端載入新成員的數據
+        MemberModule.clearCache(prev);
+        Sync.fetchData();
+    },
+
+    clearCache(member) {
+        // 清除所有 localStorage 中的備份數據
+        Object.keys(localStorage)
+            .filter(k => k.startsWith(CONFIG.LS_PREFIX))
+            .forEach(k => localStorage.removeItem(k));
+    },
+
+    updateUI() {
+        const cur = MemberModule.current();
+        document.querySelectorAll('.member-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.member === cur);
+        });
+        // 更新 brand 顯示
+        const brand = document.querySelector('.brand-bold');
+        if (brand) brand.firstChild.textContent = `GPAL · ${cur.toUpperCase()} `;
+    },
+
+    init() {
+        MemberModule.updateUI();
+    },
+};
+
 // ---------- SYNC MODULE ----------
 const Sync = {
     // 預取 ±3 天資料
@@ -4565,6 +4640,7 @@ window.addEventListener('DOMContentLoaded', () => {
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
     MemberMgr.init();
+    MemberModule.init();
     LongTermModule.init();
     HabitModule.init();
     GoalTemplateModule.init();

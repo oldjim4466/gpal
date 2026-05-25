@@ -124,11 +124,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(6, 22, 35, 0.9);
-            position: sticky;
-            top: 0;
+            background: rgba(6, 22, 35, 0.95);
+            position: fixed;
+            top: 0; left: 0; right: 0;
             z-index: 100;
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             overflow: hidden;
         }
         @media (min-width: 768px) {
@@ -235,6 +236,7 @@
 
         .header-section {
             padding: 1.2rem 1rem 1rem;
+            padding-top: calc(var(--nav-h, 50px) + 1.2rem);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -4570,6 +4572,9 @@ window.addEventListener('DOMContentLoaded', () => {
     MissionClockModule.init();
     StreakModule.init();
     Events.init();
+    // 計算固定 nav 高度，補償 header-section padding
+    const navH = document.querySelector('nav')?.offsetHeight || 50;
+    document.documentElement.style.setProperty('--nav-h', navH + 'px');
     Sync.fetchData();
 
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);

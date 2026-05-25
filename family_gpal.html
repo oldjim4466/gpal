@@ -367,13 +367,13 @@
             margin: 0 auto;
             padding: 0.5rem;
             width: 100%;
-            padding-bottom: 60px;
+            padding-bottom: calc(var(--footer-h, 180px) + 16px);
         }
         @media (min-width: 768px) {
             .main-container {
                 max-width: 860px;
                 padding: 0.8rem 1.2rem;
-                padding-bottom: 300px;
+                padding-bottom: calc(var(--footer-h, 180px) + 24px);
             }
         }
         .gpal-card {
@@ -3476,7 +3476,7 @@ const SpotifyModule = {
     // ─── Init ───────────────────────────────────────────────────────────────
     init() {
         // 預設 Client ID + Redirect URI（用戶專屬）
-        const DEFAULT_CONFIG = { clientId: 'cc2c4917566648d1a79b3f84b9a3e28f', redirectUri: 'https://oldjim4466.github.io/gpal/index.html' };
+        const DEFAULT_CONFIG = { clientId: 'f05736246eff49ab8ff41e3d51a79588', redirectUri: 'https://oldjim4466.github.io/gpal/family_gpal.html' };
         if (!localStorage.getItem(SpotifyModule.LS_CONFIG)) {
             localStorage.setItem(SpotifyModule.LS_CONFIG, JSON.stringify(DEFAULT_CONFIG));
         }
@@ -4575,6 +4575,15 @@ window.addEventListener('DOMContentLoaded', () => {
     // 計算固定 nav 高度，補償 header-section padding
     const navH = document.querySelector('nav')?.offsetHeight || 50;
     document.documentElement.style.setProperty('--nav-h', navH + 'px');
+    // 計算固定 footer 高度，補償 main-container padding-bottom
+    const setFooterH = () => {
+        const fh = document.querySelector('footer')?.offsetHeight || 180;
+        document.documentElement.style.setProperty('--footer-h', fh + 'px');
+    };
+    setFooterH();
+    // Spotify 連接/斷開後 footer 高度改變，重新計算
+    const _origSpRender = SpotifyModule.render.bind(SpotifyModule);
+    SpotifyModule.render = function() { _origSpRender(); setTimeout(setFooterH, 100); };
     Sync.fetchData();
 
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);

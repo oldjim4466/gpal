@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="version" content="202605230800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.65</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.66</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2956,7 +2956,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.65</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.66</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5640,12 +5640,17 @@ const SpotifyModule = {
         SpotifyModule._tracks = [];
         SpotifyModule._panelTab = 'tracks';
         SpotifyModule.renderPanel(); // show loading
-        const data = await SpotifyModule._api(
-            `/playlists/${id}/tracks?limit=50&fields=items(track(id,name,artists,duration_ms,uri))`
-        );
-        if (data?.items) {
-            SpotifyModule._tracks = data.items.filter(i => i?.track).map(i => i.track);
-        }
+
+        try {
+            // 不加 fields 參數避免 URL 解析問題；limit=100 抓更多歌
+            const data = await SpotifyModule._api(`/playlists/${id}/tracks?limit=100`);
+            if (data?.items) {
+                SpotifyModule._tracks = data.items
+                    .filter(i => i?.track?.id)  // 過濾 null 和本地檔案
+                    .map(i => i.track);
+            }
+        } catch(e) {}
+
         SpotifyModule.renderPanel();
     },
 
@@ -5681,16 +5686,31 @@ const SpotifyModule = {
         if (document.getElementById('sp-modal-backdrop')) { SpotifyModule.closePlaylistPanel(); return; }
         const btn = document.getElementById('sp-list-btn');
         if (btn) btn.classList.add('active');
-        // 建立 backdrop + modal
+
         const backdrop = document.createElement('div');
         backdrop.className = 'sp-modal-backdrop';
         backdrop.id = 'sp-modal-backdrop';
         backdrop.addEventListener('click', e => { if (e.target === backdrop) SpotifyModule.closePlaylistPanel(); });
+
         const modal = document.createElement('div');
         modal.className = 'sp-modal';
         modal.id = 'sp-modal';
+
+        // 事件委托：處理 playlist 和 track 點擊
+        modal.addEventListener('click', e => {
+            const plItem = e.target.closest('[data-pl-index]');
+            if (plItem) {
+                const p = SpotifyModule._playlists[+plItem.dataset.plIndex];
+                if (p) SpotifyModule.selectPlaylist(p.id, p.name, p.uri);
+                return;
+            }
+            const trItem = e.target.closest('[data-track-index]');
+            if (trItem) SpotifyModule.playTrack(+trItem.dataset.trackIndex);
+        });
+
         backdrop.appendChild(modal);
         document.body.appendChild(backdrop);
+
         if (!SpotifyModule._playlists.length) {
             modal.innerHTML = `<div class="sp-modal-header"><span class="sp-modal-title">♪ SPOTIFY</span><button class="sp-modal-close" onclick="SpotifyModule.closePlaylistPanel()">✕</button></div><div class="sp-panel-content" style="padding:14px;"><div class="sp-pl-header">LOADING...</div></div>`;
             await SpotifyModule.fetchPlaylists();
@@ -5728,8 +5748,8 @@ const SpotifyModule = {
     _renderPlaylists() {
         if (!SpotifyModule._playlists.length)
             return `<div class="sp-pl-header"><span>NO_PLAYLISTS · RECONNECT SPOTIFY</span></div>`;
-        return SpotifyModule._playlists.map(p => `
-            <div class="sp-pl-item" onclick="SpotifyModule.selectPlaylist('${p.id}','${p.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${p.uri}')">
+        return SpotifyModule._playlists.map((p, i) => `
+            <div class="sp-pl-item" data-pl-index="${i}">
                 ${p.images?.[0]?.url
                     ? `<img class="sp-pl-img" src="${p.images[0].url}" alt="">`
                     : `<div class="sp-pl-img" style="background:rgba(29,185,84,0.08);display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(29,185,84,0.35)">♪</div>`}
@@ -5745,7 +5765,7 @@ const SpotifyModule = {
             const m = Math.floor(t.duration_ms/60000);
             const s = String(Math.floor((t.duration_ms%60000)/1000)).padStart(2,'0');
             const artist = t.artists?.map(a=>a.name).join(', ')||'';
-            return `<div class="sp-pl-item" onclick="SpotifyModule.playTrack(${i})">
+            return `<div class="sp-pl-item" data-track-index="${i}">
                 <span class="sp-track-num">${i+1}</span>
                 <div class="sp-track-info">
                     <div class="sp-pl-name">${t.name}</div>

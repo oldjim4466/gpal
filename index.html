@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="version" content="202605230800">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.77</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.78</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -119,11 +119,14 @@
         }
 
         .sticky-header {
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             z-index: 100;
-            background: rgba(6, 22, 35, 0.9);
+            background: rgba(6, 22, 35, 0.95);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
         nav {
             padding: 0.6rem;
@@ -240,8 +243,10 @@
         .conn-dot.syncing { background: var(--stark-gold); box-shadow: 0 0 8px var(--stark-gold); }
         .conn-dot.syncing::before { color: var(--stark-gold); animation-duration: 1s; }
 
+        .sticky-header { height: var(--nav-h, 50px); } /* JS will set exact height */
         .header-section {
             padding: 1.2rem 1rem 1rem;
+            padding-top: calc(var(--nav-h, 50px) + 1.2rem);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1278,7 +1283,14 @@
             color: var(--stark-cyan); border-color: var(--stark-cyan);
             transform: rotate(180deg); box-shadow: 0 0 10px var(--stark-glow);
         }
-        .hud-row {
+        .btn-portfolio-toggle {
+            font-family: 'Orbitron', sans-serif; font-size: 0.42rem; font-weight: 700;
+            color: rgba(0,242,255,0.4); background: transparent;
+            border: none; cursor: pointer; padding: 4px 8px;
+            letter-spacing: 1px; transition: color 0.2s; outline: none;
+            width: 100%; text-align: center;
+        }
+        .btn-portfolio-toggle:hover { color: var(--stark-cyan); }
             padding: 0;
             text-align: center;
             background: transparent;
@@ -2933,7 +2945,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.77</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.78</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3318,7 +3330,13 @@
 </main>
 <footer>
     <div class="hud-row">
-        <div class="portfolio-hud">
+        <button class="btn-portfolio-toggle" id="btn-portfolio-toggle" onclick="
+            const hud = this.nextElementSibling;
+            const show = hud.style.display === 'none';
+            hud.style.display = show ? '' : 'none';
+            this.textContent = show ? '▾ PORTFOLIO' : '▸ PORTFOLIO';
+        ">▸ PORTFOLIO</button>
+        <div class="portfolio-hud" style="display:none;">
             <div id="portfolio-display">NET WORTH: SYNCING...</div>
         </div>
     </div>
@@ -7807,6 +7825,9 @@ window.addEventListener('DOMContentLoaded', () => {
     SpotifyModule.init();
     MissionClockModule.init();
     StreakModule.init();
+    // 計算固定 nav 高度，補償 header-section padding
+    const navH = document.querySelector('.sticky-header')?.offsetHeight || 50;
+    document.documentElement.style.setProperty('--nav-h', navH + 'px');
     Events.init();
     HealthModule.bindEvents();
     HealthModule.render(DOM.datePicker.value);

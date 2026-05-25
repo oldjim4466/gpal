@@ -5879,7 +5879,7 @@ const SpotifyModule = {
         if (!lb) return;
         if (!SpotifyModule._playing || !SpotifyModule._lyrics.length) return;
 
-        const sec = SpotifyModule._estimateProgress() / 1000;
+        const sec = SpotifyModule._estimateProgress() / 1000 + 0.5; // 提前 0.5 秒顯示
         let idx = 0;
         for (let i = 0; i < SpotifyModule._lyrics.length; i++) {
             if (SpotifyModule._lyrics[i].time <= sec) idx = i;

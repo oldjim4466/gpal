@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v1.91">
+    <meta name="version" content="v1.92">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.91</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.92</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2941,7 +2941,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.91</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.92</span></div>
         <div class="member-selector" id="member-selector">
             <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
             <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
@@ -6956,11 +6956,11 @@ const FinanceModule = {
                 <div class="fm-sum-item net ${net < 0 ? 'negative' : ''}"><div class="fm-sum-label">結餘</div><div class="fm-sum-val">${net >= 0 ? '+' : '-'}$${FinanceModule.fmt(Math.abs(net)).slice(1)}</div></div>
             `;
             FinanceModule._managerRecords = (data.records || [])
-                .filter(r => filter === 'income' ? r.income > 0 : filter === 'expense' ? r.expense > 0 : true)
+                .filter(r => filter === 'income' ? r.income > 0 : filter === 'expense' ? r.expense < 0 : true)
                 .map(r => ({
                     date:      `${month}-${r.date.split('-')[1]}`,
                     direction: r.income > 0 ? 'income' : 'expense',
-                    amount:    r.income > 0 ? r.income : r.expense,
+                    amount:    r.income > 0 ? r.income : Math.abs(r.expense),
                     category:  r.category, note: r.note, account: r.account, _mmdd: r.date,
                 }));
             FinanceModule.renderManager();
@@ -7814,7 +7814,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v1.91';
+    const CURRENT_VERSION = 'v1.92';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="202605230100">
+    <meta name="version" content="202605230300">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.54</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.56</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -591,50 +591,64 @@
 
         /* === SPOTIFY BAR === */
         #spotify-bar {
-            background: rgba(0,0,0,0.4);
-            border-bottom: 1px solid rgba(29,185,84,0.2);
-            padding: 5px 12px;
-            min-height: 36px;
+            background: rgba(0,0,0,0.5);
+            border-bottom: 2px solid rgba(29,185,84,0.3);
+            padding: 10px 14px;
+            min-height: 72px;
             display: flex; align-items: center;
         }
-        .sp-connect-row { display: flex; align-items: center; gap: 8px; width: 100%; }
-        .sp-label {
-            font-family: 'Orbitron', sans-serif; font-size: 0.42rem; font-weight: 700;
-            color: rgba(29,185,84,0.65); letter-spacing: 2px; white-space: nowrap; flex-shrink: 0;
-        }
-        .sp-input {
-            flex: 1; min-width: 0; background: transparent;
-            border: 1px solid rgba(29,185,84,0.25); border-bottom: 1px solid rgba(29,185,84,0.4);
-            color: rgba(29,185,84,0.85); font-family: 'Orbitron', sans-serif; font-size: 0.38rem;
-            padding: 2px 6px; outline: none; transition: border-color 0.2s;
-        }
+        .sp-connect-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .sp-label { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; color: rgba(29,185,84,0.7); letter-spacing: 2px; white-space: nowrap; flex-shrink: 0; }
+        .sp-input { flex: 1; min-width: 0; background: transparent; border: 1px solid rgba(29,185,84,0.3); color: rgba(29,185,84,0.9); font-family: 'Orbitron', sans-serif; font-size: 11px; padding: 7px 8px; outline: none; transition: border-color 0.2s; }
         .sp-input:focus { border-color: rgba(29,185,84,0.7); }
-        .sp-input::placeholder { color: rgba(29,185,84,0.25); }
-        .sp-btn {
-            font-family: 'Orbitron', sans-serif; font-size: 0.42rem; font-weight: 700;
-            color: rgba(29,185,84,0.65); border: 1px solid rgba(29,185,84,0.3);
-            background: transparent; padding: 3px 12px; cursor: pointer; outline: none;
-            transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
-            clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%); position: relative; overflow: hidden;
-        }
+        .sp-input::placeholder { color: rgba(29,185,84,0.3); }
+        .sp-btn { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; color: rgba(29,185,84,0.7); border: 1px solid rgba(29,185,84,0.4); background: transparent; padding: 8px 20px; cursor: pointer; outline: none; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%); position: relative; overflow: hidden; }
         .sp-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg,transparent,rgba(29,185,84,0.25),transparent); transition: left 0.4s; }
         .sp-btn:hover::before { left: 200%; }
-        .sp-btn:hover { color: #1DB954; border-color: #1DB954; box-shadow: 0 0 8px rgba(29,185,84,0.25); }
-        .sp-player { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; }
-        .sp-art { width: 28px; height: 28px; border-radius: 2px; object-fit: cover; border: 1px solid rgba(29,185,84,0.2); flex-shrink: 0; }
+        .sp-btn:hover { color: #1DB954; border-color: #1DB954; box-shadow: 0 0 10px rgba(29,185,84,0.35); }
+        .sp-player { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; }
+        .sp-art { width: 50px; height: 50px; border-radius: 3px; object-fit: cover; border: 1px solid rgba(29,185,84,0.3); flex-shrink: 0; }
         .sp-art[src=""] { display: none; }
         .sp-info { flex: 1; min-width: 0; }
-        .sp-track { font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sp-artist { font-family: 'Orbitron', sans-serif; font-size: 0.36rem; color: rgba(29,185,84,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sp-mid { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
-        .sp-controls { display: flex; align-items: center; gap: 2px; }
-        .sp-ctrl-btn { font-size: 0.55rem; color: rgba(29,185,84,0.55); background: transparent; border: none; cursor: pointer; padding: 2px 5px; transition: color 0.15s; outline: none; }
-        .sp-ctrl-btn:hover { color: #1DB954; }
-        .sp-play-btn { font-size: 0.75rem !important; color: rgba(29,185,84,0.75) !important; }
-        .sp-progress-wrap { width: 80px; height: 2px; background: rgba(29,185,84,0.12); border-radius: 1px; overflow: hidden; }
-        .sp-progress-bar { height: 100%; background: #1DB954; border-radius: 1px; transition: width 1s linear; width: 0%; }
-        .sp-disconnect-btn { font-size: 0.4rem; color: rgba(255,255,255,0.18); background: transparent; border: none; cursor: pointer; padding: 2px 4px; transition: color 0.2s; flex-shrink: 0; outline: none; }
-        .sp-disconnect-btn:hover { color: rgba(255,100,100,0.7); }
+        .sp-track { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sp-artist { font-family: 'Orbitron', sans-serif; font-size: 10px; color: rgba(29,185,84,0.65); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; letter-spacing: 1px; }
+        .sp-mid { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+        .sp-controls { display: flex; align-items: center; gap: 6px; }
+        .sp-ctrl-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(29,185,84,0.65);
+            border: 1px solid rgba(29,185,84,0.35);
+            background: transparent;
+            padding: 8px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+            letter-spacing: 1px;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            min-width: 48px;
+            text-align: center;
+        }
+        .sp-ctrl-btn:hover, .sp-ctrl-btn:active { color: #1DB954; border-color: #1DB954; box-shadow: 0 0 8px rgba(29,185,84,0.35); }
+        .sp-play-btn {
+            font-size: 15px;
+            padding: 9px 24px;
+            color: rgba(29,185,84,0.9);
+            border-color: rgba(29,185,84,0.5);
+            clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
+            position: relative;
+            overflow: hidden;
+            min-width: 68px;
+        }
+        .sp-play-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg,transparent,rgba(29,185,84,0.3),transparent); transition: left 0.4s; }
+        .sp-play-btn:hover::before { left: 200%; }
+        .sp-play-btn:hover { box-shadow: 0 0 14px rgba(29,185,84,0.45); }
+        .sp-progress-wrap { width: 90px; height: 3px; background: rgba(29,185,84,0.15); border-radius: 2px; overflow: hidden; }
+        .sp-progress-bar { height: 100%; background: #1DB954; border-radius: 2px; transition: width 1s linear; width: 0%; }
+        .sp-disconnect-btn { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.2); background: transparent; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; padding: 5px 9px; transition: all 0.2s; flex-shrink: 0; outline: none; }
+        .sp-disconnect-btn:hover { color: rgba(255,100,100,0.8); border-color: rgba(255,100,100,0.4); }
 
         /* === GOAL TEMPLATE === */
         .btn-tmpl {
@@ -2820,7 +2834,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.54</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.56</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5436,7 +5450,34 @@ const SpotifyModule = {
         SpotifyModule._updateUI();
     },
 
-    async togglePlay()  { if (SpotifyModule._playing) { await SpotifyModule._api('/me/player/pause','PUT'); SpotifyModule._playing=false; } else { await SpotifyModule._api('/me/player/play','PUT'); SpotifyModule._playing=true; } SpotifyModule._updatePlayBtn(); },
+    async togglePlay() {
+        if (SpotifyModule._playing) {
+            const res = await SpotifyModule._api('/me/player/pause', 'PUT');
+            if (res !== null) { SpotifyModule._playing = false; SpotifyModule._updatePlayBtn(); }
+        } else {
+            await SpotifyModule._resumeOrStart();
+        }
+    },
+
+    async _resumeOrStart() {
+        // 先嘗試直接恢復播放
+        let res = await SpotifyModule._api('/me/player/play', 'PUT');
+        if (res !== null) { SpotifyModule._playing = true; SpotifyModule._updatePlayBtn(); return; }
+
+        // 失敗（沒有活躍設備）→ 找第一個可用設備
+        const devData = await SpotifyModule._api('/me/player/devices');
+        const device = devData?.devices?.find(d => !d.is_restricted) || devData?.devices?.[0];
+        if (device) {
+            res = await SpotifyModule._api('/me/player/play?device_id=' + device.id, 'PUT');
+            if (res !== null) {
+                SpotifyModule._playing = true; SpotifyModule._updatePlayBtn();
+                setTimeout(SpotifyModule.fetchNowPlaying, 800);
+                return;
+            }
+        }
+        // 所有設備都無法播放
+        Utils.setStatus('SPOTIFY: Open Spotify on a device first', 'warn');
+    },
     async next()        { await SpotifyModule._api('/me/player/next','POST'); setTimeout(SpotifyModule.fetchNowPlaying, 400); },
     async previous()    { await SpotifyModule._api('/me/player/previous','POST'); setTimeout(SpotifyModule.fetchNowPlaying, 400); },
 
@@ -5789,7 +5830,7 @@ const Sync = {
 
                 // 分隔線
                 const div1 = document.createElement('span');
-                div1.className = 'pf-divider';
+                div1.56className = 'pf-divider';
 
                 // P/L 區塊
                 const plGroup = document.createElement('span');
@@ -7365,7 +7406,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = '202605230100';
+    const CURRENT_VERSION = '202605230300';
     async function checkVersion() {
         try {
             // 只抓前 500 字節（version tag 在 <head> 裡），比下載整頁快 10x+

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v1.94">
+    <meta name="version" content="v1.98">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.94</title>
+    <title>GPAL FAMILY v1.98</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1723,7 +1723,7 @@
 <body>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.94</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.98</span></div>
     <div class="member-selector" id="member-selector">
         <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
         <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
@@ -3965,12 +3965,18 @@ const MemberModule = {
 // ── Global fetch interceptor: auto-inject member (skip shared data types) ──
 (function() {
     const _origFetch = window.fetch.bind(window);
-    const _SHARED_RE = /type=(portfolio|expense|watchlist|weather|trade)/;
+    const _SHARED_TYPES = new Set(['portfolio','expense','expense_delete','expense_edit','watchlist','weather','trade']);
+    function isShared(url, body) {
+        // Check URL param: ?type=expense
+        if (/[?&]type=([^&]+)/.test(url)) return _SHARED_TYPES.has(RegExp.$1);
+        // Check JSON body: {"type":"expense"}
+        if (body) { try { return _SHARED_TYPES.has(JSON.parse(body).type || ''); } catch {} }
+        return false;
+    }
     window.fetch = function(url, options = {}) {
         if (typeof url === 'string' && typeof CONFIG !== 'undefined' &&
             url.includes(CONFIG.WEB_APP_URL.split('?')[0]) &&
-            !_SHARED_RE.test(url) &&
-            !(options.body && _SHARED_RE.test(options.body))) {
+            !isShared(url, options.body)) {
             const member = (typeof MemberModule !== 'undefined') ? MemberModule.current() : 'dad';
             const sep = url.includes('?') ? '&' : '?';
             if (!url.includes('member=')) url = url + sep + 'member=' + encodeURIComponent(member);
@@ -4567,7 +4573,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v1.94';
+    const CURRENT_VERSION = 'v1.98';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.07">
+    <meta name="version" content="v2.09">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.07</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.09</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -507,6 +507,39 @@
         }
         .copy-item-btn:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
         .copy-item-btn.copied { color: var(--stark-green); border-color: var(--stark-green); }
+        /* ── Duplicate row button (Plan) ── */
+        .dup-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.38rem;
+            font-weight: 700;
+            color: rgba(255,204,0,0.45);
+            cursor: pointer;
+            padding: 1px 5px;
+            border: 1px solid rgba(255,204,0,0.2);
+            background: transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .dup-btn:hover { color: var(--stark-gold); border-color: var(--stark-gold); }
+        .dup-btn.duped { color: var(--stark-green); border-color: var(--stark-green); }
+        /* ── Goal copy button ── */
+        .goal-copy-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.34rem;
+            font-weight: 700;
+            color: rgba(0,242,255,0.30);
+            cursor: pointer;
+            padding: 1px 4px;
+            border: 1px solid rgba(0,242,255,0.12);
+            background: transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .goal-copy-btn:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
+        .goal-copy-btn.copied { color: var(--stark-green); border-color: var(--stark-green); }
         .progress-stats {
             font-family: 'Orbitron';
             font-size: 0.7rem;
@@ -2946,7 +2979,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.07</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.09</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -2986,7 +3019,11 @@
         <div id="goal-list" class="goal-list"></div>
     </section>
     <section class="gpal-card">
-        <div class="card-header"><h2>[ 02 ] STRATEGIC_PLAN</h2></div>
+        <div class="card-header">
+            <h2>[ 02 ] STRATEGIC_PLAN</h2>
+            <button class="btn-tmpl" id="btn-plan-tmpl" title="Plan Templates" onclick="PlanTemplateModule.togglePanel()">TMPL</button>
+        </div>
+        <div id="plan-tmpl-panel" class="goal-tmpl-panel" style="display:none;"></div>
         <div id="plan-container">
             <div id="plan-list-0" class="plan-list"></div>
         </div>
@@ -3654,7 +3691,13 @@ const GoalModule = {
         input.dataset.role = 'text';
 
         textContainer.appendChild(input);
-        row.append(prioBtn, cb, textContainer);
+        const goalCopyBtn = document.createElement('div');
+        goalCopyBtn.className = 'goal-copy-btn';
+        goalCopyBtn.textContent = '⎘';
+        goalCopyBtn.dataset.role = 'goal-copy';
+        goalCopyBtn.title = 'Copy goal text';
+
+        row.append(prioBtn, cb, textContainer, goalCopyBtn);
         parent.appendChild(row);
         return row;
     },
@@ -3899,7 +3942,13 @@ const PlanModule = {
         clockBtn.dataset.role = 'clock-start';
         clockBtn.title = 'Start Mission Clock';
 
-        actions.append(addBtn, locEdit, locTagGroup, clockBtn, copyBtn, delBtn);
+        const dupBtn = document.createElement('div');
+        dupBtn.className = 'dup-btn';
+        dupBtn.textContent = '⧉';
+        dupBtn.dataset.role = 'dup';
+        dupBtn.title = 'Duplicate this row';
+
+        actions.append(addBtn, locEdit, locTagGroup, clockBtn, copyBtn, dupBtn, delBtn);
         row.append(timeRow, input, actions);
         parent.appendChild(row);
         return row;
@@ -5214,6 +5263,149 @@ const GoalTemplateModule = {
     },
 };
 
+// ---------- PLAN TEMPLATE MODULE ----------
+const PlanTemplateModule = {
+    LS_KEY: 'gpal_plan_templates',
+    templates: [],
+
+    init() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]');
+            if (Array.isArray(saved)) this.templates = saved;
+        } catch {}
+    },
+
+    _save() {
+        if (this.templates.length > 10) this.templates = this.templates.slice(-10);
+        try { localStorage.setItem(this.LS_KEY, JSON.stringify(this.templates)); } catch {}
+    },
+
+    _extractPlan() {
+        PlanModule.saveCurrent();
+        const listEl = document.getElementById('plan-list-0');
+        if (!listEl) return [];
+        return Array.from(listEl.querySelectorAll('.plan-row'))
+            .map(row => {
+                const txt = row.querySelector('input[data-role=text]')?.value.trim() || '';
+                if (!txt) return null;
+                return {
+                    start: row.dataset.start,
+                    end:   row.dataset.end,
+                    text:  txt,
+                    location: row.querySelector('[data-role=loc-edit]')?.value.trim() || '',
+                };
+            }).filter(Boolean);
+    },
+
+    saveCurrentAs(name) {
+        const n = name.trim();
+        if (!n) return;
+        const rows = this._extractPlan();
+        if (!rows.length) { Utils.setStatus('NO_TASKS_TO_SAVE', 'warn'); return; }
+        const existIdx = this.templates.findIndex(t => t.name === n);
+        const tmpl = { id: 'ptmpl_' + Date.now(), name: n, rows };
+        if (existIdx >= 0) this.templates[existIdx] = tmpl;
+        else this.templates.push(tmpl);
+        this._save();
+        Utils.setStatus(`PLAN_TMPL_SAVED · ${n}`, 'success');
+        this.renderPanel();
+    },
+
+    applyTemplate(id) {
+        const tmpl = this.templates.find(t => t.id === id);
+        if (!tmpl) return;
+        if (!confirm(`Apply "${tmpl.name}"? Current plan will be replaced.`)) return;
+        const listEl = document.getElementById('plan-list-0');
+        if (!listEl) return;
+        listEl.replaceChildren();
+        tmpl.rows.forEach(r => PlanModule.create(r.start, r.end, r.text, r.location || '', listEl));
+        PlanModule.ensureTrailingEmpty();
+        if (PlanModule._rendered) PlanModule._rendered[0] = true;
+        PlanModule.saveCurrent();
+        SaveQueue.trigger();
+        PlanTemplateModule.closePanel();
+        Utils.setStatus(`PLAN_TMPL_APPLIED · ${tmpl.name}`, 'success');
+    },
+
+    deleteTemplate(id) {
+        this.templates = this.templates.filter(t => t.id !== id);
+        this._save();
+        this.renderPanel();
+    },
+
+    togglePanel() {
+        const panel = document.getElementById('plan-tmpl-panel');
+        const btn   = document.getElementById('btn-plan-tmpl');
+        if (!panel) return;
+        const isOpen = panel.style.display !== 'none';
+        panel.style.display = isOpen ? 'none' : 'block';
+        if (btn) btn.classList.toggle('active', !isOpen);
+        if (!isOpen) this.renderPanel();
+    },
+
+    closePanel() {
+        const panel = document.getElementById('plan-tmpl-panel');
+        const btn   = document.getElementById('btn-plan-tmpl');
+        if (panel) panel.style.display = 'none';
+        if (btn) btn.classList.remove('active');
+    },
+
+    renderPanel() {
+        const panel = document.getElementById('plan-tmpl-panel');
+        if (!panel || panel.style.display === 'none') return;
+        panel.replaceChildren();
+
+        if (!this.templates.length) {
+            const empty = document.createElement('div');
+            empty.className = 'tmpl-empty';
+            empty.textContent = 'NO_TEMPLATES · SAVE CURRENT PLAN BELOW';
+            panel.appendChild(empty);
+        } else {
+            const list = document.createElement('div');
+            this.templates.forEach(tmpl => {
+                const item = document.createElement('div');
+                item.className = 'tmpl-item';
+
+                const nameEl = document.createElement('span');
+                nameEl.className = 'tmpl-item-name';
+                nameEl.textContent = tmpl.name + '  ·  ' + tmpl.rows.length + ' tasks';
+
+                const applyEl = document.createElement('span');
+                applyEl.className = 'tmpl-item-apply';
+                applyEl.textContent = '[APPLY]';
+                applyEl.onclick = () => PlanTemplateModule.applyTemplate(tmpl.id);
+
+                const delEl = document.createElement('span');
+                delEl.className = 'tmpl-item-del';
+                delEl.textContent = '[DEL]';
+                delEl.onclick = e => { e.stopPropagation(); PlanTemplateModule.deleteTemplate(tmpl.id); };
+
+                item.append(nameEl, applyEl, delEl);
+                list.appendChild(item);
+            });
+            panel.appendChild(list);
+        }
+
+        const saveRow = document.createElement('div');
+        saveRow.className = 'tmpl-save-row';
+
+        const input = document.createElement('input');
+        input.type = 'text'; input.className = 'tmpl-name-input';
+        input.placeholder = 'Template name...'; input.maxLength = 30;
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') PlanTemplateModule.saveCurrentAs(input.value);
+        });
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'tmpl-save-btn';
+        saveBtn.textContent = 'SAVE CURRENT';
+        saveBtn.onclick = () => PlanTemplateModule.saveCurrentAs(input.value);
+
+        saveRow.append(input, saveBtn);
+        panel.appendChild(saveRow);
+    },
+};
+
 // ---------- JARVIS BRIEF MODULE ----------
 const JarvisModule = {
     LS_KEY: 'gpal_jarvis_lang',
@@ -6294,6 +6486,20 @@ const Events = {
                 SaveQueue.trigger();
                 GoalModule.saveCurrent(); // 立即同步 allData（Streak 需要最新狀態）
                 StreakModule.checkAndUpdate(DOM.datePicker.value);
+            } else if (t.dataset.role === 'goal-copy') {
+                const txt = row.querySelector('input[data-role=text]').value.trim();
+                if (!txt) return;
+                const doFeedback = () => {
+                    t.textContent = '✓'; t.classList.add('copied');
+                    setTimeout(() => { t.textContent = '⎘'; t.classList.remove('copied'); }, 1500);
+                };
+                navigator.clipboard.writeText(txt).then(doFeedback).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = txt;
+                    ta.style.cssText = 'position:fixed;opacity:0';
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); doFeedback();
+                });
             }
         });
 
@@ -6380,7 +6586,22 @@ const Events = {
                         SaveQueue.trigger();
                     }, 200);
                 }
-            }
+            } else if (role === 'dup') {
+                const txt   = row.querySelector('input[data-role=text]').value.trim();
+                const loc   = row.querySelector('[data-role=loc-edit]')?.value.trim() || '';
+                const newRow = PlanModule.create(row.dataset.start, row.dataset.end, txt, loc, row.parentElement);
+                row.after(newRow); // move from end → right after current row
+                if (loc) {
+                    newRow.querySelector('[data-role=loc-badge]').textContent = `📍 ${loc}`;
+                    newRow.querySelector('.loc-tag-group').style.display = 'flex';
+                    newRow.querySelector('[data-role=loc-add]').style.display = 'none';
+                    newRow.querySelector('[data-role=loc-edit]').style.display = 'none';
+                }
+                newRow.querySelector('input[data-role=text]')?.focus();
+                // flash feedback on dup button
+                t.textContent = '✓'; t.classList.add('duped');
+                setTimeout(() => { t.textContent = '⧉'; t.classList.remove('duped'); }, 1200);
+                SaveQueue.trigger();
         });
 
         DOM.planContainer.addEventListener('blur', (e) => {
@@ -7832,6 +8053,7 @@ window.addEventListener('DOMContentLoaded', () => {
     LongTermModule.init();
     HabitModule.init();
     GoalTemplateModule.init();
+    PlanTemplateModule.init();
     // Spotify: defer init until user opens the bar (saves ~80ms on first load)
     document.getElementById('btn-spotify-toggle').addEventListener('click', function _spInit() {
         this.removeEventListener('click', _spInit);
@@ -7857,7 +8079,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.07';
+    const CURRENT_VERSION = 'v2.09';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v1.98">
+    <meta name="version" content="v1.99">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.98</title>
+    <title>GPAL MK-VII // OPTIMIZED v1.99</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2941,7 +2941,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.98</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.99</span></div>
         <div class="member-selector" id="member-selector">
             <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
             <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
@@ -4772,7 +4772,7 @@ const MissionClockModule = {
     },
 
     init() {
-        document.addEventListener('visibilitychange', MissionClockModule.onVisibilityChange);
+        // visibilitychange handled by Events.init consolidated listener
     },
 };
 
@@ -6418,6 +6418,7 @@ const Events = {
                 PlanModule.ensureTrailingEmpty();
                 SaveQueue.trigger();
                 // 更新 clock 按鈕的 empty 狀態（有文字才可啟動）
+                const row = e.target.closest('.plan-row');
                 const clockBtn = row?.querySelector('[data-role=clock-start]');
                 if (clockBtn) clockBtn.classList.toggle('empty', !e.target.value.trim());
             }
@@ -6523,7 +6524,8 @@ const Events = {
             const dy = e.changedTouches[0].clientY - touchStartY;
             // 水平位移 > 60px 且水平幅度大於垂直（避免誤觸滾動）
             if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-            Events.changeDate(dx < 0 ? -1 : 1);
+            // 左滑 = 下一天（前進），右滑 = 上一天（後退）
+            Events.changeDate(dx < 0 ? 1 : -1);
         }, { passive: true });
         DOM.datePicker.addEventListener('change', async () => {
             Utils.updateDateLabel(DOM.datePicker.value);
@@ -6556,9 +6558,11 @@ const Events = {
             }
         });
 
-        // 頁面回到前景時刷新時間 highlight
+        // 頁面回到前景時刷新時間 highlight、同步 MissionClock 及 Spotify
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) PlanModule.checkTimeHighlight();
+            if (document.hidden) return;
+            PlanModule.checkTimeHighlight();
+            MissionClockModule.onVisibilityChange();
         });
     },
 
@@ -7533,6 +7537,7 @@ const PortfolioEditor = {
 
 // ---------- FINANCIAL INTEL MODULE ----------
 const IntelModule = {
+    LS_KEY: (date) => 'gpal_intel_cache_' + date,
     LS_KEY_API: 'gpal_api_key',
 
     getApiKey() {
@@ -7828,7 +7833,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v1.98';
+    const CURRENT_VERSION = 'v1.99';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

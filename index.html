@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v1.99">
+    <meta name="version" content="v2.02">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v1.99</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.02</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -25,6 +25,7 @@
             --stark-green: #00ff88;
             --easing-cyber: cubic-bezier(0.175, 0.885, 0.32, 1.275);
             --easing-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --day-grid: rgba(0, 242, 255, 0.025); /* updated by JS per day */
         }
 
         /* 桌面版放大基礎字體，所有 rem 單位自動等比放大 */
@@ -64,8 +65,8 @@
             position: fixed;
             inset: 0;
             background-image:
-                linear-gradient(rgba(0,242,255,0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,242,255,0.025) 1px, transparent 1px);
+                linear-gradient(var(--day-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--day-grid) 1px, transparent 1px);
             background-size: 40px 40px;
             pointer-events: none;
             z-index: 0;
@@ -76,6 +77,23 @@
             to   { background-position: 40px 40px, 40px 40px; }
         }
         nav, .header-section, main, footer { position: relative; z-index: 1; }
+
+        /* ── Day theme overlay ── */
+        #day-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background-color: transparent;
+            transition: background-color 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        @keyframes day-shift {
+            0%   { opacity: 0; transform: scale(1.04); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        #day-overlay.shift {
+            animation: day-shift 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
 
         /* === 全域動畫 === */
         @keyframes scan-line {
@@ -259,15 +277,6 @@
         .conn-dot.syncing::before { color: var(--stark-gold); animation-duration: 1s; }
 
         .sticky-header { height: var(--nav-h, 50px); } /* JS will set exact height */
-        .header-section {
-            padding: 1.2rem 1rem 1rem;
-            padding-top: calc(var(--nav-h, 50px) + 1.2rem);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            position: relative;
-        }
         .date-nav-row {
             display: flex;
             align-items: center;
@@ -319,13 +328,6 @@
             letter-spacing: 2px;
             text-align: center;
             cursor: pointer;
-        }
-        .clock-weather-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 2px;
-            flex-shrink: 0;
         }
         .weather-display {
             font-family: 'Orbitron';
@@ -391,6 +393,7 @@
             max-width: 750px;
             margin: 0 auto;
             padding: 0.5rem;
+            padding-top: calc(var(--nav-h, 50px) + 0.6rem);
             width: 100%;
             padding-bottom: 260px;
         }
@@ -398,6 +401,7 @@
             .main-container {
                 max-width: 860px;
                 padding: 0.8rem 1.2rem;
+                padding-top: calc(var(--nav-h, 50px) + 0.8rem);
                 padding-bottom: 300px;
             }
         }
@@ -2928,6 +2932,39 @@
             .finance-cat-name { min-width: 55px; font-size: 0.75rem; }
         }
 
+        /* ── Footer date / time / weather row ── */
+        .footer-dt-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 5px 12px;
+            border-top: 1px solid rgba(0,242,255,0.12);
+            flex-wrap: nowrap;
+        }
+        .footer-dt-row .nav-btn {
+            width: 26px; height: 26px; font-size: 0.75rem; flex-shrink: 0;
+        }
+        .footer-dt-row .date-display { gap: 0; }
+        .footer-dt-row input[type="date"] { font-size: 0.75rem; letter-spacing: 1px; }
+        .footer-dt-row .date-label { font-size: 0.44rem; letter-spacing: 2px; height: 11px; }
+        .footer-dt-row .date-underline { display: none; }
+        .footer-dt-spacer { flex: 1; min-width: 0; }
+        .footer-dt-row .weather-display { font-size: 0.5rem; text-align: right; white-space: nowrap; min-height: 0; }
+        .footer-dt-row .live-clock { font-size: 0.72rem; padding-left: 10px; letter-spacing: 0; }
+        .footer-dt-row .clock-sec-group { font-size: 0.6rem; }
+        /* ── Spotify toggle (mirrors Portfolio toggle) ── */
+        .btn-spotify-toggle {
+            font-family: 'Orbitron', sans-serif; font-size: 0.42rem; font-weight: 700;
+            color: rgba(29,185,84,0.5); background: transparent;
+            border: none; border-top: 1px solid rgba(29,185,84,0.12);
+            cursor: pointer; padding: 4px 8px;
+            letter-spacing: 1px; transition: color 0.2s; outline: none;
+            width: 100%; text-align: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-spotify-toggle:hover { color: #1DB954; }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -2937,11 +2974,11 @@
     </style>
 </head>
 <body>
-
+<div id="day-overlay"></div>
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.99</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.02</span></div>
         <div class="member-selector" id="member-selector">
             <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
             <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
@@ -2955,22 +2992,6 @@
         </div>
     </div>
 </nav>
-</div>
-
-<div class="header-section">
-    <div class="date-nav-row">
-        <button class="nav-btn" data-action="prev-day" aria-label="前一天">❮</button>
-        <div class="date-display">
-            <div id="date-label" class="date-label hidden">TODAY</div>
-            <input type="date" id="datePicker" aria-label="選擇日期">
-            <div class="date-underline"></div>
-        </div>
-        <button class="nav-btn" data-action="next-day" aria-label="後一天">❯</button>
-        <div class="clock-weather-wrap">
-            <div class="weather-display" id="weather-display"></div>
-            <div class="live-clock" id="liveClock">00:00:00</div>
-        </div>
-    </div>
 </div>
 
 <main class="main-container">
@@ -3336,8 +3357,26 @@
             <div id="portfolio-display">NET WORTH: SYNCING...</div>
         </div>
     </div>
-    <div id="spotify-bar"></div>
+    <button class="btn-spotify-toggle" id="btn-spotify-toggle" onclick="
+        const bar = document.getElementById('spotify-bar');
+        const lb  = document.getElementById('sp-lyrics-bar');
+        const show = bar.style.display === 'none';
+        bar.style.display = show ? '' : 'none';
+        this.textContent = show ? '▾ SPOTIFY' : '▸ SPOTIFY';
+    ">▸ SPOTIFY</button>
+    <div id="spotify-bar" style="display:none;"></div>
     <div id="sp-lyrics-bar"></div>
+    <div class="footer-dt-row">
+        <button class="nav-btn" data-action="prev-day" aria-label="前一天">❮</button>
+        <div class="date-display">
+            <div id="date-label" class="date-label hidden">TODAY</div>
+            <input type="date" id="datePicker" aria-label="選擇日期">
+            <div class="date-underline"></div>
+        </div>
+        <button class="nav-btn" data-action="next-day" aria-label="後一天">❯</button>
+        <div class="weather-display" id="weather-display"></div>
+        <div class="live-clock" id="liveClock">00:00:00</div>
+    </div>
     <div class="action-area">
         <input id="member-input" class="member-input" 
             placeholder="USER" maxlength="12"
@@ -6529,6 +6568,7 @@ const Events = {
         }, { passive: true });
         DOM.datePicker.addEventListener('change', async () => {
             Utils.updateDateLabel(DOM.datePicker.value);
+            applyDayTheme(DOM.datePicker.value, true);
             HealthModule.render(DOM.datePicker.value);
             // health 雲端載入已由 Sync.fetchData (bundle 端點) 接手
             await SaveQueue.flushImmediate();
@@ -6572,6 +6612,7 @@ const Events = {
         d.setDate(d.getDate() + days);
         DOM.datePicker.value = `${d.getFullYear()}-${Utils.pad2(d.getMonth() + 1)}-${Utils.pad2(d.getDate())}`;
         Utils.updateDateLabel(DOM.datePicker.value);
+        applyDayTheme(DOM.datePicker.value, true);
         HealthModule.render(DOM.datePicker.value);
         Sync.fetchData();
     },
@@ -7743,10 +7784,45 @@ ${positionText}
     },
 };
 
+// ---------- DAY THEME ----------
+const DAY_THEMES = [
+    // Sun — warm amber
+    { ov: 'rgba(255,150,30,0.09)',  grid: 'rgba(255,150,30,0.025)'  },
+    // Mon — default cyan (no overlay tint)
+    { ov: 'transparent',            grid: 'rgba(0,242,255,0.025)'   },
+    // Tue — electric blue
+    { ov: 'rgba(30,80,255,0.08)',   grid: 'rgba(30,100,255,0.025)'  },
+    // Wed — violet
+    { ov: 'rgba(170,30,255,0.08)',  grid: 'rgba(170,30,255,0.025)'  },
+    // Thu — teal green
+    { ov: 'rgba(0,210,110,0.07)',   grid: 'rgba(0,210,110,0.025)'   },
+    // Fri — crimson
+    { ov: 'rgba(255,35,35,0.09)',   grid: 'rgba(255,35,35,0.025)'   },
+    // Sat — magenta
+    { ov: 'rgba(225,0,175,0.08)',   grid: 'rgba(225,0,175,0.025)'   },
+];
+
+function applyDayTheme(dateStr, animate = false) {
+    const day = new Date(dateStr + 'T12:00:00').getDay();
+    const t   = DAY_THEMES[day];
+    const overlay = document.getElementById('day-overlay');
+    if (overlay) {
+        overlay.style.backgroundColor = t.ov;
+        if (animate) {
+            overlay.classList.remove('shift');
+            void overlay.offsetWidth; // reflow
+            overlay.classList.add('shift');
+            setTimeout(() => overlay.classList.remove('shift'), 700);
+        }
+    }
+    document.documentElement.style.setProperty('--day-grid', t.grid);
+}
+
 // ---------- INIT ----------
 window.addEventListener('DOMContentLoaded', () => {
     DOM.datePicker.value = Utils.todayISO();
     Utils.updateDateLabel(DOM.datePicker.value);
+    applyDayTheme(DOM.datePicker.value);
 
     // 即時時鐘
     const clockEl = document.getElementById('liveClock');
@@ -7815,7 +7891,7 @@ window.addEventListener('DOMContentLoaded', () => {
     SpotifyModule.init();
     MissionClockModule.init();
     StreakModule.init();
-    // 計算固定 nav 高度，補償 header-section padding
+    // 計算固定 nav 高度，設定 CSS var
     const navH = document.querySelector('.sticky-header')?.offsetHeight || 50;
     document.documentElement.style.setProperty('--nav-h', navH + 'px');
     Events.init();
@@ -7833,7 +7909,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v1.99';
+    const CURRENT_VERSION = 'v2.02';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

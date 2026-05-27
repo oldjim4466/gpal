@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.05">
+    <meta name="version" content="v2.07">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.05</title>
+    <title>GPAL FAMILY v2.07</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1727,7 +1727,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.05</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.07</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -4444,7 +4444,7 @@ const Events = {
             // 水平位移 > 60px 且水平幅度大於垂直（避免誤觸滾動）
             if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
             // 左滑 = 下一天（前進），右滑 = 上一天（後退）
-            Events.changeDate(dx < 0 ? 1 : -1);
+            Events.changeDate(dx < 0 ? -1 : 1);
         }, { passive: true });
         DOM.datePicker.addEventListener('change', async () => {
             Utils.updateDateLabel(DOM.datePicker.value);
@@ -4500,13 +4500,27 @@ const IntelModule = { loadCache(){return null;}, saveCache(){}, render(){}, show
 
 // ---------- DAY THEME ----------
 const DAY_THEMES = [
-    { ov: 'rgba(255,150,30,0.09)',  grid: 'rgba(255,150,30,0.025)'  }, // Sun
-    { ov: 'transparent',            grid: 'rgba(0,242,255,0.025)'   }, // Mon
-    { ov: 'rgba(30,80,255,0.08)',   grid: 'rgba(30,100,255,0.025)'  }, // Tue
-    { ov: 'rgba(170,30,255,0.08)',  grid: 'rgba(170,30,255,0.025)'  }, // Wed
-    { ov: 'rgba(0,210,110,0.07)',   grid: 'rgba(0,210,110,0.025)'   }, // Thu
-    { ov: 'rgba(255,35,35,0.09)',   grid: 'rgba(255,35,35,0.025)'   }, // Fri
-    { ov: 'rgba(225,0,175,0.08)',   grid: 'rgba(225,0,175,0.025)'   }, // Sat
+    { ov: 'rgba(255,160,40,0.22)',
+      bg: 'radial-gradient(circle at 15% 25%, rgba(255,160,40,0.20), transparent 55%), radial-gradient(circle at 82% 75%, rgba(255,100,0,0.12), transparent 50%)',
+      grid: 'rgba(255,160,40,0.07)' },
+    { ov: 'rgba(0,242,255,0.14)',
+      bg: 'radial-gradient(circle at 20% 30%, rgba(0,242,255,0.14), transparent 50%), radial-gradient(circle at 80% 70%, rgba(255,204,0,0.07), transparent 50%)',
+      grid: 'rgba(0,242,255,0.04)' },
+    { ov: 'rgba(40,100,255,0.22)',
+      bg: 'radial-gradient(circle at 25% 20%, rgba(40,120,255,0.20), transparent 55%), radial-gradient(circle at 75% 78%, rgba(0,200,255,0.12), transparent 50%)',
+      grid: 'rgba(40,120,255,0.07)' },
+    { ov: 'rgba(180,40,255,0.22)',
+      bg: 'radial-gradient(circle at 18% 35%, rgba(180,40,255,0.20), transparent 55%), radial-gradient(circle at 80% 65%, rgba(100,0,255,0.12), transparent 50%)',
+      grid: 'rgba(180,40,255,0.07)' },
+    { ov: 'rgba(0,220,110,0.20)',
+      bg: 'radial-gradient(circle at 20% 28%, rgba(0,220,110,0.18), transparent 55%), radial-gradient(circle at 80% 72%, rgba(0,180,200,0.10), transparent 50%)',
+      grid: 'rgba(0,220,110,0.07)' },
+    { ov: 'rgba(255,40,40,0.22)',
+      bg: 'radial-gradient(circle at 20% 30%, rgba(255,40,40,0.20), transparent 55%), radial-gradient(circle at 80% 70%, rgba(255,120,0,0.12), transparent 50%)',
+      grid: 'rgba(255,40,40,0.07)' },
+    { ov: 'rgba(230,0,185,0.22)',
+      bg: 'radial-gradient(circle at 18% 30%, rgba(230,0,185,0.20), transparent 55%), radial-gradient(circle at 80% 70%, rgba(160,0,255,0.12), transparent 50%)',
+      grid: 'rgba(230,0,185,0.07)' },
 ];
 
 function applyDayTheme(dateStr, animate = false) {
@@ -4522,6 +4536,7 @@ function applyDayTheme(dateStr, animate = false) {
             setTimeout(() => overlay.classList.remove('shift'), 700);
         }
     }
+    document.body.style.backgroundImage = t.bg;
     document.documentElement.style.setProperty('--day-grid', t.grid);
 }
 
@@ -4561,7 +4576,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.05';
+    const CURRENT_VERSION = 'v2.07';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

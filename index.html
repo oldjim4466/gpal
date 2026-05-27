@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.04">
+    <meta name="version" content="v2.05">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.04</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.05</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -338,38 +338,8 @@
             min-height: 0.75rem;
             text-align: right;
         }
-        .weather-display .w-temp { color: var(--stark-gold); font-weight: 900; }
-        .weather-display .w-icon { margin-right: 2px; }
         @media (max-width: 480px) {
             .weather-display { font-size: 0.6rem; }
-            .weather-display .w-temp { font-size: 0.65rem; }
-        }
-        .live-clock {
-            font-family: 'Orbitron';
-            font-size: 0.85rem;
-            letter-spacing: 0;
-            color: var(--stark-gold);
-            border-left: 1px solid rgba(255, 204, 0, 0.3);
-            padding-left: 12px;
-            line-height: 1;
-            display: inline-flex;
-            align-items: center;
-            font-variant-numeric: tabular-nums;
-        }
-        .clock-digit {
-            display: inline-block;
-            width: 1.1ch;
-            text-align: center;
-        }
-        .clock-colon {
-            display: inline-block;
-            width: 0.5ch;
-            text-align: center;
-            opacity: 0.6;
-        }
-        .clock-sec-group {
-            opacity: 0.5;
-            font-size: 0.7rem;
         }
         .date-label {
             font-family: 'Orbitron';
@@ -2950,8 +2920,6 @@
         .footer-dt-row .date-label { font-size: 0.44rem; letter-spacing: 2px; height: 11px; }
         .footer-dt-row .date-underline { display: none; }
         .footer-dt-spacer { flex: 1; min-width: 0; }
-        .footer-dt-row .weather-display { font-size: 0.5rem; text-align: right; white-space: nowrap; min-height: 0; }
-        .footer-dt-row .live-clock { font-size: 0.72rem; padding-left: 10px; letter-spacing: 0; }
         .footer-dt-row .clock-sec-group { font-size: 0.6rem; }
         /* ── Spotify toggle (mirrors Portfolio toggle) ── */
         .btn-spotify-toggle {
@@ -2978,7 +2946,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.04</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.05</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -7369,19 +7337,28 @@ const WatchlistModule = {
         WatchlistModule.countdown = 20;
         const cdEl = document.getElementById('wl-countdown');
 
-        WatchlistModule.timer = setInterval(() => {
-            const open = WatchlistModule.isMarketOpen();
-            if (!open) {
+        function _schedule() {
+            clearInterval(WatchlistModule.timer);
+            if (!WatchlistModule.isMarketOpen()) {
                 if (cdEl) cdEl.textContent = 'CLOSED';
-                return; // 收市不刷新
+                // Re-check every 60s — 60× less CPU vs 1s loop
+                WatchlistModule.timer = setInterval(() => {
+                    if (WatchlistModule.isMarketOpen()) { WatchlistModule.countdown = 20; _schedule(); }
+                    else if (cdEl) cdEl.textContent = 'CLOSED';
+                }, 60000);
+            } else {
+                WatchlistModule.timer = setInterval(() => {
+                    if (!WatchlistModule.isMarketOpen()) { _schedule(); return; }
+                    WatchlistModule.countdown--;
+                    if (cdEl) cdEl.textContent = `${WatchlistModule.countdown}s`;
+                    if (WatchlistModule.countdown <= 0) {
+                        WatchlistModule.countdown = 20;
+                        WatchlistModule.fetchAll();
+                    }
+                }, 1000);
             }
-            WatchlistModule.countdown--;
-            if (cdEl) cdEl.textContent = `${WatchlistModule.countdown}s`;
-            if (WatchlistModule.countdown <= 0) {
-                WatchlistModule.countdown = 20;
-                WatchlistModule.fetchAll();
-            }
-        }, 1000);
+        }
+        _schedule();
     },
 
     init() {
@@ -7538,6 +7515,12 @@ const PortfolioEditor = {
             if (!data.success) throw new Error(data.error || 'FAILED');
             PortfolioEditor.holdings[idx].shares   = shares;
             PortfolioEditor.holdings[idx].avg_cost = avgCost;
+            // Recalculate P/L locally so UI updates without a full reload
+            const curPx = Number(PortfolioEditor.holdings[idx].current_price) || 0;
+            const newPl = (curPx - avgCost) * shares;
+            const newPct = avgCost > 0 ? ((curPx - avgCost) / avgCost * 100) : 0;
+            PortfolioEditor.holdings[idx].pl     = newPl;
+            PortfolioEditor.holdings[idx].pl_pct = newPct.toFixed(2);
             btn.textContent = '✓';
             btn.style.color = 'var(--stark-green)';
             setTimeout(() => { btn.disabled = false; btn.textContent = 'SAVE'; btn.style.color = ''; }, 1500);
@@ -7833,7 +7816,11 @@ window.addEventListener('DOMContentLoaded', () => {
     LongTermModule.init();
     HabitModule.init();
     GoalTemplateModule.init();
-    SpotifyModule.init();
+    // Spotify: defer init until user opens the bar (saves ~80ms on first load)
+    document.getElementById('btn-spotify-toggle').addEventListener('click', function _spInit() {
+        this.removeEventListener('click', _spInit);
+        SpotifyModule.init();
+    }, { once: false }); // keep toggle working; init only fires once via removeEventListener
     MissionClockModule.init();
     StreakModule.init();
     // 計算固定 nav 高度，設定 CSS var
@@ -7854,7 +7841,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.04';
+    const CURRENT_VERSION = 'v2.05';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {
@@ -7869,7 +7856,7 @@ window.addEventListener('DOMContentLoaded', () => {
         } catch(e) {}
     }
     setTimeout(checkVersion, 5000);    // 5 秒後首次檢查
-    setInterval(checkVersion, 120000); // 之後每 2 分鐘
+    setInterval(checkVersion, 300000); // 每 5 分鐘
 
 });
 </script>

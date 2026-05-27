@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v1.98">
+    <meta name="version" content="v2.03">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v1.98</title>
+    <title>GPAL FAMILY v2.03</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -25,6 +25,7 @@
             --stark-green: #00ff88;
             --easing-cyber: cubic-bezier(0.175, 0.885, 0.32, 1.275);
             --easing-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --day-grid: rgba(0, 242, 255, 0.025);
         }
 
         /* 桌面版放大基礎字體，所有 rem 單位自動等比放大 */
@@ -64,8 +65,8 @@
             position: fixed;
             inset: 0;
             background-image:
-                linear-gradient(rgba(0,242,255,0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,242,255,0.025) 1px, transparent 1px);
+                linear-gradient(var(--day-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--day-grid) 1px, transparent 1px);
             background-size: 40px 40px;
             pointer-events: none;
             z-index: 0;
@@ -76,6 +77,23 @@
             to   { background-position: 40px 40px, 40px 40px; }
         }
         nav, .header-section, main, footer { position: relative; z-index: 1; }
+
+        /* ── Day theme overlay ── */
+        #day-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background-color: transparent;
+            transition: background-color 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        @keyframes day-shift {
+            0%   { opacity: 0; transform: scale(1.04); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        #day-overlay.shift {
+            animation: day-shift 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
 
         /* === 全域動畫 === */
         @keyframes scan-line {
@@ -249,15 +267,6 @@
         .conn-dot.syncing { background: var(--stark-gold); box-shadow: 0 0 8px var(--stark-gold); }
         .conn-dot.syncing::before { color: var(--stark-gold); animation-duration: 1s; }
 
-        .header-section {
-            padding: 1.2rem 1rem 1rem;
-            padding-top: calc(var(--nav-h, 50px) + 1.2rem);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            position: relative;
-        }
         .date-nav-row {
             display: flex;
             align-items: center;
@@ -309,13 +318,6 @@
             letter-spacing: 2px;
             text-align: center;
             cursor: pointer;
-        }
-        .clock-weather-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 2px;
-            flex-shrink: 0;
         }
         .weather-display {
             font-family: 'Orbitron';
@@ -381,6 +383,7 @@
             max-width: 750px;
             margin: 0 auto;
             padding: 0.5rem;
+            padding-top: calc(var(--nav-h, 50px) + 0.6rem);
             width: 100%;
             padding-bottom: calc(var(--footer-h, 180px) + 16px);
         }
@@ -388,6 +391,7 @@
             .main-container {
                 max-width: 860px;
                 padding: 0.8rem 1.2rem;
+                padding-top: calc(var(--nav-h, 50px) + 0.8rem);
                 padding-bottom: calc(var(--footer-h, 180px) + 24px);
             }
         }
@@ -1712,6 +1716,39 @@
             .finance-cat-name { min-width: 55px; font-size: 0.75rem; }
         }
 
+        /* ── Footer date / time / weather row ── */
+        .footer-dt-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 5px 12px;
+            border-top: 1px solid rgba(0,242,255,0.12);
+            flex-wrap: nowrap;
+        }
+        .footer-dt-row .nav-btn {
+            width: 26px; height: 26px; font-size: 0.75rem; flex-shrink: 0;
+        }
+        .footer-dt-row .date-display { gap: 0; }
+        .footer-dt-row input[type="date"] { font-size: 0.75rem; letter-spacing: 1px; }
+        .footer-dt-row .date-label { font-size: 0.44rem; letter-spacing: 2px; height: 11px; }
+        .footer-dt-row .date-underline { display: none; }
+        .footer-dt-spacer { flex: 1; min-width: 0; }
+        .footer-dt-row .weather-display { font-size: 0.5rem; text-align: right; white-space: nowrap; min-height: 0; }
+        .footer-dt-row .live-clock { font-size: 0.72rem; padding-left: 10px; letter-spacing: 0; }
+        .footer-dt-row .clock-sec-group { font-size: 0.6rem; }
+        /* ── Spotify toggle ── */
+        .btn-spotify-toggle {
+            font-family: 'Orbitron', sans-serif; font-size: 0.42rem; font-weight: 700;
+            color: rgba(29,185,84,0.5); background: transparent;
+            border: none; border-top: 1px solid rgba(29,185,84,0.12);
+            cursor: pointer; padding: 4px 8px;
+            letter-spacing: 1px; transition: color 0.2s; outline: none;
+            width: 100%; text-align: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-spotify-toggle:hover { color: #1DB954; }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -1721,14 +1758,10 @@
     </style>
 </head>
 <body>
+<div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v1.98</span></div>
-    <div class="member-selector" id="member-selector">
-        <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
-        <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
-        <button class="mbr-btn" data-mbr="kid" onclick="MemberModule.select('kid')">KID</button>
-    </div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.03</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -1736,22 +1769,6 @@
         <button class="btn-nav-sync" id="btn-nav-sync" onclick="Sync.fetchData()" title="Sync now">↺</button>
     </div>
 </nav>
-
-<div class="header-section">
-    <div class="date-nav-row">
-        <button class="nav-btn" data-action="prev-day" aria-label="前一天">❮</button>
-        <div class="date-display">
-            <div id="date-label" class="date-label hidden">TODAY</div>
-            <input type="date" id="datePicker" aria-label="選擇日期">
-            <div class="date-underline"></div>
-        </div>
-        <button class="nav-btn" data-action="next-day" aria-label="後一天">❯</button>
-        <div class="clock-weather-wrap">
-            <div class="weather-display" id="weather-display"></div>
-            <div class="live-clock" id="liveClock">00:00:00</div>
-        </div>
-    </div>
-</div>
 
 <main class="main-container">
     <div id="mission-clock-bar" class="mission-clock-bar" style="display:none;">
@@ -1873,8 +1890,28 @@
 </main>
 
 <footer>
-    <div id="spotify-bar"></div>
+    <button class="btn-spotify-toggle" id="btn-spotify-toggle" onclick="
+        const bar = document.getElementById('spotify-bar');
+        const show = bar.style.display === 'none';
+        bar.style.display = show ? '' : 'none';
+        this.textContent = show ? '▾ SPOTIFY' : '▸ SPOTIFY';
+    ">▸ SPOTIFY</button>
+    <div id="spotify-bar" style="display:none;"></div>
     <div id="sp-lyrics-bar"></div>
+    <div class="footer-dt-row">
+        <div class="member-selector" id="member-selector">
+            <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
+            <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
+            <button class="mbr-btn" data-mbr="kid" onclick="MemberModule.select('kid')">KID</button>
+        </div>
+        <button class="nav-btn" data-action="prev-day" aria-label="前一天">❮</button>
+        <div class="date-display">
+            <div id="date-label" class="date-label hidden">TODAY</div>
+            <input type="date" id="datePicker" aria-label="選擇日期">
+            <div class="date-underline"></div>
+        </div>
+        <button class="nav-btn" data-action="next-day" aria-label="後一天">❯</button>
+    </div>
     <div class="action-area">
         <input id="member-input" class="member-input" 
             placeholder="USER" maxlength="12"
@@ -3150,7 +3187,7 @@ const MissionClockModule = {
         else if (MissionClockModule.isRunning) { MissionClockModule._updateUI(); MissionClockModule._scheduleTick(); }
     },
 
-    init() { document.addEventListener('visibilitychange', MissionClockModule.onVisibilityChange); },
+    init() { /* visibilitychange handled by Events.init consolidated listener */ },
 };
 
 // ---------- STREAK MODULE ----------
@@ -4336,6 +4373,7 @@ const Events = {
             if (role === 'text') {
                 PlanModule.ensureTrailingEmpty();
                 SaveQueue.trigger();
+                const row = e.target.closest('.plan-row');
                 const clockBtn = row?.querySelector('[data-role=clock-start]');
                 if (clockBtn) clockBtn.classList.toggle('empty', !e.target.value.trim());
             }
@@ -4439,10 +4477,12 @@ const Events = {
             const dy = e.changedTouches[0].clientY - touchStartY;
             // 水平位移 > 60px 且水平幅度大於垂直（避免誤觸滾動）
             if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-            Events.changeDate(dx < 0 ? -1 : 1);
+            // 左滑 = 下一天（前進），右滑 = 上一天（後退）
+            Events.changeDate(dx < 0 ? 1 : -1);
         }, { passive: true });
         DOM.datePicker.addEventListener('change', async () => {
             Utils.updateDateLabel(DOM.datePicker.value);
+            applyDayTheme(DOM.datePicker.value, true);
                             await SaveQueue.flushImmediate();
             Sync.fetchData();
         });
@@ -4470,9 +4510,11 @@ const Events = {
             }
         });
 
-        // 頁面回到前景時刷新時間 highlight
+        // 頁面回到前景時刷新時間 highlight、同步 MissionClock 及 Spotify
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) PlanModule.checkTimeHighlight();
+            if (document.hidden) return;
+            PlanModule.checkTimeHighlight();
+            MissionClockModule.onVisibilityChange();
         });
     },
 
@@ -4482,6 +4524,7 @@ const Events = {
         d.setDate(d.getDate() + days);
         DOM.datePicker.value = `${d.getFullYear()}-${Utils.pad2(d.getMonth() + 1)}-${Utils.pad2(d.getDate())}`;
         Utils.updateDateLabel(DOM.datePicker.value);
+        applyDayTheme(DOM.datePicker.value, true);
             Sync.fetchData();
     },
 };
@@ -4489,63 +4532,38 @@ const Events = {
 // ---------- FINANCIAL INTEL MODULE ----------
 const IntelModule = { loadCache(){return null;}, saveCache(){}, render(){}, showError(){}, clearError(){}, analyse(){}, init(){} };
 
+// ---------- DAY THEME ----------
+const DAY_THEMES = [
+    { ov: 'rgba(255,150,30,0.09)',  grid: 'rgba(255,150,30,0.025)'  }, // Sun
+    { ov: 'transparent',            grid: 'rgba(0,242,255,0.025)'   }, // Mon
+    { ov: 'rgba(30,80,255,0.08)',   grid: 'rgba(30,100,255,0.025)'  }, // Tue
+    { ov: 'rgba(170,30,255,0.08)',  grid: 'rgba(170,30,255,0.025)'  }, // Wed
+    { ov: 'rgba(0,210,110,0.07)',   grid: 'rgba(0,210,110,0.025)'   }, // Thu
+    { ov: 'rgba(255,35,35,0.09)',   grid: 'rgba(255,35,35,0.025)'   }, // Fri
+    { ov: 'rgba(225,0,175,0.08)',   grid: 'rgba(225,0,175,0.025)'   }, // Sat
+];
+
+function applyDayTheme(dateStr, animate = false) {
+    const day = new Date(dateStr + 'T12:00:00').getDay();
+    const t   = DAY_THEMES[day];
+    const overlay = document.getElementById('day-overlay');
+    if (overlay) {
+        overlay.style.backgroundColor = t.ov;
+        if (animate) {
+            overlay.classList.remove('shift');
+            void overlay.offsetWidth;
+            overlay.classList.add('shift');
+            setTimeout(() => overlay.classList.remove('shift'), 700);
+        }
+    }
+    document.documentElement.style.setProperty('--day-grid', t.grid);
+}
+
 // ---------- INIT ----------
 window.addEventListener('DOMContentLoaded', () => {
     DOM.datePicker.value = Utils.todayISO();
     Utils.updateDateLabel(DOM.datePicker.value);
-
-    // 即時時鐘
-    const clockEl = document.getElementById('liveClock');
-    function d(ch) { return `<span class="clock-digit">${ch}</span>`; }
-    function colon(cls = '') { return `<span class="clock-colon${cls}">:</span>`; }
-    function tickClock() {
-        const n = new Date();
-        const H = Utils.pad2(n.getHours());
-        const M = Utils.pad2(n.getMinutes());
-        const S = Utils.pad2(n.getSeconds());
-        clockEl.innerHTML =
-            `${d(H[0])}${d(H[1])}${colon()}${d(M[0])}${d(M[1])}<span class="clock-sec-group">${colon()}${d(S[0])}${d(S[1])}</span>`;
-    }
-    tickClock();
-    setInterval(tickClock, 1000);
-
-    // 天氣（先嘗試 Apps Script 代理，失敗則直接呼叫 Open-Meteo）
-    async function fetchWeather() {
-        const el = document.getElementById('weather-display');
-        if (!el) return;
-        try {
-            const res  = await fetch(`${CONFIG.WEB_APP_URL}?type=weather`);
-            const data = await res.json();
-            if (data.temp != null) {
-                window._gpalWeather = { temp: data.temp, code: data.code };
-                el.innerHTML = `<span class="w-icon">${weatherIcon(data.code)}</span><span class="w-temp">${data.temp}°C</span>`;
-                return;
-            }
-        } catch(e) {}
-        try {
-            const wRes  = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.8&longitude=-122.3&current=temperature_2m,weather_code&temperature_unit=celsius&timezone=auto');
-            const wData = await wRes.json();
-            const cur   = wData.current;
-            const temp  = Math.round(cur.temperature_2m);
-            window._gpalWeather = { temp, code: cur.weather_code };
-            el.innerHTML = `<span class="w-icon">${weatherIcon(cur.weather_code)}</span><span class="w-temp">${temp}°C</span>`;
-        } catch(e) { el.textContent = ''; }
-    }
-
-    function weatherIcon(code) {
-        if (code === 0)  return '☀️';
-        if (code <= 2)   return '🌤️';
-        if (code <= 3)   return '☁️';
-        if (code <= 49)  return '🌫️';
-        if (code <= 67)  return '🌧️';
-        if (code <= 77)  return '❄️';
-        if (code <= 82)  return '🌦️';
-        if (code <= 99)  return '⛈️';
-        return '🌡️';
-    }
-
-    fetchWeather();
-    setInterval(fetchWeather, 15 * 60 * 1000);
+    applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
     MemberModule.init(); // MemberMgr.names now fixed to [dad/mom/kid]
@@ -4556,7 +4574,7 @@ window.addEventListener('DOMContentLoaded', () => {
     MissionClockModule.init();
     StreakModule.init();
     Events.init();
-    // 計算固定 nav 高度，補償 header-section padding
+    // 計算固定 nav 高度，設定 CSS var
     const navH = document.querySelector('nav')?.offsetHeight || 50;
     document.documentElement.style.setProperty('--nav-h', navH + 'px');
     // 計算固定 footer 高度，補償 main-container padding-bottom
@@ -4573,7 +4591,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v1.98';
+    const CURRENT_VERSION = 'v2.03';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

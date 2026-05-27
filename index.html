@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.02">
+    <meta name="version" content="v2.03">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.02</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.03</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2978,12 +2978,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.02</span></div>
-        <div class="member-selector" id="member-selector">
-            <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
-            <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
-            <button class="mbr-btn" data-mbr="kid" onclick="MemberModule.select('kid')">KID</button>
-        </div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.03</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3367,6 +3362,11 @@
     <div id="spotify-bar" style="display:none;"></div>
     <div id="sp-lyrics-bar"></div>
     <div class="footer-dt-row">
+        <div class="member-selector" id="member-selector">
+            <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
+            <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
+            <button class="mbr-btn" data-mbr="kid" onclick="MemberModule.select('kid')">KID</button>
+        </div>
         <button class="nav-btn" data-action="prev-day" aria-label="前一天">❮</button>
         <div class="date-display">
             <div id="date-label" class="date-label hidden">TODAY</div>
@@ -3374,8 +3374,6 @@
             <div class="date-underline"></div>
         </div>
         <button class="nav-btn" data-action="next-day" aria-label="後一天">❯</button>
-        <div class="weather-display" id="weather-display"></div>
-        <div class="live-clock" id="liveClock">00:00:00</div>
     </div>
     <div class="action-area">
         <input id="member-input" class="member-input" 
@@ -7824,63 +7822,6 @@ window.addEventListener('DOMContentLoaded', () => {
     Utils.updateDateLabel(DOM.datePicker.value);
     applyDayTheme(DOM.datePicker.value);
 
-    // 即時時鐘
-    const clockEl = document.getElementById('liveClock');
-    function d(ch) { return `<span class="clock-digit">${ch}</span>`; }
-    function colon(cls = '') { return `<span class="clock-colon${cls}">:</span>`; }
-    function tickClock() {
-        const n = new Date();
-        const H = Utils.pad2(n.getHours());
-        const M = Utils.pad2(n.getMinutes());
-        const S = Utils.pad2(n.getSeconds());
-        clockEl.innerHTML =
-            `${d(H[0])}${d(H[1])}${colon()}${d(M[0])}${d(M[1])}<span class="clock-sec-group">${colon()}${d(S[0])}${d(S[1])}</span>`;
-    }
-    tickClock();
-    setInterval(tickClock, 1000);
-
-    // 天氣（先嘗試 Apps Script 代理，失敗則直接呼叫 Open-Meteo）
-    async function fetchWeather() {
-        const el = document.getElementById('weather-display');
-        if (!el) return;
-        try {
-            // 方法1：Apps Script 代理
-            const res  = await fetch(`${CONFIG.WEB_APP_URL}?type=weather`);
-            const data = await res.json();
-            if (data.temp != null) {
-                window._gpalWeather = { temp: data.temp, code: data.code };
-                el.innerHTML = `<span class="w-icon">${weatherIcon(data.code)}</span><span class="w-temp">${data.temp}°C</span>`;
-                return;
-            }
-        } catch(e) { /* fallback */ }
-
-        try {
-            // 方法2：直接 Open-Meteo（Oakland 座標作預設）
-            const wRes  = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.8&longitude=-122.3&current=temperature_2m,weather_code&temperature_unit=celsius&timezone=auto');
-            const wData = await wRes.json();
-            const cur   = wData.current;
-            const temp  = Math.round(cur.temperature_2m);
-            window._gpalWeather = { temp, code: cur.weather_code };
-            el.innerHTML = `<span class="w-icon">${weatherIcon(cur.weather_code)}</span><span class="w-temp">${temp}°C</span>`;
-        } catch(e) {
-            el.textContent = '';
-        }
-    }
-
-    function weatherIcon(code) {
-        if (code === 0)  return '☀️';
-        if (code <= 2)   return '🌤️';
-        if (code <= 3)   return '☁️';
-        if (code <= 49)  return '🌫️';
-        if (code <= 67)  return '🌧️';
-        if (code <= 77)  return '❄️';
-        if (code <= 82)  return '🌦️';
-        if (code <= 99)  return '⛈️';
-        return '🌡️';
-    }
-
-    fetchWeather();
-    setInterval(fetchWeather, 15 * 60 * 1000);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
     MemberMgr.init();
@@ -7909,7 +7850,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.02';
+    const CURRENT_VERSION = 'v2.03';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

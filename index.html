@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.03">
+    <meta name="version" content="v2.04">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.03</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.04</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2978,7 +2978,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.03</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.04</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -7441,7 +7441,11 @@ const PortfolioEditor = {
         try {
             const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=portfolio`, {}, 1);
             const data = await res.json();
-            PortfolioEditor.holdings = data.holdings || [];
+            // API may return `ticker` or `symbol` — normalise to `symbol`
+            PortfolioEditor.holdings = (data.holdings || []).map(h => ({
+                ...h,
+                symbol: h.symbol ?? h.ticker ?? '',
+            }));
             document.getElementById('pe-loading').style.display = 'none';
             PortfolioEditor.render();
         } catch(e) {
@@ -7477,7 +7481,7 @@ const PortfolioEditor = {
                     <span class="pe-ticker">${h.symbol}</span>
                     <span class="pe-val">$${Number(h.current_price||0).toFixed(2)}</span>
                     <span class="pe-pl ${pl >= 0 ? 'positive' : 'negative'}">${pl >= 0 ? '+' : ''}$${pl.toFixed(0)}</span>
-                    <span class="pe-pct ${pl >= 0 ? 'positive' : 'negative'}">${h.pl_pct}%</span>
+                    <span class="pe-pct ${pl >= 0 ? 'positive' : 'negative'}">${Number(h.pl_pct).toFixed(2)}%</span>
                 </div>
                 <div class="pe-row-bottom">
                     <span class="pe-label">QTY</span>
@@ -7486,7 +7490,7 @@ const PortfolioEditor = {
                     <input class="pe-input" type="number" value="${Number(h.avg_cost).toFixed(2)}" step="0.01" min="0" data-field="avg_cost" data-idx="${idx}">
                     <span class="pe-val pe-val-desktop">$${Number(h.current_price||0).toFixed(2)}</span>
                     <span class="pe-pl pe-pl-desktop ${pl >= 0 ? 'positive' : 'negative'}">${pl >= 0 ? '+' : ''}$${pl.toFixed(0)}</span>
-                    <span class="pe-pct pe-pct-desktop ${pl >= 0 ? 'positive' : 'negative'}">${h.pl_pct}%</span>
+                    <span class="pe-pct pe-pct-desktop ${pl >= 0 ? 'positive' : 'negative'}">${Number(h.pl_pct).toFixed(2)}%</span>
                     <div class="pe-actions">
                         <button class="btn-pe-save" onclick="PortfolioEditor.save(${idx})">SAVE</button>
                         <button class="btn-pe-del"  onclick="PortfolioEditor.del(${idx})">DEL</button>
@@ -7850,7 +7854,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.03';
+    const CURRENT_VERSION = 'v2.04';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

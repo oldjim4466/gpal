@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.14">
+    <meta name="version" content="v2.15">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.14</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.15</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -2956,6 +2956,58 @@
         }
         .btn-spotify-toggle:hover { color: #1DB954; }
 
+        .btn-youtube-toggle {
+            font-family: 'Orbitron', sans-serif; font-size: 0.42rem; font-weight: 700;
+            color: rgba(255,48,48,0.55); background: transparent;
+            border: none; border-top: 1px solid rgba(255,48,48,0.12);
+            cursor: pointer; padding: 4px 8px;
+            letter-spacing: 1px; transition: color 0.2s; outline: none;
+            width: 100%; text-align: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-youtube-toggle:hover { color: #ff3030; }
+        #youtube-bar {
+            border-top: 1px solid rgba(255,48,48,0.15);
+            padding: 6px 12px 8px;
+            background: rgba(255,20,20,0.03);
+        }
+        .yt-input-row { display: flex; gap: 6px; align-items: center; }
+        .yt-url-input {
+            flex: 1; background: transparent;
+            border: 1px solid rgba(255,48,48,0.25);
+            color: var(--stark-cyan); font-family: 'Orbitron'; font-size: 0.38rem;
+            padding: 3px 8px; outline: none; min-width: 0; letter-spacing: 0.5px;
+        }
+        .yt-url-input::placeholder { color: rgba(255,80,80,0.3); font-size: 0.36rem; }
+        .yt-url-input:focus { border-color: rgba(255,48,48,0.6); }
+        .yt-play-btn {
+            font-family: 'Orbitron'; font-size: 0.38rem; font-weight: 700;
+            color: rgba(255,60,60,0.75); background: transparent;
+            border: 1px solid rgba(255,48,48,0.3);
+            padding: 3px 10px; cursor: pointer; white-space: nowrap;
+            transition: all 0.2s; letter-spacing: 1px; outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .yt-play-btn:hover { color: #ff3030; border-color: #ff3030; }
+        .yt-controls {
+            display: flex; gap: 8px; align-items: center; margin-top: 5px; flex-wrap: nowrap;
+        }
+        .yt-ctrl-btn {
+            font-family: 'Orbitron'; font-size: 0.36rem; font-weight: 700;
+            color: rgba(255,80,80,0.65); background: transparent;
+            border: 1px solid rgba(255,80,80,0.2);
+            padding: 2px 7px; cursor: pointer; white-space: nowrap;
+            transition: all 0.2s; flex-shrink: 0; outline: none;
+        }
+        .yt-ctrl-btn:hover { color: #ff5555; border-color: #ff5555; }
+        .yt-title {
+            flex: 1; font-family: 'Orbitron'; font-size: 0.34rem;
+            color: rgba(255,80,80,0.75); overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+            letter-spacing: 0.5px;
+        }
+        .yt-vol { width: 55px; flex-shrink: 0; accent-color: #ff3030; cursor: pointer; }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -2969,7 +3021,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.14</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.15</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3356,6 +3408,25 @@
     ">▸ SPOTIFY</button>
     <div id="spotify-bar" style="display:none;"></div>
     <div id="sp-lyrics-bar"></div>
+    <!-- YouTube audio player -->
+    <div id="yt-player-anchor" style="position:absolute;width:1px;height:1px;overflow:hidden;pointer-events:none;bottom:0;left:0;"></div>
+    <button class="btn-youtube-toggle" id="btn-youtube-toggle" onclick="YouTubeModule.togglePanel()">▸ YOUTUBE</button>
+    <div id="youtube-bar" style="display:none;">
+        <div class="yt-input-row">
+            <input class="yt-url-input" id="yt-url-input" type="text"
+                placeholder="YouTube URL 或 影片 ID..."
+                onkeydown="if(event.key==='Enter') YouTubeModule.loadFromInput()">
+            <button class="yt-play-btn" onclick="YouTubeModule.loadFromInput()">▷ PLAY</button>
+        </div>
+        <div class="yt-controls" id="yt-controls" style="display:none;">
+            <button class="yt-ctrl-btn" onclick="YouTubeModule.seekRel(-10)">◀ 10s</button>
+            <button class="yt-ctrl-btn" id="yt-pp-btn" onclick="YouTubeModule.togglePlay()">▷</button>
+            <button class="yt-ctrl-btn" onclick="YouTubeModule.seekRel(10)">10s ▶</button>
+            <span class="yt-title" id="yt-title">—</span>
+            <input class="yt-vol" type="range" min="0" max="100" value="80"
+                title="音量" oninput="YouTubeModule.setVolume(this.value)">
+        </div>
+    </div>
     <div class="footer-dt-row">
         <div class="member-selector" id="member-selector">
             <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
@@ -5245,6 +5316,113 @@ const GoalTemplateModule = {
 
         saveRow.append(input, saveBtn);
         panel.appendChild(saveRow);
+    },
+};
+
+// ---------- YOUTUBE AUDIO MODULE ----------
+const YouTubeModule = {
+    LS_KEY: 'gpal_yt_last',
+    _player: null,
+    _apiReady: false,
+    _pendingId: null,
+    _playing: false,
+
+    _extractId(input) {
+        input = (input || '').trim();
+        let m;
+        if ((m = input.match(/[?&]v=([a-zA-Z0-9_-]{11})/))) return m[1];
+        if ((m = input.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/))) return m[1];
+        if ((m = input.match(/embed\/([a-zA-Z0-9_-]{11})/))) return m[1];
+        if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
+        return null;
+    },
+
+    init() {
+        if (YouTubeModule._apiReady) { YouTubeModule._createPlayer(); return; }
+        window.onYouTubeIframeAPIReady = () => {
+            YouTubeModule._apiReady = true;
+            YouTubeModule._createPlayer();
+        };
+        if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+            const s = document.createElement('script');
+            s.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(s);
+        }
+        // Restore last URL
+        const last = localStorage.getItem(YouTubeModule.LS_KEY);
+        if (last) { const el = document.getElementById('yt-url-input'); if (el) el.value = last; }
+    },
+
+    _createPlayer() {
+        if (YouTubeModule._player || !window.YT?.Player) return;
+        // Insert player div into anchor (keeps it in DOM, invisible, audio plays)
+        const anchor = document.getElementById('yt-player-anchor');
+        const div = document.createElement('div');
+        div.id = 'yt-player-div';
+        if (anchor) anchor.appendChild(div);
+        YouTubeModule._player = new YT.Player('yt-player-div', {
+            height: '1', width: '1', videoId: '',
+            playerVars: { autoplay: 0, controls: 0, rel: 0, modestbranding: 1, iv_load_policy: 3 },
+            events: {
+                onReady(e) {
+                    e.target.setVolume(80);
+                    if (YouTubeModule._pendingId) {
+                        e.target.loadVideoById(YouTubeModule._pendingId);
+                        YouTubeModule._pendingId = null;
+                    }
+                },
+                onStateChange(e) {
+                    YouTubeModule._playing = e.data === YT.PlayerState.PLAYING;
+                    const ppBtn = document.getElementById('yt-pp-btn');
+                    if (ppBtn) ppBtn.textContent = YouTubeModule._playing ? 'II' : '▷';
+                    if (YouTubeModule._playing) {
+                        const title = YouTubeModule._player.getVideoData?.()?.title || '';
+                        const titleEl = document.getElementById('yt-title');
+                        if (titleEl) titleEl.textContent = title || '—';
+                        const ctrl = document.getElementById('yt-controls');
+                        if (ctrl) ctrl.style.display = 'flex';
+                    }
+                },
+                onError() { Utils.setStatus('YT_LOAD_ERROR', 'error'); },
+            },
+        });
+    },
+
+    loadFromInput() {
+        const val = document.getElementById('yt-url-input')?.value.trim();
+        if (!val) return;
+        const id = YouTubeModule._extractId(val);
+        if (!id) { Utils.setStatus('INVALID_YOUTUBE_URL', 'error'); return; }
+        localStorage.setItem(YouTubeModule.LS_KEY, val);
+        Utils.setStatus('YT_LOADING...', 'warn');
+        if (!YouTubeModule._apiReady || !YouTubeModule._player) {
+            YouTubeModule._pendingId = id; YouTubeModule.init(); return;
+        }
+        YouTubeModule._player.loadVideoById(id);
+    },
+
+    togglePlay() {
+        if (!YouTubeModule._player) return;
+        YouTubeModule._playing ? YouTubeModule._player.pauseVideo() : YouTubeModule._player.playVideo();
+    },
+
+    seekRel(secs) {
+        if (!YouTubeModule._player) return;
+        YouTubeModule._player.seekTo(Math.max(0, (YouTubeModule._player.getCurrentTime() || 0) + secs), true);
+    },
+
+    setVolume(val) {
+        if (YouTubeModule._player) YouTubeModule._player.setVolume(Number(val));
+    },
+
+    togglePanel() {
+        const bar = document.getElementById('youtube-bar');
+        const btn = document.getElementById('btn-youtube-toggle');
+        if (!bar) return;
+        const show = bar.style.display === 'none';
+        bar.style.display = show ? 'block' : 'none';
+        if (btn) btn.textContent = show ? '▾ YOUTUBE' : '▸ YOUTUBE';
+        if (show) YouTubeModule.init(); // load API on first open
     },
 };
 
@@ -8065,7 +8243,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.14';
+    const CURRENT_VERSION = 'v2.15';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

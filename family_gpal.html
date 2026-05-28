@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.20">
+    <meta name="version" content="v2.22">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.20</title>
+    <title>GPAL FAMILY v2.22</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1748,6 +1748,22 @@
         .btn-spotify-toggle:hover { color: #1DB954; }
 
 
+        /* ── Translate mode ── */
+        .btn-translate {
+            font-family: 'Orbitron'; font-size: 0.42rem; font-weight: 700;
+            color: rgba(0,242,255,0.5); background: transparent;
+            border: 1px solid rgba(0,242,255,0.25);
+            padding: 0.35rem 0.8rem; cursor: pointer;
+            transition: all 0.2s; outline: none; white-space: nowrap;
+            -webkit-tap-highlight-color: transparent; letter-spacing: 1px;
+        }
+        .btn-translate:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
+        .btn-translate.active { color: var(--stark-gold); border-color: rgba(255,204,0,0.6); background: rgba(255,204,0,0.04); }
+        input.translated-view, textarea.translated-view {
+            color: rgba(255,220,80,0.9) !important;
+            background: rgba(255,200,0,0.04) !important;
+            border-color: rgba(255,200,0,0.25) !important;
+        }
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -1760,7 +1776,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.20</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.22</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -1917,6 +1933,7 @@
         <button class="nav-btn" data-action="next-day" aria-label="後一天">❯</button>
     </div>
     <div class="action-area">
+        <button class="btn-translate" id="btn-translate" onclick="TranslateModule.toggle()" title="Translate all to English (read-only)">🌐 EN</button>
         <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
         <button class="btn-refresh-icon" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())" title="Refresh page">↺</button>
         <select id="jarvis-lang" class="jarvis-lang-sel" title="JARVIS voice language">
@@ -2109,13 +2126,16 @@ const Utils = {
 
 // ---------- SAVE QUEUE（防抖 + 狀態提示） ----------
 const SaveQueue = {
+    _paused: false, // set true by TranslateModule — prevents upload of translated text
     trigger() {
+        if (SaveQueue._paused) return;
         State.dirty = true;
         clearTimeout(State.autoSaveTimer);
         Utils.setStatus('>> RECORDING...', 'warn');
         State.autoSaveTimer = setTimeout(() => Sync.save('AUTO'), CONFIG.AUTO_SAVE_DELAY);
     },
     flushImmediate() {
+        if (SaveQueue._paused) return Promise.resolve();
         clearTimeout(State.autoSaveTimer);
         if (State.dirty) return Sync.save('AUTO');
     }
@@ -4825,6 +4845,98 @@ function applyDayTheme(dateStr, animate = false) {
     document.documentElement.style.setProperty('--day-grid', t.grid);
 }
 
+// ---------- TRANSLATE MODULE ----------
+// Translation is routed through Google Apps Script (LanguageApp.translate),
+// which avoids CORS and requires no API key.
+const TranslateModule = {
+    _active: false,
+    _originals: new Map(),
+
+    toggle() {
+        TranslateModule._active ? TranslateModule._restore() : TranslateModule._run();
+    },
+
+    _elements() {
+        const all = [
+            ...document.querySelectorAll('#plan-container input[data-role="text"]'),
+            ...document.querySelectorAll('#goal-list input[data-role="text"]'),
+            ...document.querySelectorAll('#lt-goal-list input[data-role="lt-text"]'),
+            document.getElementById('textAction'),
+            document.getElementById('textLearn'),
+        ];
+        return all.filter(el => el && (el.value || el.textContent || '').trim());
+    },
+
+    async _run() {
+        const btn = document.getElementById('btn-translate');
+
+        // Immediate feedback
+        if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+        Utils.setStatus('>> READING TEXT...', 'warn');
+
+        const els = TranslateModule._elements();
+        if (!els.length) {
+            if (btn) { btn.textContent = '🌐 EN'; btn.disabled = false; }
+            Utils.setStatus('NO_TEXT_FOUND · DATA_MAY_NOT_BE_LOADED', 'warn');
+            return;
+        }
+
+        SaveQueue._paused = true;
+        TranslateModule._active = true;
+        Utils.setStatus('TRANSLATING ' + els.length + ' ITEMS...', 'warn');
+
+        const texts = els.map(el => (el.value !== undefined ? el.value : el.textContent) || '');
+
+        try {
+            // POST to Apps Script — it uses LanguageApp.translate() internally
+            const res  = await Utils.safeFetch(CONFIG.WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ type: 'translate', texts, target: 'en' }),
+            });
+            const json = await res.json();
+            const translated = json.data;
+            if (!Array.isArray(translated) || translated.length !== texts.length) {
+                throw new Error(json.error || 'INVALID_RESPONSE');
+            }
+
+            els.forEach((el, i) => {
+                const orig = el.value !== undefined ? el.value : el.textContent;
+                TranslateModule._originals.set(el, orig);
+                const t = translated[i] !== undefined ? translated[i] : orig;
+                if (el.value !== undefined) { el.value = t; el.readOnly = true; }
+                else { el.textContent = t; }
+                el.classList.add('translated-view');
+            });
+
+            if (btn) { btn.textContent = '↩ RESTORE'; btn.disabled = false; btn.classList.add('active'); }
+            Utils.setStatus('TRANSLATED · READ_ONLY · UPLOAD_DISABLED', 'success');
+
+        } catch (e) {
+            TranslateModule._active = false;
+            SaveQueue._paused = false;
+            if (btn) { btn.textContent = '🌐 EN'; btn.disabled = false; }
+            Utils.setStatus('TRANSLATE_ERR · ' + (e.message || 'CHECK_APPS_SCRIPT'), 'error');
+        }
+    },
+
+    _restore() {
+        TranslateModule._originals.forEach((orig, el) => {
+            if (el.value !== undefined) { el.value = orig; el.readOnly = false; }
+            else { el.textContent = orig; }
+            el.classList.remove('translated-view');
+        });
+        TranslateModule._originals.clear();
+        TranslateModule._active = false;
+        SaveQueue._paused = false;
+
+        const btn = document.getElementById('btn-translate');
+        if (btn) { btn.textContent = '🌐 EN'; btn.classList.remove('active'); }
+        Utils.setStatus('RESTORED', 'success');
+    },
+};
+
+
 // ---------- INIT ----------
 window.addEventListener('DOMContentLoaded', () => {
     DOM.datePicker.value = Utils.todayISO();
@@ -4862,7 +4974,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.20';
+    const CURRENT_VERSION = 'v2.22';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.12">
+    <meta name="version" content="v2.14">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.12</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.14</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1217,21 +1217,11 @@
             backdrop-filter: blur(15px);
             z-index: 1000;
         }
-        .member-input {
-            font-family: 'Orbitron', sans-serif; font-size: 0.4rem; font-weight: 700;
-            background: transparent; border: 1px solid rgba(0,242,255,0.3);
-            color: var(--stark-cyan); padding: 3px 8px; width: 60px;
-            letter-spacing: 1px; outline: none; text-align: center;
-            text-transform: uppercase;
-        }
-        .member-input:focus { border-color: var(--stark-cyan); box-shadow: 0 0 6px rgba(0,242,255,0.3); }
-        .member-input::placeholder { color: rgba(0,242,255,0.25); }
         .action-area {
             padding: 0.5rem;
             padding-bottom: 1rem;
             display: flex;
             justify-content: center;
-            flex-wrap: wrap;
             gap: 6px;
             align-items: center;
         }
@@ -2979,7 +2969,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.12</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.14</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3381,11 +3371,6 @@
         <button class="nav-btn" data-action="next-day" aria-label="後一天">❯</button>
     </div>
     <div class="action-area">
-        <input id="member-input" class="member-input" 
-            placeholder="USER" maxlength="12"
-            title="你的用戶名（每台裝置設定一次）"
-            onchange="MemberModule.set(this.value)"
-            onblur="MemberModule.set(this.value)">
         <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
         <button class="btn-refresh-icon" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())" title="Refresh page">↺</button>
         <select id="jarvis-lang" class="jarvis-lang-sel" title="JARVIS voice language">
@@ -8080,7 +8065,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.12';
+    const CURRENT_VERSION = 'v2.14';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

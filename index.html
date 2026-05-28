@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.11">
+    <meta name="version" content="v2.12">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.11</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.12</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1231,6 +1231,7 @@
             padding-bottom: 1rem;
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
             gap: 6px;
             align-items: center;
         }
@@ -2940,22 +2941,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            padding: 8px 14px;
+            gap: 6px;
+            padding: 6px 10px;
             border-top: 1px solid rgba(0,242,255,0.12);
             flex-wrap: nowrap;
+            overflow: hidden;
         }
-        .footer-dt-row .nav-btn {
-            width: 34px; height: 34px; font-size: 1rem; flex-shrink: 0;
-        }
-        .footer-dt-row .date-display { gap: 0; }
-        .footer-dt-row input[type="date"] { font-size: 1rem; letter-spacing: 1px; }
-        .footer-dt-row .date-label { font-size: 0.55rem; letter-spacing: 2px; height: 14px; }
+        .footer-dt-row .member-selector { gap: 5px; flex-shrink: 0; }
+        .footer-dt-row .mbr-btn { font-size: 0.5rem; padding: 4px 9px; }
+        .footer-dt-row .nav-btn { width: 30px; height: 30px; font-size: 0.9rem; flex-shrink: 0; }
+        .footer-dt-row .date-display { gap: 0; flex: 1 1 auto; min-width: 0; align-items: center; }
+        .footer-dt-row input[type="date"] { font-size: 0.88rem; letter-spacing: 0.5px; width: 100%; min-width: 0; }
+        .footer-dt-row .date-label { font-size: 0.5rem; letter-spacing: 2px; height: 12px; }
         .footer-dt-row .date-underline { display: none; }
-        .footer-dt-spacer { flex: 1; min-width: 0; }
-        .footer-dt-row .member-selector { gap: 6px; }
-        .footer-dt-row .mbr-btn { font-size: 0.55rem; padding: 5px 12px; }
-        .footer-dt-row .clock-sec-group { font-size: 0.6rem; }
         /* ── Spotify toggle (mirrors Portfolio toggle) ── */
         .btn-spotify-toggle {
             font-family: 'Orbitron', sans-serif; font-size: 0.42rem; font-weight: 700;
@@ -2981,7 +2979,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.11</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.12</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -8082,7 +8080,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.11';
+    const CURRENT_VERSION = 'v2.12';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

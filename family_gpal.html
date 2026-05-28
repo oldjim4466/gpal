@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.18">
+    <meta name="version" content="v2.19">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.18</title>
+    <title>GPAL FAMILY v2.19</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -1760,7 +1760,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.18</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.19</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2468,7 +2468,15 @@ const PlanModule = {
         dupBtn.dataset.role = 'dup';
         dupBtn.title = 'Duplicate this row';
 
-        actions.append(addBtn, locEdit, locTagGroup, copyBtn, clockBtn, dupBtn, delBtn);
+        const moreBtn = document.createElement('div');
+        moreBtn.className = 'row-more-btn';
+        moreBtn.textContent = '•••';
+        moreBtn.dataset.role = 'more-toggle';
+        moreBtn.title = 'More options';
+        const actionsExtra = document.createElement('div');
+        actionsExtra.className = 'row-actions-extra';
+        actionsExtra.append(addBtn, locEdit, locTagGroup, copyBtn, clockBtn, dupBtn);
+        actions.append(moreBtn, actionsExtra, delBtn);
         row.append(timeRow, input, actions);
         parent.appendChild(row);
         return row;
@@ -4822,7 +4830,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.18';
+    const CURRENT_VERSION = 'v2.19';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

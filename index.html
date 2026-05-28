@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.17">
+    <meta name="version" content="v2.18">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.17</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.18</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -492,7 +492,30 @@
         }
         .btn-copy-plan:hover { border-color: var(--stark-cyan); color: var(--stark-cyan); }
         .btn-copy-plan.copied { border-color: var(--stark-green); color: var(--stark-green); }
-        .copy-item-btn {
+        /* ── Row "more" toggle & extras ── */
+        .row-more-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 0.36rem; font-weight: 700;
+            color: rgba(0,242,255,0.3); background: transparent;
+            border: 1px solid rgba(0,242,255,0.12);
+            padding: 1px 5px; cursor: pointer; flex-shrink: 0;
+            transition: all 0.2s; outline: none; user-select: none;
+            -webkit-tap-highlight-color: transparent; letter-spacing: 1px;
+        }
+        .row-more-btn:hover, .row-more-btn.open { color: var(--stark-cyan); border-color: var(--stark-cyan); }
+        .row-actions-extra {
+            display: none; align-items: center; gap: 4px; flex-shrink: 0;
+        }
+        .row-actions-extra.open { display: flex; }
+        /* ── Goal delete button ── */
+        .goal-del-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
+            color: var(--stark-red); border: 1px solid var(--stark-red);
+            padding: 1px 4px; cursor: pointer; opacity: 0.4; transition: 0.2s;
+            flex-shrink: 0; background: transparent; outline: none;
+            -webkit-tap-highlight-color: rgba(255,62,62,0.2);
+        }
+        .goal-del-btn:hover { opacity: 1; }
+                .copy-item-btn {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.38rem;
             font-weight: 700;
@@ -2971,7 +2994,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.17</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.18</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3685,7 +3708,20 @@ const GoalModule = {
         goalCopyBtn.dataset.role = 'goal-copy';
         goalCopyBtn.title = 'Copy goal text';
 
-        row.append(prioBtn, cb, textContainer, goalCopyBtn);
+        const goalMoreBtn = document.createElement('div');
+        goalMoreBtn.className = 'row-more-btn';
+        goalMoreBtn.textContent = '•••';
+        goalMoreBtn.dataset.role = 'goal-more-toggle';
+        goalMoreBtn.title = 'More options';
+        const goalExtra = document.createElement('div');
+        goalExtra.className = 'row-actions-extra';
+        goalExtra.append(goalCopyBtn);
+        const goalDelBtn = document.createElement('div');
+        goalDelBtn.className = 'goal-del-btn';
+        goalDelBtn.textContent = '✕';
+        goalDelBtn.dataset.role = 'goal-del';
+        goalDelBtn.title = 'Delete';
+        row.append(prioBtn, cb, textContainer, goalMoreBtn, goalExtra, goalDelBtn);
         parent.appendChild(row);
         return row;
     },
@@ -3936,7 +3972,15 @@ const PlanModule = {
         dupBtn.dataset.role = 'dup';
         dupBtn.title = 'Duplicate this row';
 
-        actions.append(addBtn, locEdit, locTagGroup, clockBtn, copyBtn, dupBtn, delBtn);
+        const moreBtn = document.createElement('div');
+        moreBtn.className = 'row-more-btn';
+        moreBtn.textContent = '•••';
+        moreBtn.dataset.role = 'more-toggle';
+        moreBtn.title = 'More options';
+        const actionsExtra = document.createElement('div');
+        actionsExtra.className = 'row-actions-extra';
+        actionsExtra.append(addBtn, locEdit, locTagGroup, clockBtn, copyBtn, dupBtn);
+        actions.append(moreBtn, actionsExtra, delBtn);
         row.append(timeRow, input, actions);
         parent.appendChild(row);
         return row;
@@ -6475,6 +6519,24 @@ const Events = {
                 SaveQueue.trigger();
                 GoalModule.saveCurrent(); // 立即同步 allData（Streak 需要最新狀態）
                 StreakModule.checkAndUpdate(DOM.datePicker.value);
+            } else if (t.dataset.role === 'goal-more-toggle') {
+                const extra = row.querySelector('.row-actions-extra');
+                const isOpen = extra.classList.contains('open');
+                DOM.goalList.querySelectorAll('.row-actions-extra.open').forEach(el => {
+                    el.classList.remove('open');
+                    el.closest('.goal-row')?.querySelector('[data-role=goal-more-toggle]')?.classList.remove('open');
+                });
+                if (!isOpen) { extra.classList.add('open'); t.classList.add('open'); }
+            } else if (t.dataset.role === 'goal-del') {
+                row.style.transition = 'opacity 0.2s, transform 0.2s';
+                row.style.opacity = '0'; row.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                    row.remove();
+                    GoalModule.updateProgress();
+                    GoalModule.ensureTrailingEmpty();
+                    SaveQueue.trigger();
+                    GoalModule.saveCurrent();
+                }, 200);
             } else if (t.dataset.role === 'goal-copy') {
                 const txt = row.querySelector('input[data-role=text]').value.trim();
                 if (!txt) return;
@@ -6564,7 +6626,19 @@ const Events = {
             } else if (role === 'clock-start') {
                 const txt = row.querySelector('input[data-role=text]')?.value.trim();
                 if (txt) MissionClockModule.start(txt, row);
+            } else if (role === 'more-toggle') {
+                const extra = row.querySelector('.row-actions-extra');
+                const isOpen = extra.classList.contains('open');
+                // close all open rows first
+                DOM.planContainer.querySelectorAll('.row-actions-extra.open').forEach(el => {
+                    el.classList.remove('open');
+                    el.closest('.plan-row')?.querySelector('[data-role=more-toggle]')?.classList.remove('open');
+                });
+                if (!isOpen) { extra.classList.add('open'); t.classList.add('open'); }
             } else if (role === 'del') {
+                // close extras on del
+                row.querySelector('.row-actions-extra')?.classList.remove('open');
+                row.querySelector('[data-role=more-toggle]')?.classList.remove('open');
                 if (confirm('DELETE THIS TASK?')) {
                     row.style.transition = 'opacity 0.2s, transform 0.2s';
                     row.style.opacity = '0';
@@ -8069,7 +8143,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.17';
+    const CURRENT_VERSION = 'v2.18';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

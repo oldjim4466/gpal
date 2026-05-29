@@ -7136,10 +7136,15 @@ const FinanceModule = {
 
     render(data) {
         FinanceModule._lastData = data;
+        // 確保所有欄位都有預設值
+        data.records    = Array.isArray(data.records)    ? data.records    : [];
+        data.categories = Array.isArray(data.categories) ? data.categories : [];
+        data.total_income  = Number(data.total_income  || 0);
+        data.total_expense = Number(data.total_expense || 0);
         // Ensure records sorted by date ascending
-        if (data.records) data.records.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+        data.records.sort((a,b) => (a.date||'').localeCompare(b.date||''));
         // 結餘直接使用雲端計算的 net_balance（= totalIncome − |totalExpense|）
-        const net = data.net_balance ?? ((data.total_income || 0) - Math.abs(data.total_expense || 0));
+        const net = data.net_balance ?? (data.total_income - Math.abs(data.total_expense));
         data.net_balance = net;
         const netCard = document.getElementById('finance-net-card');
         netCard.className = `finance-stat net ${net >= 0 ? 'positive' : 'negative'}`;
@@ -7159,8 +7164,9 @@ const FinanceModule = {
         // 類別支出條
         const catsEl = document.getElementById('finance-cats');
         catsEl.replaceChildren();
-        const max = data.categories[0]?.amount || 1;
-        data.categories.slice(0, 6).forEach(cat => {
+        const cats = Array.isArray(data.categories) ? data.categories : [];
+        const max = cats[0]?.amount || 1;
+        cats.slice(0, 6).forEach(cat => {
             const pct = (cat.amount / max * 100).toFixed(1);
             const row = document.createElement('div');
             row.className = 'finance-cat-row';
@@ -7211,9 +7217,11 @@ const FinanceModule = {
             const url  = `${CONFIG.WEB_APP_URL}?type=expense&month=${month}&account=${encodeURIComponent(FinanceModule.currentAccount)}`;
             const res  = await Utils.safeFetch(url, {}, 1);
             const data = await res.json();
+            console.log('[Finance] raw data:', JSON.stringify(data).slice(0, 300));
             if (data.error) throw new Error(data.error);
             FinanceModule.render(data);
         } catch(e) {
+            console.error('[Finance] load error:', e);
             FinanceModule.showError(e.message || 'LOAD_FAILED');
         }
     },

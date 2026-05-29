@@ -7214,7 +7214,9 @@ const FinanceModule = {
             btn.classList.toggle('active', btn.dataset.account === FinanceModule.currentAccount);
         });
         try {
-            const url  = `${CONFIG.WEB_APP_URL}?type=expense&month=${month}&account=${encodeURIComponent(FinanceModule.currentAccount)}`;
+            const acctParam = (FinanceModule.currentAccount && FinanceModule.currentAccount !== 'ALL')
+                ? `&account=${encodeURIComponent(FinanceModule.currentAccount)}` : '';
+            const url  = `${CONFIG.WEB_APP_URL}?type=expense&month=${month}${acctParam}`;
             const res  = await Utils.safeFetch(url, {}, 1);
             const data = await res.json();
             console.log('[Finance] raw data:', JSON.stringify(data).slice(0, 300));

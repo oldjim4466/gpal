@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.34">
+    <meta name="version" content="v2.36">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.34</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.36</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -1123,7 +1123,16 @@
             display: none;
         }
         .plan-row.past {
-            opacity: 0.45;
+            opacity: 0.38;
+            filter: grayscale(0.4);
+            text-decoration-color: rgba(255,255,255,0.2);
+        }
+        .plan-row.past .plan-time,
+        .plan-row.past .plan-text {
+            color: var(--text-dim, rgba(255,255,255,0.35)) !important;
+        }
+        .plan-row.past .plan-location {
+            opacity: 0.5;
         }
 
         .time-select-row {
@@ -2999,6 +3008,7 @@
             .card-header::before { animation: none !important; }
             .lt-days.lt-overdue { animation: none !important; }
             .plan-row.active-now::before { animation: none !important; }
+            .plan-row.past { opacity: 0.38 !important; filter: grayscale(0.4) !important; }
             .portfolio-hud::after { animation: none !important; }
             .mc-time.urgent { animation: none !important; }
         }
@@ -3009,7 +3019,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.34</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.36</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3415,11 +3425,9 @@
         <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
         <button class="btn-refresh-icon" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())" title="Refresh page">↺</button>
         <select id="jarvis-lang" class="jarvis-lang-sel" title="JARVIS voice language">
-            <option value="auto">AUTO</option>
-            <option value="zh-TW">繁中</option>
-            <option value="zh-CN">簡中</option>
             <option value="en-US">EN</option>
-            <option value="ja-JP">日語</option>
+            <option value="zh-HK">粵語</option>
+            <option value="zh-CN">國語</option>
         </select>
         <button class="btn-sync" id="btn-jarvis" title="JARVIS Status Report">◎ BRIEF</button>
     </div>
@@ -4036,10 +4044,21 @@ const PlanModule = {
             listEl.querySelectorAll('.plan-row').forEach(row => {
                 row.classList.remove('active-now', 'past');
                 if (!isToday) return;
-                if (cur >= row.dataset.start && cur < row.dataset.end) {
+                const start = row.dataset.start || '';
+                const end   = row.dataset.end   || '';
+                if (!start) return; // 沒有時間的行不處理
+                if (end && cur >= start && cur < end) {
                     row.classList.add('active-now');
-                } else if (cur >= row.dataset.end) {
+                } else if (end && cur >= end) {
+                    // 結束時間已過 → 變暗
                     row.classList.add('past');
+                } else if (!end && cur > start) {
+                    // 只有開始時間，超過開始時間 30 分鐘後變暗
+                    const [sh, sm] = start.split(':').map(Number);
+                    const [ch, cm] = cur.split(':').map(Number);
+                    const startMins = sh * 60 + sm;
+                    const curMins   = ch * 60 + cm;
+                    if (curMins - startMins > 30) row.classList.add('past');
                 }
             });
         }
@@ -5543,38 +5562,45 @@ const JarvisModule = {
     _speaking: false,
 
     _getLang() {
-        return localStorage.getItem(JarvisModule.LS_KEY) || 'auto';
+        return localStorage.getItem(JarvisModule.LS_KEY) || 'en-US';
     },
 
     _selectVoice() {
         if (!('speechSynthesis' in window)) return null;
         const voices = window.speechSynthesis.getVoices();
         const lang = JarvisModule._getLang();
-        if (lang === 'auto') {
-            return voices.find(v => v.lang === 'zh-TW') ||
-                   voices.find(v => v.lang === 'zh-HK') ||
-                   voices.find(v => v.lang.startsWith('zh')) ||
-                   voices.find(v => v.lang === 'en-US') ||
+        if (lang === 'en-US') {
+            return voices.find(v => v.lang === 'en-US') ||
+                   voices.find(v => v.lang.startsWith('en')) ||
                    voices[0] || null;
         }
-        return voices.find(v => v.lang === lang) ||
-               voices.find(v => v.lang.startsWith(lang.slice(0, 2))) ||
+        if (lang === 'zh-HK') {
+            // 粵語：優先 zh-HK 語音
+            return voices.find(v => v.lang === 'zh-HK') ||
+                   voices.find(v => v.lang === 'yue-HK') ||
+                   voices.find(v => v.lang.startsWith('zh-HK')) ||
+                   voices.find(v => v.lang.startsWith('zh')) ||
+                   voices[0] || null;
+        }
+        // 國語 (zh-CN)：優先 zh-CN / zh-TW 語音
+        return voices.find(v => v.lang === 'zh-CN') ||
+               voices.find(v => v.lang === 'zh-TW') ||
+               voices.find(v => v.lang.startsWith('zh-CN')) ||
+               voices.find(v => v.lang.startsWith('zh')) ||
                voices[0] || null;
     },
 
     _weatherDesc(code) {
-        const lang = JarvisModule._getLang();
-        const isEn = lang === 'en-US';
-        const isJa = lang === 'ja-JP';
+        const isEn = JarvisModule._getLang() === 'en-US';
         const map = [
-            [0,   isEn ? 'clear sky'      : isJa ? '快晴'    : '晴天'],
-            [2,   isEn ? 'partly cloudy'  : isJa ? '晴れ時々曇り' : '多雲時晴'],
-            [3,   isEn ? 'overcast'       : isJa ? '曇り'    : '陰天'],
-            [49,  isEn ? 'foggy'          : isJa ? '霧'      : '有霧'],
-            [67,  isEn ? 'rainy'          : isJa ? '雨'      : '下雨'],
-            [77,  isEn ? 'snowy'          : isJa ? '雪'      : '下雪'],
-            [82,  isEn ? 'showers'        : isJa ? 'にわか雨' : '陣雨'],
-            [99,  isEn ? 'thunderstorm'   : isJa ? '雷雨'    : '雷暴'],
+            [0,   isEn ? 'clear sky'      : '晴天'],
+            [2,   isEn ? 'partly cloudy'  : '多雲時晴'],
+            [3,   isEn ? 'overcast'       : '陰天'],
+            [49,  isEn ? 'foggy'          : '有霧'],
+            [67,  isEn ? 'rainy'          : '下雨'],
+            [77,  isEn ? 'snowy'          : '下雪'],
+            [82,  isEn ? 'showers'        : '陣雨'],
+            [99,  isEn ? 'thunderstorm'   : '雷暴'],
         ];
         for (const [max, desc] of map) { if (code <= max) return desc; }
         return isEn ? 'unknown' : '未知';
@@ -5583,7 +5609,6 @@ const JarvisModule = {
     _buildReport() {
         const lang = JarvisModule._getLang();
         const isEn = lang === 'en-US';
-        const isJa = lang === 'ja-JP';
         const date = (DOM.datePicker && DOM.datePicker.value) || Utils.todayISO();
         const raw = GoalModule.allData[0] || '';
         const lines = raw.split('\n').filter(l => l.trim() && /^\[[ x]\]/.test(l));
@@ -5610,19 +5635,8 @@ const JarvisModule = {
             if (w) report += `Weather: ${JarvisModule._weatherDesc(w.code)}, ${w.temp} degrees Celsius. `;
             try { const h = HealthModule.load(date); if (h && (h.water || h.sleep || h.exercise)) { report += `Health: ${h.water} cups of water, ${h.sleep} hours sleep, ${h.exercise} minutes exercise. `; } } catch {}
             report += `All systems nominal. End of report.`;
-        } else if (isJa) {
-            const dateStr = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
-            report = `JARVISシステムレポート。${member}のミッション状況。日付：${dateStr}。`;
-            if (lines.length) {
-                report += `タスク完了率：${pct}%。`;
-                if (doneTexts.length) report += `完了：${doneTexts.join('、')}。`;
-                if (pendingTexts.length) report += `未完了：${pendingTexts.join('、')}。`;
-            } else { report += `本日のタスクはまだ設定されていません。`; }
-            const w = window._gpalWeather;
-            if (w) report += `天気：${JarvisModule._weatherDesc(w.code)}、気温${w.temp}度。`;
-            report += `全システム正常。レポート終了。`;
         } else {
-            // zh-TW / zh-CN / auto
+            // 粵語 (zh-HK) / 國語 (zh-CN) 都用中文報告
             const dateStr = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
             report = `JARVIS 系統匯報。${member} 的任務狀態。日期：${dateStr}。`;
             if (lines.length) {
@@ -8362,7 +8376,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.34';
+    const CURRENT_VERSION = 'v2.36';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

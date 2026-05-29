@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.26">
+    <meta name="version" content="v2.27">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.26</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.27</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -3006,7 +3006,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.26</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.27</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -6370,7 +6370,7 @@ const Sync = {
 
             if (isToday) {
                 // ── 今天：用 init 端點一次取得所有資料 ──────────────────
-                const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=init&date=${date}`);
+                const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=init&date=${date}&member=${MemberModule.current()}`);
                 data = await res.json();
                 if (token !== State.fetchToken) return;
                 goalRaw = data.goal || '';
@@ -6451,7 +6451,7 @@ const Sync = {
 
             } else {
                 // ── 非今天：只需 bundle ──────────────────────────────────
-                const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=bundle&date=${date}`);
+                const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=bundle&date=${date}&member=${MemberModule.current()}`);
                 data = await res.json();
                 if (token !== State.fetchToken) return;
                 goalRaw = data.goal || '';
@@ -6459,19 +6459,20 @@ const Sync = {
 
             State.currentData = data;
             const rolledOver  = goalRaw !== (data.goal || '');
-            const cacheData   = cacheSnapshot ? JSON.parse(cacheSnapshot).data : null;
+            const cacheData   = cacheSnapshot ? (() => { try { return JSON.parse(cacheSnapshot).data; } catch { return null; } })() : null;
             const dataChanged = rolledOver || !cacheData ||
                 cacheData.goal   !== data.goal   ||
                 cacheData.plan   !== data.plan   ||
                 cacheData.learn  !== data.learn  ||
                 cacheData.action !== data.action;
 
-            if (dataChanged || !cacheHit) {
-                GoalModule.parseAll(goalRaw);
-                PlanModule.parseAll(data.plan   || '');
-                ActionModule.parseAll(data.action || '');
-                LearnModule.parseAll(data.learn   || '');
-            }
+            // 始終解析 Plan
+            console.log('[GPAL] plan raw:', JSON.stringify(data.plan || '').slice(0, 200));
+            console.log('[GPAL] goal raw:', JSON.stringify(goalRaw || '').slice(0, 100));
+            GoalModule.parseAll(goalRaw);
+            PlanModule.parseAll(data.plan   || '');
+            ActionModule.parseAll(data.action || '');
+            LearnModule.parseAll(data.learn   || '');
             StreakModule.checkAndUpdate(date);
 
             if (data.health) {
@@ -8341,7 +8342,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.26';
+    const CURRENT_VERSION = 'v2.27';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

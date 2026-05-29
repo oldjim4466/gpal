@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.37">
+    <meta name="version" content="v2.38">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.37</title>
+    <title>GPAL FAMILY v2.38</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -1780,7 +1780,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.37</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.38</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2418,8 +2418,8 @@ const PlanModule = {
     create(start = '08:00', end = '08:30', text = '', location = '', parent = DOM.planList) {
         const row = document.createElement('div');
         row.className = 'plan-row';
-        row.dataset.start = start;
-        row.dataset.end = end;
+        row.dataset.start = String(start || '').replace(/[^0-9:]/g, '');
+        row.dataset.end   = String(end   || '').replace(/[^0-9:]/g, '');
 
         // 時間選擇器
         const timeRow = document.createElement('div');
@@ -2520,8 +2520,8 @@ const PlanModule = {
     },
 
     updateRowTime(row, newStart, newDurationMins) {
-        row.dataset.start = newStart;
-        row.dataset.end = Utils.getOffsetTime(newStart, newDurationMins);
+        row.dataset.start = String(newStart || '').replace(/[^0-9:]/g, '');
+        row.dataset.end   = String(Utils.getOffsetTime(newStart, newDurationMins) || '').replace(/[^0-9:]/g, '');
     },
 
     sort() {
@@ -2541,8 +2541,8 @@ const PlanModule = {
             listEl.querySelectorAll('.plan-row').forEach(row => {
                 row.classList.remove('active-now', 'past');
                 if (!isToday) return;
-                const start = row.dataset.start || '';
-                const end   = row.dataset.end   || '';
+                const start = (row.dataset.start || '').replace(/[^0-9:]/g, '');
+                const end   = (row.dataset.end   || '').replace(/[^0-9:]/g, '');
                 if (!start) return;
                 if (end && cur >= start && cur < end) {
                     row.classList.add('active-now');
@@ -4931,7 +4931,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.37';
+    const CURRENT_VERSION = 'v2.38';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

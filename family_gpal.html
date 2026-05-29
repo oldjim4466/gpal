@@ -70,7 +70,7 @@
             background-size: 40px 40px;
             pointer-events: none;
             z-index: 0;
-            /* animation: grid-drift 30s linear infinite; -- disabled */
+            animation: grid-drift 30s linear infinite;
         }
         @keyframes grid-drift {
             from { background-position: 0 0, 0 0; }
@@ -131,7 +131,7 @@
             height: 2px;
             background: linear-gradient(90deg, transparent, var(--stark-glow), transparent);
             opacity: 0.4;
-            /* animation: scan-line 8s linear infinite; -- disabled */
+            animation: scan-line 8s linear infinite;
             pointer-events: none;
             z-index: 9999;
         }
@@ -162,7 +162,7 @@
             height: 2px;
             background: linear-gradient(90deg, transparent, var(--stark-cyan), transparent);
             box-shadow: 0 0 10px var(--stark-cyan);
-            /* animation: nav-scan 5s linear infinite; -- disabled */
+            animation: nav-scan 5s linear infinite;
         }
         @keyframes nav-scan {
             to { left: 150%; }
@@ -256,7 +256,7 @@
             border-radius: 50%;
             border: 1px solid currentColor;
             color: var(--stark-green);
-            /* animation: radar-ping 2s ease-out infinite; -- disabled */
+            animation: radar-ping 2s ease-out infinite;
         }
         @keyframes radar-ping {
             0%   { transform: scale(1); opacity: 1; }
@@ -447,7 +447,7 @@
             width: 3px;
             background: var(--stark-cyan);
             box-shadow: 0 0 10px var(--stark-glow);
-            /* animation: header-pulse 3s ease-in-out infinite; -- disabled */
+            animation: header-pulse 3s ease-in-out infinite;
         }
         @keyframes header-pulse {
             0%, 100% { opacity: 0.7; box-shadow: 0 0 6px var(--stark-glow-soft); }
@@ -1231,7 +1231,7 @@
             top: 0; left: -100%;
             width: 60%; height: 1px;
             background: linear-gradient(90deg, transparent, var(--stark-gold), transparent);
-            /* animation: sweep-line 4s ease-in-out infinite; -- disabled */
+            animation: sweep-line 4s ease-in-out infinite;
         }
         @keyframes sweep-line {
             0%   { left: -60%; opacity: 0; }

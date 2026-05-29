@@ -1956,8 +1956,8 @@ const CONFIG = Object.freeze({
     AUTO_SAVE_DELAY: 1500,
     PORTFOLIO_REFRESH: 60_000,
     TIME_CHECK_INTERVAL: 60_000,
-    FETCH_TIMEOUT: 15_000,
-    MAX_RETRIES: 2,
+    FETCH_TIMEOUT: 10_000,
+    MAX_RETRIES: 1,
     PRIO_LEVELS: ['NONE', 'P1', 'P2', 'P3'],
     PRIO_ORDER: { P1: 1, P2: 2, P3: 3, NONE: 4 },
     DURATION_OPTIONS: [
@@ -2795,12 +2795,17 @@ const LongTermModule = {
         return LongTermModule.data[name];
     },
 
-    async init() {
+    init() { LongTermModule._loadFromLocal(); LongTermModule._loadFromCloud(); },
+
+    _loadFromLocal() {
         try {
             const cached = JSON.parse(localStorage.getItem(LongTermModule.LS_KEY) || 'null');
             if (cached && typeof cached === 'object') LongTermModule.data = cached;
         } catch {}
         LongTermModule.render();
+    },
+
+    async _loadFromCloud() {
         try {
             const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=longterm`);
             const json = await res.json();
@@ -2973,8 +2978,9 @@ const GoalTemplateModule = {
     LS_KEY: 'gpal_goal_templates',
     templates: [],
 
-    async init() {
-        try { const s = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]'); if (Array.isArray(s)) this.templates = s; } catch {}
+    init() { this._loadFromLocal(); this._loadFromCloud(); },
+    _loadFromLocal() { try { const s = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]'); if (Array.isArray(s)) this.templates = s; } catch {} },
+    async _loadFromCloud() {
         try {
             const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=templates&tmpl_type=goal`, {}, 1);
             const data = await res.json();
@@ -3089,8 +3095,9 @@ const PlanTemplateModule = {
     LS_KEY: 'gpal_plan_templates',
     templates: [],
 
-    async init() {
-        try { const saved = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]'); if (Array.isArray(saved)) this.templates = saved; } catch {}
+    init() { this._loadFromLocal(); this._loadFromCloud(); },
+    _loadFromLocal() { try { const saved = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]'); if (Array.isArray(saved)) this.templates = saved; } catch {} },
+    async _loadFromCloud() {
         try {
             const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=templates&tmpl_type=plan`, {}, 1);
             const data = await res.json();
@@ -3498,15 +3505,19 @@ const HabitModule = {
         Object.keys(habit.logs).forEach(d => { if (d < cutoffStr) delete habit.logs[d]; });
     },
 
-    async init() {
+    init() { HabitModule._loadFromLocal(); HabitModule._loadFromCloud(); },
+
+    _loadFromLocal() {
         HabitModule.data = [];
         try { const c = JSON.parse(localStorage.getItem(HabitModule._lsKey()) || 'null'); if (Array.isArray(c)) HabitModule.data = c; } catch {}
         HabitModule.render();
+    },
+
+    async _loadFromCloud() {
         try {
             const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=habit`);
             const json = await res.json();
             let incoming = json.habits;
-            // migrate old format {member:[...]} → extract current member's array
             if (!Array.isArray(incoming) && incoming && typeof incoming === 'object') incoming = incoming[MemberModule.current()] || [];
             if (Array.isArray(incoming) && json.found !== false) {
                 HabitModule.data = incoming;
@@ -4181,9 +4192,10 @@ const MemberModule = {
         Object.keys(localStorage)
             .filter(k => k.startsWith(CONFIG.LS_PREFIX) || k.startsWith('gpal_prefetch_'))
             .forEach(k => localStorage.removeItem(k));
-        LongTermModule.init();
-        HabitModule.init();
+        LongTermModule._loadFromLocal();
+        HabitModule._loadFromLocal();
         Sync.fetchData();
+        setTimeout(() => { LongTermModule._loadFromCloud(); HabitModule._loadFromCloud(); }, 500);
     },
 
     updateUI() {
@@ -4841,18 +4853,15 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    MemberModule.init(); // MemberMgr.names now fixed to [dad/mom/kid]
-    LongTermModule.init();
-    HabitModule.init();
-    GoalTemplateModule.init();
-    PlanTemplateModule.init();
-    // Spotify: defer init until user opens the bar
-    document.getElementById('btn-spotify-toggle').addEventListener('click', function _spInit() {
-        this.removeEventListener('click', _spInit);
-        SpotifyModule.init();
-    }, { once: false });
-    MissionClockModule.init();
+    MemberModule.init();
+
+    // Step 1: 立即從 localStorage 載入
+    LongTermModule._loadFromLocal();
+    HabitModule._loadFromLocal();
+    GoalTemplateModule._loadFromLocal();
+    PlanTemplateModule._loadFromLocal();
     StreakModule.init();
+    MissionClockModule.init();
     Events.init();
     // 計算固定 nav 高度，設定 CSS var
     const navH = document.querySelector('nav')?.offsetHeight || 50;
@@ -4866,7 +4875,24 @@ window.addEventListener('DOMContentLoaded', () => {
     // Spotify 連接/斷開後 footer 高度改變，重新計算
     const _origSpRender = SpotifyModule.render.bind(SpotifyModule);
     SpotifyModule.render = function() { _origSpRender(); setTimeout(setFooterH, 100); };
+    // Step 2: 主資料請求
     Sync.fetchData();
+
+    // Step 3: 次要雲端請求延後
+    setTimeout(() => {
+        LongTermModule._loadFromCloud();
+        HabitModule._loadFromCloud();
+    }, 1000);
+    setTimeout(() => {
+        GoalTemplateModule._loadFromCloud();
+        PlanTemplateModule._loadFromCloud();
+    }, 2000);
+
+    // Spotify: defer until user opens
+    document.getElementById('btn-spotify-toggle').addEventListener('click', function _spInit() {
+        this.removeEventListener('click', _spInit);
+        SpotifyModule.init();
+    }, { once: false });
 
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 

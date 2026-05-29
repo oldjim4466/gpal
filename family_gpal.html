@@ -5,10 +5,13 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.30">
+    <meta name="version" content="v2.31">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.30</title>
+    <title>GPAL FAMILY v2.31</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://script.google.com" crossorigin>
+    <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+    <link rel="dns-prefetch" href="https://script.google.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
@@ -1772,7 +1775,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.30</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.31</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -1954,7 +1957,7 @@
 const CONFIG = Object.freeze({
     WEB_APP_URL: "https://script.google.com/macros/s/AKfycbwJzPU4lFpkHR4RuiQVypAiXW8mkopvVk0e9VB8lJ7yeFyeJKlMgo1LfIjPnPTFdPcX/exec",
     AUTO_SAVE_DELAY: 1500,
-    PORTFOLIO_REFRESH: 60_000,
+    PORTFOLIO_REFRESH: 120_000,
     TIME_CHECK_INTERVAL: 60_000,
     FETCH_TIMEOUT: 10_000,
     MAX_RETRIES: 1,
@@ -2023,7 +2026,7 @@ const Utils = {
     },
 
     nowTimeStr() {
-        const d = new Date();
+        const d = Utils.nowHK();
         return `${Utils.pad2(d.getHours())}:${Utils.pad2(d.getMinutes())}`;
     },
 
@@ -4917,7 +4920,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.30';
+    const CURRENT_VERSION = 'v2.31';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

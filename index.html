@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.37">
+    <meta name="version" content="v2.40">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.37</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.40</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -3019,7 +3019,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.37</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.40</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3873,7 +3873,10 @@ const PlanModule = {
                 if (!txt) return null;
                 const locEl = row.querySelector('[data-role=loc-edit]');
                 const loc = locEl ? locEl.value.trim() : '';
-                return `${row.dataset.start}-${row.dataset.end}|${txt}|${loc}`;
+                // 確保時間欄位乾淨（清除引號等非數字/冒號字符）
+                const s = String(row.dataset.start || '').replace(/[^0-9:]/g, '');
+                const e = String(row.dataset.end   || '').replace(/[^0-9:]/g, '');
+                return `${s}-${e}|${txt}|${loc}`;
             }).filter(Boolean).join('\n');
     },
 
@@ -3926,8 +3929,8 @@ const PlanModule = {
     create(start = '08:00', end = '08:30', text = '', location = '', parent = DOM.planList) {
         const row = document.createElement('div');
         row.className = 'plan-row';
-        row.dataset.start = start;
-        row.dataset.end = end;
+        row.dataset.start = String(start || '').replace(/[^0-9:]/g, '');
+        row.dataset.end   = String(end   || '').replace(/[^0-9:]/g, '');
 
         // 時間選擇器
         const timeRow = document.createElement('div');
@@ -4028,8 +4031,8 @@ const PlanModule = {
     },
 
     updateRowTime(row, newStart, newDurationMins) {
-        row.dataset.start = newStart;
-        row.dataset.end = Utils.getOffsetTime(newStart, newDurationMins);
+        row.dataset.start = String(newStart || '').replace(/[^0-9:]/g, '');
+        row.dataset.end   = String(Utils.getOffsetTime(newStart, newDurationMins) || '').replace(/[^0-9:]/g, '');
     },
 
     sort() {
@@ -4049,8 +4052,8 @@ const PlanModule = {
             listEl.querySelectorAll('.plan-row').forEach(row => {
                 row.classList.remove('active-now', 'past');
                 if (!isToday) return;
-                const start = row.dataset.start || '';
-                const end   = row.dataset.end   || '';
+                const start = (row.dataset.start || '').replace(/[^0-9:]/g, '');
+                const end   = (row.dataset.end   || '').replace(/[^0-9:]/g, '');
                 if (!start) return; // 沒有時間的行不處理
                 if (end && cur >= start && cur < end) {
                     row.classList.add('active-now');
@@ -7275,9 +7278,12 @@ const FinanceModule = {
     },
 
     setLabel(month) {
-        const [y, m] = month.split('-');
+        if (!month) month = FinanceModule.getMonthStr(0);
+        const [y, m] = String(month).split('-');
+        if (!y || !m) return;
         const names = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-        document.getElementById('finance-month-label').textContent = `${names[parseInt(m)-1]} ${y}`;
+        const el = document.getElementById('finance-month-label');
+        if (el) el.textContent = `${names[parseInt(m)-1]} ${y}`;
     },
 
     render(data) {
@@ -8366,7 +8372,7 @@ window.addEventListener('DOMContentLoaded', () => {
     } catch {}
 
     // Finance：init 端點已載入當月資料，僅需設定 UI 標籤
-    setTimeout(() => { if (FinanceModule.setLabel) FinanceModule.setLabel(); }, 500);
+    setTimeout(() => FinanceModule.init(), 500);
 
     // Watchlist（最低優先）
     setTimeout(() => WatchlistModule.init(), 3000);
@@ -8381,7 +8387,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.37';
+    const CURRENT_VERSION = 'v2.40';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

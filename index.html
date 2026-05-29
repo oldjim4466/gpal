@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.27">
+    <meta name="version" content="v2.30">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.27</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.30</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
@@ -3006,7 +3006,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.27</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.30</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3508,9 +3508,13 @@ const Utils = {
         return `${Utils.pad2(d.getHours())}:${Utils.pad2(d.getMinutes())}`;
     },
 
+    // 統一用香港時間（Asia/Hong_Kong, UTC+8），避免跟 Google Sheet 時區不符
     todayISO() {
-        const d = new Date();
-        return `${d.getFullYear()}-${Utils.pad2(d.getMonth() + 1)}-${Utils.pad2(d.getDate())}`;
+        return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+    },
+
+    nowHK() {
+        return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
     },
 
     updateDateLabel(dateStr) {
@@ -6467,8 +6471,6 @@ const Sync = {
                 cacheData.action !== data.action;
 
             // 始終解析 Plan
-            console.log('[GPAL] plan raw:', JSON.stringify(data.plan || '').slice(0, 200));
-            console.log('[GPAL] goal raw:', JSON.stringify(goalRaw || '').slice(0, 100));
             GoalModule.parseAll(goalRaw);
             PlanModule.parseAll(data.plan   || '');
             ActionModule.parseAll(data.action || '');
@@ -8342,7 +8344,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.27';
+    const CURRENT_VERSION = 'v2.30';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

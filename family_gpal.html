@@ -1760,7 +1760,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.19</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.23</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2961,13 +2961,26 @@ const GoalTemplateModule = {
     LS_KEY: 'gpal_goal_templates',
     templates: [],
 
-    init() {
+    async init() {
         try { const s = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]'); if (Array.isArray(s)) this.templates = s; } catch {}
+        try {
+            const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=templates&tmpl_type=goal`, {}, 1);
+            const data = await res.json();
+            if (Array.isArray(data.templates) && data.templates.length > 0) {
+                this.templates = data.templates.map(t => ({ id: 'tmpl_' + Date.now() + '_' + Math.floor(Math.random()*9999), name: t.name, goals: Array.isArray(t.data) ? t.data : [] }));
+                this._saveLocal();
+            }
+        } catch {}
     },
 
-    _save() {
-        if (this.templates.length > 10) this.templates = this.templates.slice(-10);
-        try { localStorage.setItem(this.LS_KEY, JSON.stringify(this.templates)); } catch {}
+    _saveLocal() { try { localStorage.setItem(this.LS_KEY, JSON.stringify(this.templates)); } catch {} },
+
+    async _saveCloud(name, data) {
+        try { await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'template_save', tmpl_type: 'goal', name, data }) }); } catch {}
+    },
+
+    async _deleteCloud(name) {
+        try { await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'template_delete', tmpl_type: 'goal', name }) }); } catch {}
     },
 
     _extractGoals() {
@@ -2988,7 +3001,8 @@ const GoalTemplateModule = {
         const existIdx = this.templates.findIndex(t => t.name === n);
         const tmpl = { id: 'tmpl_' + Date.now(), name: n, goals };
         if (existIdx >= 0) this.templates[existIdx] = tmpl; else this.templates.push(tmpl);
-        this._save();
+        this._saveLocal();
+        this._saveCloud(n, goals);
         Utils.setStatus(`TEMPLATE_SAVED · ${n}`, 'success');
         this.renderPanel();
     },
@@ -3005,8 +3019,10 @@ const GoalTemplateModule = {
     },
 
     deleteTemplate(id) {
+        const tmpl = this.templates.find(t => t.id === id);
+        if (tmpl) this._deleteCloud(tmpl.name);
         this.templates = this.templates.filter(t => t.id !== id);
-        this._save(); this.renderPanel();
+        this._saveLocal(); this.renderPanel();
     },
 
     togglePanel() {
@@ -3061,16 +3077,26 @@ const PlanTemplateModule = {
     LS_KEY: 'gpal_plan_templates',
     templates: [],
 
-    init() {
+    async init() {
+        try { const saved = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]'); if (Array.isArray(saved)) this.templates = saved; } catch {}
         try {
-            const saved = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]');
-            if (Array.isArray(saved)) this.templates = saved;
+            const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=templates&tmpl_type=plan`, {}, 1);
+            const data = await res.json();
+            if (Array.isArray(data.templates) && data.templates.length > 0) {
+                this.templates = data.templates.map(t => ({ id: 'ptmpl_' + Date.now() + '_' + Math.floor(Math.random()*9999), name: t.name, rows: Array.isArray(t.data) ? t.data : [] }));
+                this._saveLocal();
+            }
         } catch {}
     },
 
-    _save() {
-        if (this.templates.length > 10) this.templates = this.templates.slice(-10);
-        try { localStorage.setItem(this.LS_KEY, JSON.stringify(this.templates)); } catch {}
+    _saveLocal() { try { localStorage.setItem(this.LS_KEY, JSON.stringify(this.templates)); } catch {} },
+
+    async _saveCloud(name, data) {
+        try { await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'template_save', tmpl_type: 'plan', name, data }) }); } catch {}
+    },
+
+    async _deleteCloud(name) {
+        try { await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'template_delete', tmpl_type: 'plan', name }) }); } catch {}
     },
 
     _extractPlan() {
@@ -3095,7 +3121,8 @@ const PlanTemplateModule = {
         const tmpl = { id: 'ptmpl_' + Date.now(), name: n, rows };
         if (existIdx >= 0) this.templates[existIdx] = tmpl;
         else this.templates.push(tmpl);
-        this._save();
+        this._saveLocal();
+        this._saveCloud(n, rows);
         Utils.setStatus(`PLAN_TMPL_SAVED · ${n}`, 'success');
         this.renderPanel();
     },
@@ -3117,8 +3144,10 @@ const PlanTemplateModule = {
     },
 
     deleteTemplate(id) {
+        const tmpl = this.templates.find(t => t.id === id);
+        if (tmpl) this._deleteCloud(tmpl.name);
         this.templates = this.templates.filter(t => t.id !== id);
-        this._save();
+        this._saveLocal();
         this.renderPanel();
     },
 
@@ -4830,7 +4859,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.19';
+    const CURRENT_VERSION = 'v2.23';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

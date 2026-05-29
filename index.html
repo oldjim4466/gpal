@@ -123,14 +123,14 @@
             100% { opacity: 1; }
         }
 
-        /* 掃描線特效 */
+        /* 掃描線特效 - disabled to save battery */
         body::before {
             content: '';
             position: fixed;
             top: 0; left: 0; right: 0;
             height: 2px;
             background: linear-gradient(90deg, transparent, var(--stark-glow), transparent);
-            opacity: 0.4;
+            opacity: 0.2;
             animation: scan-line 8s linear infinite;
             pointer-events: none;
             z-index: 9999;
@@ -2986,6 +2986,18 @@
                 animation-duration: 0.01ms !important;
                 transition-duration: 0.01ms !important;
             }
+        }
+        /* 手機省電：關閉所有 infinite 動畫 */
+        @media (max-width: 768px) {
+            body::after { animation: none !important; }
+            body::before { animation: none !important; }
+            nav::after { animation: none !important; }
+            .conn-dot::before { animation: none !important; }
+            .card-header::before { animation: none !important; }
+            .lt-days.lt-overdue { animation: none !important; }
+            .plan-row.active-now::before { animation: none !important; }
+            .portfolio-hud::after { animation: none !important; }
+            .mc-time.urgent { animation: none !important; }
         }
     </style>
 </head>
@@ -6041,7 +6053,7 @@ const SpotifyModule = {
     _startPolling() {
         clearInterval(SpotifyModule._pollTimer);
         SpotifyModule.fetchNowPlaying();
-        SpotifyModule._pollTimer = setInterval(SpotifyModule.fetchNowPlaying, 10000);
+        SpotifyModule._pollTimer = setInterval(SpotifyModule.fetchNowPlaying, 30000);
         clearInterval(SpotifyModule._lyricsTimer);
         SpotifyModule._lyricsTimer = setInterval(SpotifyModule._tickLyrics, 1000);
     },
@@ -6912,9 +6924,18 @@ const Events = {
 
         // 頁面回到前景時刷新時間 highlight、同步 MissionClock 及 Spotify
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden) return;
+            if (document.hidden) {
+                // 頁面隱藏時停止 Watchlist timer 節省電量
+                if (WatchlistModule.timer) {
+                    clearInterval(WatchlistModule.timer);
+                    WatchlistModule.timer = null;
+                }
+                return;
+            }
             PlanModule.checkTimeHighlight();
             MissionClockModule.onVisibilityChange();
+            // 頁面恢復時重啟 Watchlist timer
+            if (!WatchlistModule.timer) WatchlistModule.startTimer();
         });
     },
 
@@ -8229,7 +8250,7 @@ window.addEventListener('DOMContentLoaded', () => {
         } catch(e) {}
     }
     setTimeout(checkVersion, 5000);    // 5 秒後首次檢查
-    setInterval(checkVersion, 300000); // 每 5 分鐘
+    setInterval(checkVersion, 600000); // 每 10 分鐘
 
 });
 </script>

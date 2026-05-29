@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.40">
+    <meta name="version" content="v2.41">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.40</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.41</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -3019,7 +3019,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.40</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.41</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -7114,14 +7114,18 @@ const FinanceModule = {
     async deleteRecord(idx) {
         const r = FinanceModule.todayRecords[idx];
         if (!r) return;
+        if (!confirm(`刪除這筆記錄？\n${r.category} ${r.note ? '· ' + r.note : ''} · $${r.amount}`)) return;
         try {
+            // amount 必須是絕對值（後端用 direction 判斷收支）
             const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
-                    type: 'expense_delete',
-                    date: r.date, amount: r.amount,
-                    category: r.category, account: r.account,
+                    type:     'expense_delete',
+                    date:     r.date,
+                    amount:   Math.abs(Number(r.amount) || 0),
+                    category: r.category,
+                    account:  r.account,
                 }),
             });
             const data = await res.json();
@@ -7129,7 +7133,9 @@ const FinanceModule = {
             FinanceModule.todayRecords.splice(idx, 1);
             FinanceModule.renderRecords();
             FinanceModule.load(FinanceModule.getMonthStr(FinanceModule.monthOffset), FinanceModule.currentAccount);
-        } catch(e) { alert(`刪除失敗：${e.message}`); }
+        } catch(e) {
+            alert(`刪除失敗：${e.message || e}`);
+        }
     },
 
     openEditModal(idx) {
@@ -8387,7 +8393,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.40';
+    const CURRENT_VERSION = 'v2.41';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

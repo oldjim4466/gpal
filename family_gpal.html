@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.31">
+    <meta name="version" content="v2.33">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.31</title>
+    <title>GPAL FAMILY v2.33</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -1775,7 +1775,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.31</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.33</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -4193,15 +4193,13 @@ const MemberModule = {
 
     select(name) {
         if (!MemberModule.MEMBERS.includes(name)) return;
+        if (name === MemberModule.current()) return; // 已是當前成員
         localStorage.setItem(MemberModule.LS_KEY, name);
         MemberModule.updateUI();
-        Object.keys(localStorage)
-            .filter(k => k.startsWith(CONFIG.LS_PREFIX) || k.startsWith('gpal_prefetch_'))
-            .forEach(k => localStorage.removeItem(k));
+        // 不刪快取（各成員獨立快取），即時從本地載入
         LongTermModule._loadFromLocal();
         HabitModule._loadFromLocal();
         Sync.fetchData();
-        setTimeout(() => { LongTermModule._loadFromCloud(); HabitModule._loadFromCloud(); }, 500);
     },
 
     updateUI() {
@@ -4920,7 +4918,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.31';
+    const CURRENT_VERSION = 'v2.33';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.43">
+    <meta name="version" content="v2.48">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.43</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.48</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -481,8 +481,8 @@
         .btn-copy-plan {
             margin-left: auto;
             background: transparent;
-            border: 1px solid rgba(0,242,255,0.25);
-            color: rgba(0,242,255,0.5);
+            border: 1px solid rgba(0,242,255,0.55);
+            color: rgba(0,242,255,0.8);
             font-family: 'Orbitron', sans-serif;
             font-size: 0.42rem;
             font-weight: 700;
@@ -498,8 +498,8 @@
         /* ── Row "more" toggle & extras ── */
         .row-more-btn {
             font-family: 'Orbitron', sans-serif; font-size: 0.36rem; font-weight: 700;
-            color: rgba(0,242,255,0.3); background: transparent;
-            border: 1px solid rgba(0,242,255,0.12);
+            color: rgba(0,242,255,0.7); background: transparent;
+            border: 1px solid rgba(0,242,255,0.4);
             padding: 1px 5px; cursor: pointer; flex-shrink: 0;
             transition: all 0.2s; outline: none; user-select: none;
             -webkit-tap-highlight-color: transparent; letter-spacing: 1px;
@@ -513,7 +513,7 @@
         .goal-del-btn {
             font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
             color: var(--stark-red); border: 1px solid var(--stark-red);
-            padding: 1px 4px; cursor: pointer; opacity: 0.4; transition: 0.2s;
+            padding: 1px 4px; cursor: pointer; opacity: 0.75; transition: 0.2s;
             flex-shrink: 0; background: transparent; outline: none;
             -webkit-tap-highlight-color: rgba(255,62,62,0.2);
         }
@@ -522,7 +522,7 @@
             font-family: 'Orbitron', sans-serif;
             font-size: 0.38rem;
             font-weight: 700;
-            color: rgba(0,242,255,0.35);
+            color: rgba(0,242,255,0.75);
             cursor: pointer;
             padding: 1px 5px;
             border: 1px solid rgba(0,242,255,0.15);
@@ -614,7 +614,7 @@
         .mc-btn:hover { border-color: var(--stark-gold); color: var(--stark-gold); }
         .clock-start-btn {
             font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 900;
-            color: rgba(255,204,0,0.45); border: 1px solid rgba(255,204,0,0.25);
+            color: rgba(255,204,0,0.85); border: 1px solid rgba(255,204,0,0.6);
             background: rgba(255,204,0,0.03); padding: 2px 7px;
             cursor: pointer; user-select: none; letter-spacing: 1px;
             clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
@@ -803,7 +803,7 @@
         /* === GOAL TEMPLATE === */
         .btn-tmpl {
             font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
-            color: rgba(0,242,255,0.45); border: 1px solid rgba(0,242,255,0.2);
+            color: rgba(0,242,255,0.8); border: 1px solid rgba(0,242,255,0.45);
             background: transparent; padding: 1px 6px; cursor: pointer;
             transition: all 0.2s; margin-left: 4px; outline: none;
         }
@@ -1065,7 +1065,7 @@
         .plan-tab {
             background: transparent;
             border: 1px solid rgba(0,242,255,0.2);
-            color: rgba(0,242,255,0.35);
+            color: rgba(0,242,255,0.75);
             font-family: 'Orbitron', sans-serif;
             font-size: 0.5rem;
             font-weight: 900;
@@ -1123,16 +1123,16 @@
             display: none;
         }
         .plan-row.past {
-            opacity: 0.38 !important;
-            filter: grayscale(0.4) !important;
+            opacity: 0.75 !important;
+            filter: grayscale(0.15) !important;
         }
         .plan-row.past .plan-time,
         .plan-row.past .plan-text,
         .plan-row.past input,
         .plan-row.past .plan-loc,
         .plan-row.past .plan-location {
-            color: rgba(255,255,255,0.35) !important;
-            opacity: 0.38 !important;
+            color: rgba(255,255,255,0.7) !important;
+            opacity: 0.75 !important;
         }
 
         .time-select-row {
@@ -1182,7 +1182,7 @@
             font-size: 0.5rem;
             color: var(--stark-gold);
             cursor: pointer;
-            opacity: 0.5;
+            opacity: 0.8;
             border: 1px dashed var(--stark-gold);
             padding: 1px 4px;
             transition: 0.2s;
@@ -1236,7 +1236,7 @@
         .del-btn {
             color: var(--stark-red); border: 1px solid var(--stark-red);
             font-family: 'Orbitron'; font-size: 0.38rem; font-weight: 700;
-            padding: 1px 4px; cursor: pointer; opacity: 0.4; transition: 0.2s;
+            padding: 1px 4px; cursor: pointer; opacity: 0.75; transition: 0.2s;
             flex-shrink: 0; position: relative; z-index: 5;
             background: transparent; outline: none;
             -webkit-tap-highlight-color: rgba(255,62,62,0.2);
@@ -1848,8 +1848,8 @@
         .btn-wl-add:hover { background: var(--stark-cyan); color: var(--stark-dark); }
         .btn-wl-refresh {
             background: transparent;
-            border: 1px solid rgba(0,242,255,0.25);
-            color: rgba(0,242,255,0.5);
+            border: 1px solid rgba(0,242,255,0.55);
+            color: rgba(0,242,255,0.8);
             font-family: 'Orbitron';
             font-size: 0.48rem;
             padding: 4px 8px;
@@ -1983,7 +1983,7 @@
         .wl-loading {
             font-family: 'Orbitron';
             font-size: 0.5rem;
-            color: rgba(0,242,255,0.35);
+            color: rgba(0,242,255,0.75);
             letter-spacing: 1px;
             text-align: center;
             padding: 8px 0;
@@ -3012,6 +3012,24 @@
             .portfolio-hud::after { animation: none !important; }
             .mc-time.urgent { animation: none !important; }
         }
+            @media (max-width: 768px) {
+            .time-sel {
+                font-size: 0.75rem !important;
+                padding: 3px 2px !important;
+                min-width: 44px !important;
+            }
+            .time-dash {
+                font-size: 0.8rem !important;
+                opacity: 0.7;
+            }
+            .time-select-row {
+                gap: 3px !important;
+            }
+            .plan-dur {
+                font-size: 0.7rem !important;
+                min-width: 36px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -3019,7 +3037,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.43</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.48</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -8393,7 +8411,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.43';
+    const CURRENT_VERSION = 'v2.48';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

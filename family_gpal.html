@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.43">
+    <meta name="version" content="v2.48">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.43</title>
+    <title>GPAL FAMILY v2.48</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -471,8 +471,8 @@
         .btn-copy-plan {
             margin-left: auto;
             background: transparent;
-            border: 1px solid rgba(0,242,255,0.25);
-            color: rgba(0,242,255,0.5);
+            border: 1px solid rgba(0,242,255,0.55);
+            color: rgba(0,242,255,0.8);
             font-family: 'Orbitron', sans-serif;
             font-size: 0.42rem;
             font-weight: 700;
@@ -488,8 +488,8 @@
         /* ── Row "more" toggle & extras ── */
         .row-more-btn {
             font-family: 'Orbitron', sans-serif; font-size: 0.36rem; font-weight: 700;
-            color: rgba(0,242,255,0.3); background: transparent;
-            border: 1px solid rgba(0,242,255,0.12);
+            color: rgba(0,242,255,0.7); background: transparent;
+            border: 1px solid rgba(0,242,255,0.4);
             padding: 1px 5px; cursor: pointer; flex-shrink: 0;
             transition: all 0.2s; outline: none; user-select: none;
             -webkit-tap-highlight-color: transparent; letter-spacing: 1px;
@@ -503,7 +503,7 @@
         .goal-del-btn {
             font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
             color: var(--stark-red); border: 1px solid var(--stark-red);
-            padding: 1px 4px; cursor: pointer; opacity: 0.4; transition: 0.2s;
+            padding: 1px 4px; cursor: pointer; opacity: 0.75; transition: 0.2s;
             flex-shrink: 0; background: transparent; outline: none;
             -webkit-tap-highlight-color: rgba(255,62,62,0.2);
         }
@@ -512,7 +512,7 @@
             font-family: 'Orbitron', sans-serif;
             font-size: 0.38rem;
             font-weight: 700;
-            color: rgba(0,242,255,0.35);
+            color: rgba(0,242,255,0.75);
             cursor: pointer;
             padding: 1px 5px;
             border: 1px solid rgba(0,242,255,0.15);
@@ -587,7 +587,7 @@
         .mc-btn:hover { border-color: var(--stark-gold); color: var(--stark-gold); }
         .clock-start-btn {
             font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 900;
-            color: rgba(255,204,0,0.45); border: 1px solid rgba(255,204,0,0.25);
+            color: rgba(255,204,0,0.85); border: 1px solid rgba(255,204,0,0.6);
             background: rgba(255,204,0,0.03); padding: 2px 7px;
             cursor: pointer; user-select: none; letter-spacing: 1px;
             clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
@@ -773,7 +773,7 @@
         @keyframes streak-burst { 0%{transform:scale(1.6)} 100%{transform:scale(1)} }
 
         /* === GOAL TEMPLATE === */
-        .btn-tmpl { font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700; color: rgba(0,242,255,0.45); border: 1px solid rgba(0,242,255,0.2); background: transparent; padding: 1px 6px; cursor: pointer; transition: all 0.2s; margin-left: 4px; outline: none; }
+        .btn-tmpl { font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700; color: rgba(0,242,255,0.8); border: 1px solid rgba(0,242,255,0.45); background: transparent; padding: 1px 6px; cursor: pointer; transition: all 0.2s; margin-left: 4px; outline: none; }
         .btn-tmpl:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
         .btn-tmpl.active { color: var(--stark-cyan); border-color: var(--stark-cyan); background: rgba(0,242,255,0.08); }
         .goal-tmpl-panel { border: 1px solid rgba(0,242,255,0.15); border-left: 3px solid var(--stark-cyan); background: rgba(0,242,255,0.03); padding: 8px 10px; margin-bottom: 6px; }
@@ -1031,15 +1031,15 @@
             display: none;
         }
         .plan-row.past {
-            opacity: 0.38 !important;
-            filter: grayscale(0.4) !important;
+            opacity: 0.75 !important;
+            filter: grayscale(0.15) !important;
         }
         .plan-row.past .plan-time,
         .plan-row.past .plan-text,
         .plan-row.past input,
         .plan-row.past .plan-loc {
-            color: rgba(255,255,255,0.35) !important;
-            opacity: 0.38 !important;
+            color: rgba(255,255,255,0.7) !important;
+            opacity: 0.75 !important;
         }
 
         .time-select-row {
@@ -1089,7 +1089,7 @@
             font-size: 0.5rem;
             color: var(--stark-gold);
             cursor: pointer;
-            opacity: 0.5;
+            opacity: 0.8;
             border: 1px dashed var(--stark-gold);
             padding: 1px 4px;
             transition: 0.2s;
@@ -1143,7 +1143,7 @@
         .del-btn {
             color: var(--stark-red); border: 1px solid var(--stark-red);
             font-family: 'Orbitron'; font-size: 0.38rem; font-weight: 700;
-            padding: 1px 4px; cursor: pointer; opacity: 0.4; transition: 0.2s;
+            padding: 1px 4px; cursor: pointer; opacity: 0.75; transition: 0.2s;
             flex-shrink: 0; position: relative; z-index: 5;
             background: transparent; outline: none;
             -webkit-tap-highlight-color: rgba(255,62,62,0.2);
@@ -1776,6 +1776,24 @@
             .plan-row.active-now::before { animation: none !important; }
             .portfolio-hud::after { animation: none !important; }
             .mc-time.urgent { animation: none !important; }
+
+            /* 手機版 Plan 時間及時長加大 */
+            .time-sel {
+                font-size: 0.75rem !important;
+                padding: 3px 2px !important;
+                min-width: 44px !important;
+            }
+            .time-dash {
+                font-size: 0.8rem !important;
+                opacity: 0.7;
+            }
+            .time-select-row {
+                gap: 3px !important;
+            }
+            .plan-dur {
+                font-size: 0.7rem !important;
+                min-width: 36px !important;
+            }
         }
     </style>
 </head>
@@ -1783,7 +1801,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.43</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.48</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -4893,7 +4911,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v2.43 loaded - past dimming active');
+    console.log('[GPAL] Family v2.48 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -4938,7 +4956,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.43';
+    const CURRENT_VERSION = 'v2.48';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

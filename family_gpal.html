@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.50">
+    <meta name="version" content="v2.55">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.50</title>
+    <title>GPAL FAMILY v2.55</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -1222,6 +1222,71 @@
             position: relative;
             overflow: hidden;
         }
+        .tz-hud {
+            display: flex; flex-direction: column; gap: 6px;
+            padding: 8px 12px; background: rgba(8, 26, 41, 0.6);
+            border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 6px;
+            margin-top: 4px; position: relative; overflow: hidden;
+        }
+        #tz-display { display: flex; flex-direction: column; gap: 5px; }
+        .tz-row {
+            display: flex; justify-content: space-between; align-items: baseline;
+            padding: 3px 0; border-bottom: 1px solid rgba(0,242,255,0.08);
+        }
+        .tz-row:last-child { border-bottom: none; }
+        .tz-city {
+            font-family: 'Orbitron', sans-serif; font-size: 0.7rem;
+            color: rgba(0,242,255,0.85); letter-spacing: 1px; text-transform: uppercase;
+        }
+        .tz-time {
+            font-family: 'Orbitron', sans-serif; font-size: 1.05rem; font-weight: 700;
+            color: #fff; text-shadow: 0 0 8px rgba(0,242,255,0.4);
+        }
+        .tz-date { font-size: 0.72rem; color: rgba(255,255,255,0.6); margin-left: 8px; }
+        .btn-tz-edit {
+            background: transparent; border: 1px solid rgba(0,242,255,0.45);
+            color: rgba(0,242,255,0.8); font-family: 'Orbitron', sans-serif;
+            font-size: 0.55rem; padding: 4px 8px; border-radius: 4px;
+            cursor: pointer; letter-spacing: 1px; align-self: flex-start; transition: 0.2s;
+        }
+        .btn-tz-edit:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
+        .tz-edit-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000; backdrop-filter: blur(8px);
+        }
+        .tz-edit-modal.show { display: flex; }
+        .tz-edit-box {
+            background: rgba(12, 30, 48, 0.98); border: 2px solid var(--stark-cyan);
+            border-radius: 10px; padding: 1.2rem; width: 90%; max-width: 420px;
+            box-shadow: 0 0 30px rgba(0,242,255,0.3);
+        }
+        .tz-edit-title {
+            font-family: 'Orbitron', sans-serif; font-size: 0.85rem;
+            color: var(--stark-cyan); letter-spacing: 2px; margin-bottom: 1rem; text-align: center;
+        }
+        .tz-edit-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+        .tz-edit-row label {
+            font-size: 0.6rem; color: rgba(0,242,255,0.7);
+            font-family: 'Orbitron', sans-serif; width: 50px; flex-shrink: 0;
+        }
+        .tz-edit-row input {
+            flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,242,255,0.3);
+            color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.7rem;
+        }
+        .tz-edit-row select {
+            flex: 1.4; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,242,255,0.3);
+            color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.65rem;
+        }
+        .tz-edit-btns { display: flex; gap: 10px; margin-top: 1rem; }
+        .tz-edit-btns button {
+            flex: 1; padding: 8px; border-radius: 5px; font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem; letter-spacing: 1px; cursor: pointer; border: 1px solid; background: transparent;
+        }
+        .tz-save-btn { color: var(--stark-cyan); border-color: var(--stark-cyan); }
+        .tz-save-btn:hover { background: rgba(0,242,255,0.15); }
+        .tz-cancel-btn { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.3); }
+
         .portfolio-hud {
             position: relative;
             padding: 10px 16px 8px;
@@ -1801,7 +1866,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.50</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.55</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -1934,6 +1999,17 @@
 </main>
 
 <footer>
+    <button class="btn-spotify-toggle" id="btn-tz-toggle" onclick="
+        const hud = this.nextElementSibling;
+        const show = hud.style.display === 'none';
+        hud.style.display = show ? '' : 'none';
+        this.textContent = show ? '▾ TIMEZONE' : '▸ TIMEZONE';
+        if (show) TimezoneModule.startTimer(); else TimezoneModule.stopTimer();
+    ">▸ TIMEZONE</button>
+    <div class="tz-hud" style="display:none;">
+        <div id="tz-display"></div>
+        <button class="btn-tz-edit" onclick="TimezoneModule.openEditor()">✎ EDIT ZONES</button>
+    </div>
     <button class="btn-spotify-toggle" id="btn-spotify-toggle" onclick="
         const bar = document.getElementById('spotify-bar');
         const show = bar.style.display === 'none';
@@ -1968,6 +2044,18 @@
         <button class="btn-sync" id="btn-jarvis" title="JARVIS Status Report">◎ BRIEF</button>
     </div>
 </footer>
+
+<!-- Timezone Edit Modal -->
+<div class="tz-edit-modal" id="tz-edit-modal">
+    <div class="tz-edit-box">
+        <div class="tz-edit-title">◷ EDIT TIME ZONES</div>
+        <div id="tz-edit-rows"></div>
+        <div class="tz-edit-btns">
+            <button class="tz-cancel-btn" onclick="TimezoneModule.closeEditor()">CANCEL</button>
+            <button class="tz-save-btn" onclick="TimezoneModule.saveZones()">SAVE</button>
+        </div>
+    </div>
+</div>
 
 <script>
 'use strict';
@@ -3350,6 +3438,92 @@ const JarvisModule = {
 };
 
 // ---------- MISSION CLOCK MODULE ----------
+// ---------- TIMEZONE MODULE ----------
+const TimezoneModule = {
+    LS_KEY: 'gpal_timezones',
+    timer: null,
+    DEFAULT: [
+        { city: 'Los Angeles', tz: 'America/Los_Angeles' },
+        { city: 'Hong Kong',   tz: 'Asia/Hong_Kong' },
+        { city: 'London',      tz: 'Europe/London' },
+    ],
+    ZONES: [
+        ['Los Angeles','America/Los_Angeles'],['New York','America/New_York'],
+        ['Chicago','America/Chicago'],['Denver','America/Denver'],['Toronto','America/Toronto'],
+        ['Mexico City','America/Mexico_City'],['São Paulo','America/Sao_Paulo'],
+        ['London','Europe/London'],['Paris','Europe/Paris'],['Berlin','Europe/Berlin'],
+        ['Moscow','Europe/Moscow'],['Dubai','Asia/Dubai'],['Mumbai','Asia/Kolkata'],
+        ['Bangkok','Asia/Bangkok'],['Hong Kong','Asia/Hong_Kong'],['Shanghai','Asia/Shanghai'],
+        ['Taipei','Asia/Taipei'],['Tokyo','Asia/Tokyo'],['Seoul','Asia/Seoul'],
+        ['Singapore','Asia/Singapore'],['Sydney','Australia/Sydney'],
+        ['Auckland','Pacific/Auckland'],['Honolulu','Pacific/Honolulu'],
+    ],
+    _zones() {
+        try { const s = JSON.parse(localStorage.getItem(this.LS_KEY) || 'null'); if (Array.isArray(s) && s.length === 3) return s; } catch {}
+        return [...TimezoneModule.DEFAULT];
+    },
+    startTimer() {
+        TimezoneModule.render();
+        TimezoneModule.stopTimer();
+        TimezoneModule.timer = setInterval(() => TimezoneModule.render(), 1000);
+    },
+    stopTimer() { if (TimezoneModule.timer) { clearInterval(TimezoneModule.timer); TimezoneModule.timer = null; } },
+    render() {
+        const el = document.getElementById('tz-display');
+        if (!el) return;
+        const zones = TimezoneModule._zones();
+        const now = new Date();
+        el.replaceChildren();
+        const DAY = '#ffcc00', NIGHT = '#00f2ff'; // 日間金 / 夜間青
+        zones.forEach((z, i) => {
+            const t = new Intl.DateTimeFormat('en-GB', { timeZone: z.tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(now);
+            const d = new Intl.DateTimeFormat('en-US', { timeZone: z.tz, weekday: 'short', month: 'short', day: 'numeric' }).format(now);
+            // 取當地小時判斷日夜：06:00-17:59 日間金，18:00-05:59 夜間青
+            const hr = parseInt(new Intl.DateTimeFormat('en-GB', { timeZone: z.tz, hour: '2-digit', hour12: false }).format(now), 10);
+            const c = (hr >= 6 && hr < 18) ? DAY : NIGHT;
+            const row = document.createElement('div'); row.className = 'tz-row';
+            const city = document.createElement('span'); city.className = 'tz-city'; city.textContent = z.city;
+            city.style.color = c;
+            const tw = document.createElement('span');
+            const time = document.createElement('span'); time.className = 'tz-time'; time.textContent = t;
+            time.style.color = c;
+            time.style.textShadow = `0 0 8px ${c}66`;
+            const date = document.createElement('span'); date.className = 'tz-date'; date.textContent = d;
+            tw.append(time, date); row.append(city, tw); el.appendChild(row);
+        });
+    },
+    openEditor() {
+        const zones = TimezoneModule._zones();
+        const rowsEl = document.getElementById('tz-edit-rows');
+        rowsEl.replaceChildren();
+        zones.forEach((z, i) => {
+            const row = document.createElement('div'); row.className = 'tz-edit-row';
+            const label = document.createElement('label'); label.textContent = `ZONE ${i + 1}`;
+            const nameInput = document.createElement('input'); nameInput.type = 'text'; nameInput.value = z.city; nameInput.id = `tz-name-${i}`;
+            const sel = document.createElement('select'); sel.id = `tz-sel-${i}`;
+            TimezoneModule.ZONES.forEach(([name, tz]) => {
+                const opt = document.createElement('option'); opt.value = tz; opt.textContent = name;
+                if (tz === z.tz) opt.selected = true; sel.appendChild(opt);
+            });
+            sel.addEventListener('change', () => { const mt = TimezoneModule.ZONES.find(([n,t]) => t === sel.value); if (mt) nameInput.value = mt[0]; });
+            row.append(label, nameInput, sel); rowsEl.appendChild(row);
+        });
+        document.getElementById('tz-edit-modal').classList.add('show');
+    },
+    closeEditor() { document.getElementById('tz-edit-modal').classList.remove('show'); },
+    saveZones() {
+        const zones = [];
+        for (let i = 0; i < 3; i++) {
+            const name = document.getElementById(`tz-name-${i}`).value.trim();
+            const tz   = document.getElementById(`tz-sel-${i}`).value;
+            zones.push({ city: name || 'Zone ' + (i + 1), tz });
+        }
+        try { localStorage.setItem(TimezoneModule.LS_KEY, JSON.stringify(zones)); } catch {}
+        TimezoneModule.closeEditor();
+        TimezoneModule.render();
+    },
+};
+
 const MissionClockModule = {
     DURATION: 25 * 60 * 1000,
     startTs: null, pausedMs: 0, pauseStart: null,
@@ -4926,7 +5100,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v2.50 loaded - past dimming active');
+    console.log('[GPAL] Family v2.55 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -4971,7 +5145,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.50';
+    const CURRENT_VERSION = 'v2.55';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

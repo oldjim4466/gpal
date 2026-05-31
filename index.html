@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.49">
+    <meta name="version" content="v2.50">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.49</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.50</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -3037,7 +3037,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.49</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.50</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -7306,9 +7306,10 @@ const FinanceModule = {
     },
 
     getMonthStr(offset = 0) {
-        const d = new Date();
-        d.setDate(1);
-        d.setMonth(d.getMonth() + offset);
+        // 用加州時間取當前年月，確保跨時區一致
+        const today = Utils.todayISO(); // 2026-05-29
+        const [y, m] = today.split('-').map(Number);
+        const d = new Date(y, m - 1 + offset, 1);
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     },
 
@@ -7868,9 +7869,15 @@ const WatchlistModule = {
 
     // 判斷美股是否開市（ET 時間 Mon-Fri 09:30-16:00）
     isMarketOpen() {
-        const now = new Date();
-        // 轉換為 ET 時間
-        const et  = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+        // Safari-safe: 用 Intl 取 ET 時間
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/New_York', weekday: 'short',
+            hour: '2-digit', minute: '2-digit', hour12: false
+        }).formatToParts(new Date());
+        const wd = parts.find(p => p.type === 'weekday')?.value;
+        const et = { getDay: () => ({Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}[wd]),
+                     getHours: () => parseInt(parts.find(p=>p.type==='hour')?.value||0),
+                     getMinutes: () => parseInt(parts.find(p=>p.type==='minute')?.value||0) };
         const day = et.getDay(); // 0=Sun, 6=Sat
         if (day === 0 || day === 6) return false;
         const h = et.getHours();
@@ -8426,7 +8433,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.49';
+    const CURRENT_VERSION = 'v2.50';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

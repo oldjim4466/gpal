@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.67">
+    <meta name="version" content="v2.68">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.67</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.68</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.67</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.68</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -7852,7 +7852,7 @@ const FinanceModule = {
         data.total_income  = Number(data.total_income  || 0);
         data.total_expense = Number(data.total_expense || 0);
         // Ensure records sorted by date ascending
-        data.records.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+        data.records.sort((a,b) => (b.date||'').localeCompare(a.date||'')); // 最近優先
         // 結餘直接使用雲端計算的 net_balance（= totalIncome − |totalExpense|）
         const net = data.net_balance ?? (data.total_income - Math.abs(data.total_expense));
         data.net_balance = net;
@@ -8050,7 +8050,9 @@ const FinanceModule = {
                     direction: r.income > 0 ? 'income' : 'expense',
                     amount:    r.income > 0 ? r.income : Math.abs(r.expense),
                     category:  r.category, note: r.note, account: r.account, _mmdd: r.date,
-                }));
+                    _id:       r._id,
+                }))
+                .reverse(); // 最近記錄排最前
             FinanceModule.renderManager();
         } catch(e) {
             document.getElementById('fm-list').innerHTML = `<div class="fm-empty">⚠ ${e.message}</div>`;
@@ -8938,7 +8940,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.67';
+    const CURRENT_VERSION = 'v2.68';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

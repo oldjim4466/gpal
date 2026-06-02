@@ -5,11 +5,13 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.55">
+    <meta name="version" content="v2.61">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.55</title>
+    <title>GPAL FAMILY v2.61</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
+    <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
+    <link rel="dns-prefetch" href="https://wbsassmpynuxqlpxcbcd.supabase.co">
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
     <link rel="dns-prefetch" href="https://script.google.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1866,7 +1868,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.55</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.61</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2068,6 +2070,8 @@
 // ---------- CONFIG ----------
 const CONFIG = Object.freeze({
     WEB_APP_URL: "https://script.google.com/macros/s/AKfycbwJzPU4lFpkHR4RuiQVypAiXW8mkopvVk0e9VB8lJ7yeFyeJKlMgo1LfIjPnPTFdPcX/exec",
+    SB_URL: 'https://wbsassmpynuxqlpxcbcd.supabase.co',
+    SB_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indic2Fzc21weW51eHFscHhjYmNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODM5NDMsImV4cCI6MjA5NTg1OTk0M30.dhEw4_P0f-t-wk8N1SblbZum9lalaqF66YXgMt5pBSI',
     AUTO_SAVE_DELAY: 1500,
     PORTFOLIO_REFRESH: 120_000,
     TIME_CHECK_INTERVAL: 60_000,
@@ -2082,6 +2086,273 @@ const CONFIG = Object.freeze({
     ],
     LS_PREFIX: 'gpal_backup_',
 });
+
+// ============================================================
+//  SUPABASE API LAYER — 取代 Google Apps Script
+//  所有讀寫直接呼叫 Supabase REST API（速度快 5-10x）
+// ============================================================
+const SB = {
+    _cache: new Map(), // 記憶體快取（session 內有效）
+
+    _h() {
+        return {
+            'Content-Type':  'application/json',
+            'apikey':        CONFIG.SB_KEY,
+            'Authorization': `Bearer ${CONFIG.SB_KEY}`,
+            'Prefer':        'return=representation',
+        };
+    },
+
+    // GET：讀取資料
+    async get(table, params = '') {
+        const res = await fetch(`${CONFIG.SB_URL}/rest/v1/${table}${params}`, {
+            headers: { ...SB._h(), 'Prefer': 'return=representation' },
+            keepalive: true,
+        });
+        if (!res.ok) throw new Error(`SB GET ${table} ${res.status}`);
+        return res.json();
+    },
+
+    // UPSERT：插入或更新
+    async upsert(table, data, onConflict = '') {
+        const prefer = onConflict
+            ? `resolution=merge-duplicates,return=representation`
+            : `return=representation`;
+        const res = await fetch(`${CONFIG.SB_URL}/rest/v1/${table}`, {
+            method:  'POST',
+            headers: { ...SB._h(), 'Prefer': prefer },
+            body:    JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(`SB UPSERT ${table} ${res.status}: ${await res.text()}`);
+        return res.json();
+    },
+
+    // DELETE：刪除
+    async delete(table, params = '') {
+        const res = await fetch(`${CONFIG.SB_URL}/rest/v1/${table}${params}`, {
+            method:  'DELETE',
+            headers: SB._h(),
+        });
+        if (!res.ok) throw new Error(`SB DELETE ${table} ${res.status}`);
+        return true;
+    },
+
+    // PATCH：更新
+    async patch(table, data, params = '') {
+        const res = await fetch(`${CONFIG.SB_URL}/rest/v1/${table}${params}`, {
+            method:  'PATCH',
+            headers: { ...SB._h(), 'Prefer': 'return=representation' },
+            body:    JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(`SB PATCH ${table} ${res.status}`);
+        return res.json();
+    },
+
+    // ── Daily Data ───────────────────────────────────────────
+    async getBundle(member, date) {
+        const rows = await SB.get('daily_data',
+            `?member=eq.${member}&date=eq.${date}&select=goal,plan,action,learn,health`);
+        if (!rows.length) return { date, goal:'', plan:'', action:'', learn:'', health:null, found:false };
+        const r = rows[0];
+        return { date, goal:r.goal||'', plan:r.plan||'', action:r.action||'',
+                 learn:r.learn||'', health:r.health||null, found:true };
+    },
+
+    async saveBundle(member, date, data) {
+        return SB.upsert('daily_data', {
+            member, date,
+            ...(data.goal   !== undefined && { goal:   data.goal }),
+            ...(data.plan   !== undefined && { plan:   data.plan }),
+            ...(data.action !== undefined && { action: data.action }),
+            ...(data.learn  !== undefined && { learn:  data.learn }),
+        }, 'member,date');
+    },
+
+    async saveHealth(member, date, health) {
+        return SB.upsert('daily_data', { member, date, health }, 'member,date');
+    },
+
+    // ── Init（一次取得所有資料）──────────────────────────────
+    async getInit(member, date) {
+        const [bundle, longterm, habit, templates, portfolio, expense] = await Promise.all([
+            SB.getBundle(member, date),
+            SB.getLongterm(member),
+            SB.getHabit(member),
+            SB.getTemplates(),
+            SB.getPortfolio(),
+            SB.getExpense(date.slice(0,7)),
+        ]);
+        return {
+            ...bundle,
+            longterm:  longterm.data,
+            habits:    habit.data,
+            templates: templates.templates,
+            portfolio,
+            expense,
+            success: true,
+        };
+    },
+
+    // ── Longterm Goals ───────────────────────────────────────
+    async getLongterm(member) {
+        const key = `lt_${member}`;
+        if (SB._cache.has(key)) return SB._cache.get(key);
+        const rows = await SB.get('longterm_goals', `?member=eq.${member}&select=data`);
+        const result = { data: rows.length ? rows[0].data : null, found: rows.length > 0 };
+        SB._cache.set(key, result);
+        return result;
+    },
+
+    async saveLongterm(member, data) {
+        SB._cache.delete(`lt_${member}`); // 清除快取
+        return SB.upsert('longterm_goals', { member, data }, 'member');
+    },
+
+    // ── Habit ────────────────────────────────────────────────
+    async getHabit(member) {
+        const key = `habit_${member}`;
+        if (SB._cache.has(key)) return SB._cache.get(key);
+        const rows = await SB.get('habit_data', `?member=eq.${member}&select=data`);
+        const result = { habits: rows.length ? rows[0].data : null, found: rows.length > 0 };
+        SB._cache.set(key, result);
+        return result;
+    },
+
+    async saveHabit(member, data) {
+        SB._cache.delete(`habit_${member}`); // 清除快取
+        return SB.upsert('habit_data', { member, data }, 'member');
+    },
+
+    // ── Templates ────────────────────────────────────────────
+    async getTemplates(type) {
+        const key = `tmpl_${type || 'all'}`;
+        if (SB._cache.has(key)) return SB._cache.get(key);
+        const q = type ? `?type=eq.${type}&select=type,name,data` : `?select=type,name,data`;
+        const rows = await SB.get('templates', q);
+        const result = { templates: rows };
+        SB._cache.set(key, result);
+        return result;
+    },
+
+    async saveTemplate(type, name, data) {
+        SB._cache.delete(`tmpl_${type}`); SB._cache.delete('tmpl_all');
+        return SB.upsert('templates', { type, name, data }, 'type,name');
+    },
+
+    async deleteTemplate(type, name) {
+        SB._cache.delete(`tmpl_${type}`); SB._cache.delete('tmpl_all');
+        return SB.delete('templates', `?type=eq.${type}&name=eq.${encodeURIComponent(name)}`);
+    },
+
+    // ── Expense ──────────────────────────────────────────────
+    async getExpense(month, account) {
+        let q = `?date=gte.${month}-01&date=lt.${SB._nextMonth(month)}-01&select=date,income,expense,category,note,account&order=date.asc`;
+        if (account && account !== 'ALL') q += `&account=eq.${encodeURIComponent(account)}`;
+        const rows = await SB.get('expense_records', q);
+        let totalIncome = 0, totalExpense = 0;
+        const records = [], catMap = {};
+        rows.forEach(r => {
+            const inc = Number(r.income) || 0;
+            const exp = Number(r.expense) || 0;
+            totalIncome  += inc;
+            totalExpense += exp;
+            const mmdd = String(r.date).slice(5);
+            records.push({ date: mmdd, income: inc, expense: exp > 0 ? -exp : 0,
+                           category: r.category, note: r.note, account: r.account,
+                           _id: r.id });
+            if (exp > 0) catMap[r.category] = (catMap[r.category] || 0) + exp;
+        });
+        const categories = Object.keys(catMap)
+            .map(k => ({ name: k, amount: catMap[k] }))
+            .sort((a,b) => b.amount - a.amount);
+        return { total_income: totalIncome, total_expense: totalExpense,
+                 net_balance: totalIncome - totalExpense, records, categories };
+    },
+
+    async addExpense(data) {
+        const amt = Math.abs(Number(data.amount) || 0);
+        return SB.upsert('expense_records', {
+            date:     data.date,
+            income:   data.direction === 'income'  ? amt : 0,
+            expense:  data.direction === 'expense' ? amt : 0,
+            category: data.category || 'Others',
+            note:     data.note     || '',
+            account:  data.account  || '',
+        });
+    },
+
+    async deleteExpense(id) {
+        if (!id) return false;
+        return SB.delete('expense_records', `?id=eq.${id}`);
+    },
+
+    async editExpense(id, data) {
+        const amt = Math.abs(Number(data.amount) || 0);
+        return SB.patch('expense_records', {
+            date:     data.date,
+            income:   data.direction === 'income'  ? amt : 0,
+            expense:  data.direction === 'expense' ? amt : 0,
+            category: data.category || 'Others',
+            note:     data.note     || '',
+            account:  data.account  || '',
+        }, `?id=eq.${id}`);
+    },
+
+    // ── Portfolio ─────────────────────────────────────────────
+    async getPortfolio(forceRefresh = false) {
+        const key = 'portfolio';
+        const cached = SB._cache.get(key);
+        if (!forceRefresh && cached && Date.now() - cached.ts < 30000) return cached.data;
+        const rows = await SB.get('portfolio', `?select=ticker,shares,avg_cost,current_price`);
+        let totalValue = 0, totalCost = 0;
+        const holdings = rows.map(r => {
+            const shares = Number(r.shares), avg = Number(r.avg_cost), cur = Number(r.current_price) || avg;
+            const mkt = shares * cur, cost = shares * avg, pl = mkt - cost;
+            totalValue += mkt; totalCost += cost;
+            return { ticker: r.ticker, symbol: r.ticker, shares, avg_cost: avg,
+                     current_price: cur, value: mkt, market_value: mkt, pl,
+                     pl_pct: cost ? ((pl/cost)*100).toFixed(2) : '0' };
+        });
+        const pfResult = {
+            summary: { total_value: totalValue, total_cost: totalCost,
+                       total_pl: totalValue - totalCost,
+                       total_pl_pct: totalCost ? (totalValue-totalCost)/totalCost*100 : 0 },
+            holdings,
+        };
+        SB._cache.set('portfolio', { data: pfResult, ts: Date.now() });
+        return pfResult;
+    },
+
+    async trade(ticker, action, shares, price) {
+        const rows = await SB.get('portfolio', `?ticker=eq.${ticker}`);
+        const exist = rows[0];
+        if (action === 'BUY' || action === 'UNDO_SELL') {
+            if (!exist) {
+                return SB.upsert('portfolio', { ticker, shares, avg_cost: price, current_price: price });
+            }
+            const newShares = Number(exist.shares) + shares;
+            const newAvg    = (Number(exist.shares) * Number(exist.avg_cost) + shares * price) / newShares;
+            return SB.patch('portfolio', { shares: newShares, avg_cost: newAvg }, `?ticker=eq.${ticker}`);
+        } else {
+            if (!exist) throw new Error('ticker not found');
+            const newShares = Number(exist.shares) - shares;
+            if (newShares <= 0) return SB.delete('portfolio', `?ticker=eq.${ticker}`);
+            return SB.patch('portfolio', { shares: newShares }, `?ticker=eq.${ticker}`);
+        }
+    },
+
+    // ── Watchlist ─────────────────────────────────────────────
+    async getWatchlist() {
+        const rows = await SB.get('watchlist', `?select=ticker,note,added_at`);
+        return { items: rows.map(r => ({ ticker: r.ticker, note: r.note, added: r.added_at })) };
+    },
+
+    // ── Helpers ───────────────────────────────────────────────
+    _nextMonth(month) {
+        const [y, m] = month.split('-').map(Number);
+        return m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`;
+    },
+};
 
 // ---------- STATE ----------
 const State = {
@@ -2957,15 +3228,12 @@ const LongTermModule = {
 
     async _loadFromCloud() {
         try {
-            const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=longterm`);
-            const json = await res.json();
-            if (json.goals && typeof json.goals === 'object') {
-                if (json.found !== false) {
-                    LongTermModule.data = json.goals;
-                    LongTermModule._dataVersion++;
-                    try { localStorage.setItem(LongTermModule._lsKey(), JSON.stringify(LongTermModule.data)); } catch {}
-                    LongTermModule.render();
-                }
+            const json = await SB.getLongterm(MemberModule.current());
+            if (Array.isArray(json.data)) {
+                LongTermModule.data = json.data;
+                LongTermModule._dataVersion++;
+                try { localStorage.setItem(LongTermModule._lsKey(), JSON.stringify(LongTermModule.data)); } catch {}
+                LongTermModule.render();
             }
         } catch {}
     },
@@ -3132,8 +3400,7 @@ const GoalTemplateModule = {
     _loadFromLocal() { try { const s = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]'); if (Array.isArray(s)) this.templates = s; } catch {} },
     async _loadFromCloud() {
         try {
-            const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=templates&tmpl_type=goal`, {}, 1);
-            const data = await res.json();
+            const data = await SB.getTemplates('goal');
             if (Array.isArray(data.templates) && data.templates.length > 0) {
                 this.templates = data.templates.map(t => ({ id: 'tmpl_' + Date.now() + '_' + Math.floor(Math.random()*9999), name: t.name, goals: Array.isArray(t.data) ? t.data : [] }));
                 this._saveLocal();
@@ -3143,13 +3410,9 @@ const GoalTemplateModule = {
 
     _saveLocal() { try { localStorage.setItem(this.LS_KEY, JSON.stringify(this.templates)); } catch {} },
 
-    async _saveCloud(name, data) {
-        try { await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'template_save', tmpl_type: 'goal', name, data }) }); } catch {}
-    },
+    async _saveCloud(name, data) { try { await SB.saveTemplate('goal', name, data); } catch {} },
 
-    async _deleteCloud(name) {
-        try { await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'template_delete', tmpl_type: 'goal', name }) }); } catch {}
-    },
+    async _deleteCloud(name) { try { await SB.deleteTemplate('goal', name); } catch {} },
 
     _extractGoals() {
         GoalModule.saveCurrent();
@@ -3260,13 +3523,9 @@ const PlanTemplateModule = {
 
     _saveLocal() { try { localStorage.setItem(this.LS_KEY, JSON.stringify(this.templates)); } catch {} },
 
-    async _saveCloud(name, data) {
-        try { await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'template_save', tmpl_type: 'plan', name, data }) }); } catch {}
-    },
+    async _saveCloud(name, data) { try { await SB.saveTemplate('plan', name, data); } catch {} },
 
-    async _deleteCloud(name) {
-        try { await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'template_delete', tmpl_type: 'plan', name }) }); } catch {}
-    },
+    async _deleteCloud(name) { try { await SB.deleteTemplate('plan', name); } catch {} },
 
     _extractPlan() {
         PlanModule.saveCurrent();
@@ -3747,14 +4006,11 @@ const HabitModule = {
 
     async _loadFromCloud() {
         try {
-            const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=habit`);
-            const json = await res.json();
-            let incoming = json.habits;
-            if (!Array.isArray(incoming) && incoming && typeof incoming === 'object') incoming = incoming[MemberModule.current()] || [];
-            if (Array.isArray(incoming) && json.found !== false) {
-                HabitModule.data = incoming;
+            const json = await SB.getHabit(MemberModule.current());
+            if (Array.isArray(json.habits)) {
+                HabitModule.data = json.habits;
                 HabitModule._dataVersion++;
-                try { localStorage.setItem(HabitModule._lsKey(), JSON.stringify(incoming)); } catch {}
+                try { localStorage.setItem(HabitModule._lsKey(), JSON.stringify(HabitModule.data)); } catch {}
                 HabitModule.render();
             }
         } catch {}
@@ -5100,7 +5356,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v2.55 loaded - past dimming active');
+    console.log('[GPAL] Family v2.61 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5145,7 +5401,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.55';
+    const CURRENT_VERSION = 'v2.61';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

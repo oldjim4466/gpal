@@ -5,11 +5,13 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.60">
+    <meta name="version" content="v2.61">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.60</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.61</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
+    <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
+    <link rel="dns-prefetch" href="https://wbsassmpynuxqlpxcbcd.supabase.co">
     <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
     <link rel="dns-prefetch" href="https://script.google.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3174,7 +3176,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.60</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.61</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3645,6 +3647,8 @@ const CONFIG = Object.freeze({
 //  所有讀寫直接呼叫 Supabase REST API（速度快 5-10x）
 // ============================================================
 const SB = {
+    _cache: new Map(), // 記憶體快取（session 內有效）
+
     _h() {
         return {
             'Content-Type':  'application/json',
@@ -3658,6 +3662,7 @@ const SB = {
     async get(table, params = '') {
         const res = await fetch(`${CONFIG.SB_URL}/rest/v1/${table}${params}`, {
             headers: { ...SB._h(), 'Prefer': 'return=representation' },
+            keepalive: true,
         });
         if (!res.ok) throw new Error(`SB GET ${table} ${res.status}`);
         return res.json();
@@ -3745,36 +3750,52 @@ const SB = {
 
     // ── Longterm Goals ───────────────────────────────────────
     async getLongterm(member) {
+        const key = `lt_${member}`;
+        if (SB._cache.has(key)) return SB._cache.get(key);
         const rows = await SB.get('longterm_goals', `?member=eq.${member}&select=data`);
-        return { data: rows.length ? rows[0].data : null, found: rows.length > 0 };
+        const result = { data: rows.length ? rows[0].data : null, found: rows.length > 0 };
+        SB._cache.set(key, result);
+        return result;
     },
 
     async saveLongterm(member, data) {
+        SB._cache.delete(`lt_${member}`); // 清除快取
         return SB.upsert('longterm_goals', { member, data }, 'member');
     },
 
     // ── Habit ────────────────────────────────────────────────
     async getHabit(member) {
+        const key = `habit_${member}`;
+        if (SB._cache.has(key)) return SB._cache.get(key);
         const rows = await SB.get('habit_data', `?member=eq.${member}&select=data`);
-        return { habits: rows.length ? rows[0].data : null, found: rows.length > 0 };
+        const result = { habits: rows.length ? rows[0].data : null, found: rows.length > 0 };
+        SB._cache.set(key, result);
+        return result;
     },
 
     async saveHabit(member, data) {
+        SB._cache.delete(`habit_${member}`); // 清除快取
         return SB.upsert('habit_data', { member, data }, 'member');
     },
 
     // ── Templates ────────────────────────────────────────────
     async getTemplates(type) {
+        const key = `tmpl_${type || 'all'}`;
+        if (SB._cache.has(key)) return SB._cache.get(key);
         const q = type ? `?type=eq.${type}&select=type,name,data` : `?select=type,name,data`;
         const rows = await SB.get('templates', q);
-        return { templates: rows };
+        const result = { templates: rows };
+        SB._cache.set(key, result);
+        return result;
     },
 
     async saveTemplate(type, name, data) {
+        SB._cache.delete(`tmpl_${type}`); SB._cache.delete('tmpl_all');
         return SB.upsert('templates', { type, name, data }, 'type,name');
     },
 
     async deleteTemplate(type, name) {
+        SB._cache.delete(`tmpl_${type}`); SB._cache.delete('tmpl_all');
         return SB.delete('templates', `?type=eq.${type}&name=eq.${encodeURIComponent(name)}`);
     },
 
@@ -3833,7 +3854,10 @@ const SB = {
     },
 
     // ── Portfolio ─────────────────────────────────────────────
-    async getPortfolio() {
+    async getPortfolio(forceRefresh = false) {
+        const key = 'portfolio';
+        const cached = SB._cache.get(key);
+        if (!forceRefresh && cached && Date.now() - cached.ts < 30000) return cached.data;
         const rows = await SB.get('portfolio', `?select=ticker,shares,avg_cost,current_price`);
         let totalValue = 0, totalCost = 0;
         const holdings = rows.map(r => {
@@ -3844,12 +3868,14 @@ const SB = {
                      current_price: cur, value: mkt, market_value: mkt, pl,
                      pl_pct: cost ? ((pl/cost)*100).toFixed(2) : '0' };
         });
-        return {
+        const pfResult = {
             summary: { total_value: totalValue, total_cost: totalCost,
                        total_pl: totalValue - totalCost,
                        total_pl_pct: totalCost ? (totalValue-totalCost)/totalCost*100 : 0 },
             holdings,
         };
+        SB._cache.set('portfolio', { data: pfResult, ts: Date.now() });
+        return pfResult;
     },
 
     async trade(ticker, action, shares, price) {
@@ -8939,7 +8965,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.60';
+    const CURRENT_VERSION = 'v2.61';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -3028,25 +3028,10 @@ const TradeModule = {
     // 推送交易到 Portfolio 分頁
     async syncToPortfolio(trade) {
         try {
-            const res = await fetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({
-                    type: 'trade',
-                    action: trade.type,
-                    ticker: trade.ticker,
-                    shares: trade.shares,
-                    price: trade.price,
-                }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                // 同步成功後刷新 Portfolio HUD
-                Sync.refreshPortfolio();
-                TradeModule._flashLastRow('ok');
-            } else {
-                TradeModule._flashLastRow('err', data.error);
-            }
+            await SB.trade(trade.ticker, trade.type, trade.shares, trade.price);
+            SB._cache.delete('portfolio');
+            Sync.refreshPortfolio();
+            TradeModule._flashLastRow('ok');
         } catch (e) {
             TradeModule._flashLastRow('err', 'NETWORK');
         }
@@ -3076,30 +3061,16 @@ const TradeModule = {
         if (row) row.style.opacity = '0.4';
 
         try {
-            const res = await fetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({
-                    type: 'trade',
-                    action: trade.type === 'BUY' ? 'UNDO_BUY' : 'UNDO_SELL',
-                    ticker: trade.ticker,
-                    shares: trade.shares,
-                    price: trade.price,
-                }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                TradeModule.trades.splice(idx, 1);
-                TradeModule.render();
-                SaveQueue.trigger();
-                Sync.refreshPortfolio();
-            } else {
-                if (row) row.style.opacity = '1';
-                alert(`刪除失敗：${data.error || '未知錯誤'}`);
-            }
-        } catch (e) {
+            const undoAction = trade.type === 'BUY' ? 'UNDO_BUY' : 'UNDO_SELL';
+            await SB.trade(trade.ticker, undoAction, trade.shares, trade.price);
+            SB._cache.delete('portfolio');
+            TradeModule.trades.splice(idx, 1);
+            TradeModule.render();
+            SaveQueue.trigger();
+            Sync.refreshPortfolio();
+        } catch(e) {
             if (row) row.style.opacity = '1';
-            alert(`網路錯誤，未能同步刪除：${e.message}`);
+            alert(`刪除失敗：${e.message || '未知錯誤'}`);
         }
     },
 
@@ -3244,12 +3215,8 @@ const LongTermModule = {
         if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
         LongTermModule._saveTimer = setTimeout(async () => {
             try {
-                const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ type: 'longterm', data: LongTermModule.data })
-                });
-                const json = await res.json();
+                await SB.saveLongterm(MemberModule.current(), LongTermModule.data);
+                const json = { success: true };
                 if (!json.success) throw new Error('save failed');
             } catch(e) {
                 Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error');
@@ -3270,7 +3237,7 @@ const LongTermModule = {
             try { localStorage.setItem(LongTermModule._lsKey(), JSON.stringify(LongTermModule.data)); } catch {}
             if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
             LongTermModule._saveTimer = setTimeout(async () => {
-                try { const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'longterm', data: LongTermModule.data }) }); const json = await res.json(); if (!json.success) throw new Error('save failed'); } catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
+                try { await SB.saveLongterm(MemberModule.current(), LongTermModule.data); } catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
             }, 3000);
         }
 
@@ -3512,8 +3479,7 @@ const PlanTemplateModule = {
     _loadFromLocal() { try { const saved = JSON.parse(localStorage.getItem(this.LS_KEY) || '[]'); if (Array.isArray(saved)) this.templates = saved; } catch {} },
     async _loadFromCloud() {
         try {
-            const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=templates&tmpl_type=plan`, {}, 1);
-            const data = await res.json();
+            const data = await SB.getTemplates('plan');
             if (Array.isArray(data.templates) && data.templates.length > 0) {
                 this.templates = data.templates.map(t => ({ id: 'ptmpl_' + Date.now() + '_' + Math.floor(Math.random()*9999), name: t.name, rows: Array.isArray(t.data) ? t.data : [] }));
                 this._saveLocal();
@@ -4027,12 +3993,8 @@ const HabitModule = {
         if (HabitModule._saveTimer) clearTimeout(HabitModule._saveTimer);
         HabitModule._saveTimer = setTimeout(async () => {
             try {
-                const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ type: 'habit', data: HabitModule.data })
-                });
-                const json = await res.json();
+                await SB.saveHabit(MemberModule.current(), HabitModule.data);
+                const json = { success: true };
                 if (!json.success) throw new Error('save failed');
             } catch { Utils.setStatus('HABIT_SAVE_ERR · LOCAL_SAVED', 'error'); }
         }, 3000);
@@ -4755,8 +4717,7 @@ const Sync = {
         const fetchOne = async (date) => {
             if (!needsFetch(date)) return;
             try {
-                const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${date}&member=${MemberModule.current()}`, {}, 0);
-                const data = await res.json();
+                const data = await SB.getBundle(MemberModule.current(), date);
                 localStorage.setItem(PREFETCH_KEY(date), JSON.stringify({ data, ts: Date.now() }));
             } catch {}
         };
@@ -4802,11 +4763,11 @@ const Sync = {
             const isToday = date === Utils.todayISO();
 
             const [res, yRes] = await Promise.all([
-                Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${date}`),
-                isToday ? Utils.safeFetch(`${CONFIG.WEB_APP_URL}?date=${yDate}`, {}, 1) : Promise.resolve(null),
+                SB.getBundle(MemberModule.current(), date),
+                isToday ? SB.getBundle(MemberModule.current(), yDate) : Promise.resolve(null),
             ]);
 
-            const data = await res.json();
+            const data = res;
             if (token !== State.fetchToken) return;
             State.currentData = data;
 
@@ -4917,10 +4878,9 @@ const Sync = {
             Utils.setStatus('>> UPLOADING...', 'warn');
             Utils.setConnState('syncing');
 
-            await Utils.safeFetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload),
+            await SB.saveBundle(MemberModule.current(), payload.date, {
+                goal: payload.goal, plan: payload.plan,
+                action: payload.action, learn: payload.learn,
             });
 
             Utils.setStatus(`ARCHIVE_SYNCED · ${mode}`, 'success');

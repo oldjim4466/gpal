@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.69">
+    <meta name="version" content="v2.70">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.69</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.70</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.69</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.70</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4778,11 +4778,7 @@ const HealthModule = {
 
     async syncToCloud(date, data) {
         try {
-            await fetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ type: 'health', date, data }),
-            });
+            await SB.saveHealth(MemberModule.current(), date, data);
         } catch(e) {}
     },
 
@@ -5030,9 +5026,8 @@ const LongTermModule = {
         if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
         LongTermModule._saveTimer = setTimeout(async () => {
             try {
-                const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ type: 'longterm', data: LongTermModule.data }) });
+                await SB.saveLongterm(MemberModule.current(), LongTermModule.data);
+                    const res = { ok: true };
                 const json = await res.json();
                 if (!json.success) throw new Error('save failed');
             } catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
@@ -5057,7 +5052,7 @@ const LongTermModule = {
             if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
             LongTermModule._saveTimer = setTimeout(async () => {
                 try {
-                    const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'longterm', data: LongTermModule.data }) });
+                    await SB.saveLongterm(MemberModule.current(), LongTermModule.data);
                     const json = await res.json();
                     if (!json.success) throw new Error('save failed');
                 } catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
@@ -5674,12 +5669,8 @@ const HabitModule = {
         if (HabitModule._saveTimer) clearTimeout(HabitModule._saveTimer);
         HabitModule._saveTimer = setTimeout(async () => {
             try {
-                const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ type: 'habit', data: HabitModule.data })
-                });
-                const json = await res.json();
+                await SB.saveHabit(MemberModule.current(), HabitModule.data);
+                const json = { success: true };
                 if (!json.success) throw new Error('save failed');
             } catch { Utils.setStatus('HABIT_SAVE_ERR · LOCAL_SAVED', 'error'); }
         }, 3000);
@@ -6913,7 +6904,8 @@ const Sync = {
         const fetchOne = async (date) => {
             if (!needsFetch(date)) return; // 快取仍有效，跳過
             try {
-                const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=bundle&date=${date}`, {}, 0);
+                const _prefetchData = await SB.getBundle(MemberModule.current(), date);
+            const res  = { json: async () => _prefetchData };
                 const data = await res.json();
                 localStorage.setItem(PREFETCH_KEY(date), JSON.stringify({ data, ts: Date.now() }));
             } catch {}
@@ -6984,8 +6976,7 @@ const Sync = {
                 if (sessCache) {
                     data = sessCache;
                 } else {
-                    const res = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=init&date=${date}`);
-                    data = await res.json();
+                    data = await SB.getInit(MemberModule.current(), date);
                     if (token !== State.fetchToken) return;
                     try { sessionStorage.setItem(sessKey, JSON.stringify({ data, ts: Date.now() })); } catch {}
                 }
@@ -7147,10 +7138,11 @@ const Sync = {
             Utils.setStatus('>> UPLOADING...', 'warn');
             Utils.setConnState('syncing');
 
-            await Utils.safeFetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload),
+            await SB.saveBundle(MemberModule.current(), payload.date, {
+                goal:   payload.goal,
+                plan:   payload.plan,
+                action: payload.action,
+                learn:  payload.learn,
             });
 
             Utils.setStatus(`ARCHIVE_SYNCED · ${mode}`, 'success');
@@ -7726,17 +7718,8 @@ const FinanceModule = {
         };
 
         try {
-            const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({
-                    type: 'expense_edit',
-                    orig_date: orig.date, orig_amount: orig.amount,
-                    orig_category: orig.category, orig_account: orig.account,
-                    ...newRec,
-                }),
-            });
-            const data = await res.json();
+            await SB.editExpense(orig._id, newRec);
+            const data = { success: true };
             if (!data.success) throw new Error(data.error || 'FAILED');
 
             // 顯示 Done 動畫
@@ -7801,12 +7784,8 @@ const FinanceModule = {
             amount: FinanceModule.currentDir === 'expense' ? -Math.abs(amount) : Math.abs(amount),
         };
         try {
-            const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ type: 'expense', ...payload }),
-            });
-            const data = await res.json();
+            await SB.addExpense(payload);
+            const data = { success: true };
             if (!data.success) throw new Error(data.error || 'FAILED');
             FinanceModule.todayRecords.push(record);
             FinanceModule.renderRecords();
@@ -8032,8 +8011,7 @@ const FinanceModule = {
         document.getElementById('fm-title').textContent = titles[filter] || 'FINANCE MANAGER';
         document.getElementById('fm-list').innerHTML = '<div class="fm-empty">LOADING...</div>';
         try {
-            const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=expense&month=${month}`, {}, 1);
-            const data = await res.json();
+            const data = await SB.getExpense(month);
             if (data.error) throw new Error(data.error);
             FinanceModule._lastData = data;
             const net = data.net_balance ?? ((data.total_income || 0) - Math.abs(data.total_expense || 0));
@@ -8130,16 +8108,8 @@ const FinanceModule = {
         const r = FinanceModule._managerRecords[idx];
         if (!r) return;
         try {
-            const res = await Utils.safeFetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({
-                    type: 'expense_delete',
-                    date: r.date, amount: r.amount,
-                    category: r.category, account: r.account,
-                }),
-            });
-            const data = await res.json();
+            await SB.deleteExpense(r._id);
+            const data = { success: true };
             if (!data.success) throw new Error(data.error || 'FAILED');
             FinanceModule._managerRecords.splice(idx, 1);
             FinanceModule.renderManager();
@@ -8225,19 +8195,17 @@ const WatchlistModule = {
 
     async syncToCloud(list) {
         try {
-            await fetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ type: 'watchlist', tickers: list }),
-            });
+            // Watchlist: upsert all tickers
+            for (const t of list) {
+                await SB.upsert('watchlist', { ticker: t.toUpperCase(), note: '' }, 'ticker');
+            }
         } catch(e) { /* 靜默失敗 */ }
     },
 
     // 從雲端載入並合併
     async loadFromCloud() {
         try {
-            const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=watchlist`, {}, 1);
-            const data = await res.json();
+            const data = await SB.getWatchlist();
             if (Array.isArray(data.tickers) && data.tickers.length > 0) {
                 // 合併雲端和本地（去重）
                 const local  = JSON.parse(localStorage.getItem(WatchlistModule.LS_KEY) || '[]');
@@ -8681,8 +8649,7 @@ const IntelModule = {
 
         try {
             // 1. 抓取雲端持倉數據
-            const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=portfolio`, {}, 1);
-            const data = await res.json();
+            const data = await SB.getPortfolio();
             if (!data.holdings || data.holdings.length === 0) {
                 throw new Error('NO_HOLDINGS_DATA');
             }
@@ -8940,7 +8907,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.69';
+    const CURRENT_VERSION = 'v2.70';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

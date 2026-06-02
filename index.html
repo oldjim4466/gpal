@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.66">
+    <meta name="version" content="v2.67">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.66</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.67</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -2654,7 +2654,7 @@
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 1800;
+            z-index: 2000;
             background: var(--stark-dark);
             overflow: hidden;
         }
@@ -2784,7 +2784,7 @@
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            padding: 6px 10px 80px 10px; /* 底部 80px padding 防止最後一行被遮住 */
+            padding: 6px 10px 200px 10px; /* 底部大 padding 防止被 footer 遮住 */
             overscroll-behavior: contain;
         }
         .fm-rec {
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.66</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.67</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3420,7 +3420,7 @@
                     <button class="btn-pe-add" onclick="PortfolioEditor.addRow()">+ ADD</button>
                 </div>
             </div>
-            <div class="pager" id="pe-pager">
+            <div class="pager" id="pe-pager" style="display:none;">
                 <button class="pager-btn" id="pe-prev-btn" onclick="PortfolioEditor.prevPage()">⟨⟨ PREV</button>
                 <span class="pager-info" id="pe-page-info"></span>
                 <button class="pager-btn" id="pe-next-btn" onclick="PortfolioEditor.nextPage()">NEXT ⟩⟩</button>
@@ -8472,7 +8472,7 @@ const WatchlistModule = {
 const PortfolioEditor = {
     holdings: [],
     currentPage: 1,
-    perPage: window.innerWidth < 768 ? 7 : 10,
+    perPage: 999, // 不分頁，全部顯示
 
     async open() {
         PortfolioEditor.currentPage = 1;
@@ -8938,7 +8938,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.66';
+    const CURRENT_VERSION = 'v2.67';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

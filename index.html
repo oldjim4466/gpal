@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.61">
+    <meta name="version" content="v2.63">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.61</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.63</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3176,7 +3176,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.61</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.63</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4607,30 +4607,15 @@ const TradeModule = {
         TradeModule.syncToPortfolio(trade); // 同步到 Portfolio 分頁
     },
 
-    // 推送交易到 Portfolio 分頁
+    // 推送交易到 Portfolio（Supabase）
     async syncToPortfolio(trade) {
         try {
-            const res = await fetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({
-                    type: 'trade',
-                    action: trade.type,
-                    ticker: trade.ticker,
-                    shares: trade.shares,
-                    price: trade.price,
-                }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                // 同步成功後刷新 Portfolio HUD
-                Sync.refreshPortfolio();
-                TradeModule._flashLastRow('ok');
-            } else {
-                TradeModule._flashLastRow('err', data.error);
-            }
+            await SB.trade(trade.ticker, trade.type, trade.shares, trade.price);
+            SB._cache.delete('portfolio');
+            Sync.refreshPortfolio();
+            TradeModule._flashLastRow('ok');
         } catch (e) {
-            TradeModule._flashLastRow('err', 'NETWORK');
+            TradeModule._flashLastRow('err', e.message || 'NETWORK');
         }
     },
 
@@ -4658,30 +4643,16 @@ const TradeModule = {
         if (row) row.style.opacity = '0.4';
 
         try {
-            const res = await fetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({
-                    type: 'trade',
-                    action: trade.type === 'BUY' ? 'UNDO_BUY' : 'UNDO_SELL',
-                    ticker: trade.ticker,
-                    shares: trade.shares,
-                    price: trade.price,
-                }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                TradeModule.trades.splice(idx, 1);
-                TradeModule.render();
-                SaveQueue.trigger();
-                Sync.refreshPortfolio();
-            } else {
-                if (row) row.style.opacity = '1';
-                alert(`刪除失敗：${data.error || '未知錯誤'}`);
-            }
-        } catch (e) {
+            const undoAction = trade.type === 'BUY' ? 'UNDO_BUY' : 'UNDO_SELL';
+            await SB.trade(trade.ticker, undoAction, trade.shares, trade.price);
+            SB._cache.delete('portfolio');
+            TradeModule.trades.splice(idx, 1);
+            TradeModule.render();
+            SaveQueue.trigger();
+            Sync.refreshPortfolio();
+        } catch(e) {
             if (row) row.style.opacity = '1';
-            alert(`網路錯誤，未能同步刪除：${e.message}`);
+            alert(`刪除失敗：${e.message || '未知錯誤'}`);
         }
     },
 
@@ -8502,12 +8473,9 @@ const PortfolioEditor = {
         const inp = document.getElementById('pe-add-ticker');
         inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); PortfolioEditor.addRow(); } };
         try {
-            const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=portfolio`, {}, 1);
-            const data = await res.json();
-            // API may return `ticker` or `symbol` — normalise to `symbol`
+            const data = await SB.getPortfolio(true);
             PortfolioEditor.holdings = (data.holdings || []).map(h => ({
-                ...h,
-                symbol: h.symbol ?? h.ticker ?? '',
+                ...h, symbol: h.symbol ?? h.ticker ?? '',
             }));
             document.getElementById('pe-loading').style.display = 'none';
             PortfolioEditor.render();
@@ -8589,16 +8557,11 @@ const PortfolioEditor = {
         const btn = row.querySelector('.btn-pe-save');
         btn.disabled = true; btn.textContent = '…';
         try {
-            const res = await fetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({
-                    type: 'portfolio_edit',
-                    ticker: h.symbol, shares, avg_cost: avgCost,
-                }),
-            });
-            const data = await res.json();
-            if (!data.success) throw new Error(data.error || 'FAILED');
+            await SB.patch('portfolio',
+                { shares, avg_cost: avgCost, updated_at: new Date().toISOString() },
+                `?ticker=eq.${h.symbol}`
+            );
+            SB._cache.delete('portfolio');
             PortfolioEditor.holdings[idx].shares   = shares;
             PortfolioEditor.holdings[idx].avg_cost = avgCost;
             // Recalculate P/L locally so UI updates without a full reload
@@ -8617,13 +8580,8 @@ const PortfolioEditor = {
         const h = PortfolioEditor.holdings[idx];
         if (!h) return;
         try {
-            const res = await fetch(CONFIG.WEB_APP_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ type: 'portfolio_delete', ticker: h.symbol }),
-            });
-            const data = await res.json();
-            if (!data.success) throw new Error(data.error || 'FAILED');
+            await SB.delete('portfolio', `?ticker=eq.${h.symbol}`);
+            SB._cache.delete('portfolio');
             PortfolioEditor.holdings.splice(idx, 1);
             // 如刪除後當頁已空，退回上一頁
             const totalPages = Math.ceil(PortfolioEditor.holdings.length / PortfolioEditor.perPage);
@@ -8965,7 +8923,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.61';
+    const CURRENT_VERSION = 'v2.63';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

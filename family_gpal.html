@@ -4902,9 +4902,16 @@ const Sync = {
     },
 
     async refreshPortfolio() {
-        // Portfolio HUD removed in Family version
+        // Portfolio HUD removed in Family version - but still sync periodically
     },
 };
+
+// 自動同步：每 2 分鐘重新載入 plan/goal
+setInterval(() => {
+    if (!State.isSyncing && State.isOnline) {
+        Sync.fetchData();
+    }
+}, 120_000);
 
 // ---------- EVENT DELEGATION ----------
 const Events = {

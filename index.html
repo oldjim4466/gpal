@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.78">
+    <meta name="version" content="v2.80">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.78</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.80</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.78</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.80</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -7736,6 +7736,8 @@ const FinanceModule = {
 
         try {
             if (!orig._id) throw new Error(`Missing _id (source=${source}, idx=${idx})`);
+            // DEBUG: show what will be saved
+            alert(`儲存:\nID: ${orig._id}\n類別: ${newRec.category}\n金額: ${newRec.amount}\n方向: ${newRec.direction}`);
             await SB.editExpense(orig._id, newRec);
 
             // 顯示 Done 動畫
@@ -8110,6 +8112,7 @@ const FinanceModule = {
     async deleteManagerRecord(idx) {
         const r = FinanceModule._managerRecords[idx];
         if (!r) return;
+        if (!confirm(`刪除這筆記錄？\n${r._mmdd || ''} · ${r.category} ${r.note ? '· ' + r.note : ''} · $${r.amount}`)) return;
         try {
             await SB.deleteExpense(r._id);
             const data = { success: true };
@@ -8922,7 +8925,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.78';
+    const CURRENT_VERSION = 'v2.80';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.85">
+    <meta name="version" content="v2.86">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.85</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.86</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.85</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.86</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -7387,7 +7387,9 @@ const Events = {
             const t = e.target;
             const row = t.closest('.plan-row');
             if (!row) return;
-            const role = t.dataset.role;
+            // closest 確保點到子元素也能正確取得 role
+            const roleEl = t.closest('[data-role]');
+            const role = roleEl ? roleEl.dataset.role : t.dataset.role;
 
             if (role === 'loc-add') {
                 t.style.display = 'none';
@@ -7437,7 +7439,7 @@ const Events = {
                 if (txt) MissionClockModule.start(txt, row);
             } else if (role === 'member-toggle') {
                 // 顯示/隱藏成員標籤
-                const memberRow = target.closest('.plan-members');
+                const memberRow = (roleEl || t).closest('.plan-members');
                 const tags = memberRow.querySelectorAll('.plan-member-tag');
                 const anyVisible = Array.from(tags).some(t => t.style.display !== 'none');
                 tags.forEach(t => t.style.display = anyVisible ? 'none' : '');
@@ -7445,7 +7447,7 @@ const Events = {
                 if (anyVisible) tags.forEach(t => t.classList.remove('active'));
                 SaveQueue.trigger();
             } else if (role === 'member-tag') {
-                target.classList.toggle('active');
+                (roleEl || t).classList.toggle('active');
                 SaveQueue.trigger();
             } else if (role === 'more-toggle') {
                 const extra = row.querySelector('.row-actions-extra');
@@ -8973,7 +8975,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.85';
+    const CURRENT_VERSION = 'v2.86';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

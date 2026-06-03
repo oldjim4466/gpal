@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.88">
+    <meta name="version" content="v2.89">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.88</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.89</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1094,6 +1094,7 @@
         .plan-list { display: flex; flex-direction: column; gap: 3px; }
         .plan-row {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: 6px;
             padding: 2px 4px;
@@ -3189,6 +3190,8 @@
         .plan-members {
             display: flex; gap: 4px; flex-wrap: wrap;
             padding: 3px 0 2px 0; align-items: center;
+            width: 100%; /* 強制換行 */
+            flex-basis: 100%;
         }
         .btn-member-toggle {
             font-size: 0.75rem; background: transparent;
@@ -3217,7 +3220,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.88</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.89</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -9000,7 +9003,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.88';
+    const CURRENT_VERSION = 'v2.89';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.82">
+    <meta name="version" content="v2.83">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.82</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.83</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.82</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.83</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3269,6 +3269,7 @@
                         <option value="Utilities">Utilities</option>
                         <option value="Auto & Transport">Auto &amp; Transport</option>
                         <option value="Home Maintenance">Home Maintenance</option>
+                        <option value="Shopping">Shopping</option>
                         <option value="Others">Others</option>
                     </optgroup>
                     <optgroup label="── 收入 ──">
@@ -3480,6 +3481,7 @@
                             <option value="Utilities">Utilities</option>
                             <option value="Auto & Transport">Auto &amp; Transport</option>
                             <option value="Home Maintenance">Home Maintenance</option>
+                            <option value="Shopping">Shopping</option>
                             <option value="Others">Others</option>
                         </optgroup>
                         <optgroup label="── 收入 ──">
@@ -8935,7 +8937,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.82';
+    const CURRENT_VERSION = 'v2.83';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

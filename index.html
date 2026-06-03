@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.89">
+    <meta name="version" content="v2.90">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.89</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.90</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3220,7 +3220,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.89</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.90</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3976,7 +3976,38 @@ const SB = {
         return { items: rows.map(r => ({ ticker: r.ticker, note: r.note, added: r.added_at })) };
     },
 
-    // ── Helpers ───────────────────────────────────────────────
+        // ── Sync tagged plan rows to other members ───────────
+    async syncTaggedPlans(currentMember, date, planText) {
+        const lines = planText.split('\n');
+        const tagged = {};
+        lines.forEach(line => {
+            const parts = line.split('|');
+            if (parts.length < 2) return;
+            const membersRaw = parts[3] ? parts[3].match(/@(dad|mom|kid)/gi) || [] : [];
+            membersRaw.forEach(m => {
+                const member = m.slice(1).toLowerCase();
+                if (member === currentMember) return;
+                if (!tagged[member]) tagged[member] = [];
+                const cleanLine = parts.slice(0,3).join('|');
+                tagged[member].push({ timeKey: parts[0], line: cleanLine });
+            });
+        });
+        for (const [member, rows] of Object.entries(tagged)) {
+            if (!rows.length) continue;
+            try {
+                const existing = await SB.getBundle(member, date);
+                const existLines = (existing.plan || '').split('\n').filter(l => l.trim());
+                const existKeys = new Set(existLines.map(l => l.split('|')[0]));
+                const toAdd = rows.filter(r => !existKeys.has(r.timeKey)).map(r => r.line);
+                if (!toAdd.length) continue;
+                const newPlan = [...existLines, ...toAdd].join('\n');
+                await SB.saveBundle(member, date, { plan: newPlan });
+                console.log('[syncTaggedPlans] synced', toAdd.length, 'rows to', member);
+            } catch(e) { console.warn('syncTaggedPlans:', member, e); }
+        }
+    },
+
+// ── Helpers ───────────────────────────────────────────────
     _nextMonth(month) {
         const [y, m] = month.split('-').map(Number);
         return m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`;
@@ -7228,6 +7259,12 @@ const Sync = {
                 learn:  payload.learn,
             });
 
+            // 同步有 @member tag 的 plan 行到其他成員
+            if (payload.plan && payload.plan.includes('@')) {
+                SB.syncTaggedPlans(MemberModule.current(), payload.date, payload.plan)
+                  .catch(e => console.warn('syncTaggedPlans:', e));
+            }
+
             Utils.setStatus(`ARCHIVE_SYNCED · ${mode}`, 'success');
             Utils.setConnState('online');
             State.isOnline = true;
@@ -9003,7 +9040,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.89';
+    const CURRENT_VERSION = 'v2.90';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

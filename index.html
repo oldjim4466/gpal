@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.72">
+    <meta name="version" content="v2.73">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.72</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.73</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.72</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.73</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3820,7 +3820,7 @@ const SB = {
 
     // ── Expense ──────────────────────────────────────────────
     async getExpense(month, account) {
-        let q = `?date=gte.${month}-01&date=lt.${SB._nextMonth(month)}-01&select=date,income,expense,category,note,account&order=date.asc`;
+        let q = `?date=gte.${month}-01&date=lt.${SB._nextMonth(month)}-01&select=id,date,income,expense,category,note,account&order=date.asc`;
         if (account && account !== 'ALL') q += `&account=eq.${encodeURIComponent(account)}`;
         const rows = await SB.get('expense_records', q);
         let totalIncome = 0, totalExpense = 0;
@@ -3833,7 +3833,7 @@ const SB = {
             const mmdd = String(r.date).slice(5);
             records.push({ date: mmdd, income: inc, expense: exp > 0 ? -exp : 0,
                            category: r.category, note: r.note, account: r.account,
-                           _id: r.id });
+                           _id: r.id }); // r.id comes from Supabase SELECT id
             if (exp > 0) catMap[r.category] = (catMap[r.category] || 0) + exp;
         });
         const categories = Object.keys(catMap)
@@ -7674,8 +7674,7 @@ const FinanceModule = {
         if (!r) return;
         if (!confirm(`刪除這筆記錄？\n${r.category} ${r.note ? '· ' + r.note : ''} · $${r.amount}`)) return;
         try {
-            // 用 Supabase id 直接刪除（比 GAS 的 date/amount 比對可靠）
-            if (!r._id) throw new Error('Missing record ID');
+            if (!r._id) throw new Error(`Missing _id on record idx=${idx}, date=${r.date}, cat=${r.category}`);
             await SB.deleteExpense(r._id);
             FinanceModule.todayRecords.splice(idx, 1);
             FinanceModule.renderRecords();
@@ -7687,12 +7686,14 @@ const FinanceModule = {
 
     openEditModal(idx) {
         const r = FinanceModule.todayRecords[idx];
-        if (!r) return;
-        FinanceModule._editIdx = idx;
+        if (!r) { alert('找不到記錄'); return; }
+        FinanceModule._editIdx    = idx;
+        FinanceModule._editSource = 'hud'; // 標記來源為 HUD
         document.getElementById('edit-amount').value   = r.amount;
         document.getElementById('edit-category').value = r.category || '';
         document.getElementById('edit-note').value     = r.note || '';
         document.getElementById('edit-account').value  = r.account || 'Others';
+        // r.date 已是完整 yyyy-MM-dd（由 loadToday 設定）
         document.getElementById('edit-date').value     = r.date || '';
         const isIncome = r.direction === 'income';
         document.getElementById('edit-dir-expense').classList.toggle('active', !isIncome);
@@ -7706,7 +7707,7 @@ const FinanceModule = {
         const source = FinanceModule._editSource;
         const orig   = source === 'manager'
             ? FinanceModule._managerRecords[idx]
-            : FinanceModule.todayRecords[idx];
+            : FinanceModule.todayRecords[idx]; // 'hud' or undefined → todayRecords
         if (!orig) { alert('找不到原始記錄'); return; }
 
         const confirmBtn = document.getElementById('edit-confirm');
@@ -7722,9 +7723,8 @@ const FinanceModule = {
         };
 
         try {
+            if (!orig._id) throw new Error(`Missing _id (source=${source}, idx=${idx})`);
             await SB.editExpense(orig._id, newRec);
-            const data = { success: true };
-            if (!data.success) throw new Error(data.error || 'FAILED');
 
             // 顯示 Done 動畫
             confirmBtn.textContent = '✓ DONE';
@@ -7786,8 +7786,8 @@ const FinanceModule = {
             await SB.addExpense(record);
             const data = { success: true };
             if (!data.success) throw new Error(data.error || 'FAILED');
-            FinanceModule.todayRecords.push(record);
-            FinanceModule.renderRecords();
+            // 重新載入確保 _id 存在
+            await FinanceModule.loadToday();
             amtEl.value  = '';
             catEl.value  = '';
             noteEl.value = '';
@@ -8906,7 +8906,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.72';
+    const CURRENT_VERSION = 'v2.73';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

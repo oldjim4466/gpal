@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.75">
+    <meta name="version" content="v2.76">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.75</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.76</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.75</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.76</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -7699,10 +7699,10 @@ const FinanceModule = {
         if (!r) { alert('找不到記錄'); return; }
         FinanceModule._editIdx    = idx;
         FinanceModule._editSource = 'hud'; // 標記來源為 HUD
-        document.getElementById('edit-amount').value   = r.amount;
-        document.getElementById('edit-category').value = r.category || '';
-        document.getElementById('edit-note').value     = r.note || '';
-        document.getElementById('edit-account').value  = r.account || 'Others';
+        document.getElementById('edit-amount').value = r.amount;
+        FinanceModule._setSelectVal('edit-category', r.category || 'Others');
+        FinanceModule._setSelectVal('edit-account',  r.account  || 'Others');
+        document.getElementById('edit-note').value  = r.note || '';
         // r.date 已是完整 yyyy-MM-dd（由 loadToday 設定）
         document.getElementById('edit-date').value     = r.date || '';
         const isIncome = r.direction === 'income';
@@ -8139,16 +8139,28 @@ const FinanceModule = {
         } catch(e) { alert(`刪除失敗：${e.message}`); }
     },
 
+    _setSelectVal(id, val) {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        // 如果 option 不存在，動態加入
+        if (val && !Array.from(sel.options).some(o => o.value === val)) {
+            const opt = document.createElement('option');
+            opt.value = val; opt.textContent = val;
+            sel.appendChild(opt);
+        }
+        sel.value = val || '';
+    },
+
     openManagerEdit(idx) {
         const r = FinanceModule._managerRecords[idx];
         if (!r) return;
         FinanceModule._editIdx    = idx;
-        FinanceModule._editSource = 'manager'; // 標記來源
-        document.getElementById('edit-amount').value   = r.amount;
-        document.getElementById('edit-category').value = r.category || 'Others';
-        document.getElementById('edit-note').value     = r.note || '';
-        document.getElementById('edit-account').value  = r.account || 'Others';
-        document.getElementById('edit-date').value     = r.date || '';
+        FinanceModule._editSource = 'manager';
+        document.getElementById('edit-amount').value = r.amount;
+        FinanceModule._setSelectVal('edit-category', r.category || 'Others');
+        FinanceModule._setSelectVal('edit-account',  r.account  || 'Others');
+        document.getElementById('edit-note').value  = r.note  || '';
+        document.getElementById('edit-date').value  = r.date  || '';
         const isIncome = r.direction === 'income';
         document.getElementById('edit-dir-expense').classList.toggle('active', !isIncome);
         document.getElementById('edit-dir-income').classList.toggle('active',  isIncome);
@@ -8919,7 +8931,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.75';
+    const CURRENT_VERSION = 'v2.76';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

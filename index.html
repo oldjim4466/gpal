@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.71">
+    <meta name="version" content="v2.72">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.71</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.72</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.71</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.72</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -7782,13 +7782,8 @@ const FinanceModule = {
             note:      noteEl.value.trim(),
             account:   acctEl.value,
         };
-        // 傳到後端時，支出用負數（配合雲端格式）
-        const payload = {
-            ...record,
-            amount: FinanceModule.currentDir === 'expense' ? -Math.abs(amount) : Math.abs(amount),
-        };
         try {
-            await SB.addExpense(payload);
+            await SB.addExpense(record);
             const data = { success: true };
             if (!data.success) throw new Error(data.error || 'FAILED');
             FinanceModule.todayRecords.push(record);
@@ -8156,12 +8151,12 @@ const FinanceModule = {
         const dateStr = `${yyyy}-${mm}-${dd}`;
         const mmdd    = `${mm}-${dd}`;
         try {
-            const res  = await Utils.safeFetch(`${CONFIG.WEB_APP_URL}?type=expense&month=${FinanceModule.getMonthStr(0)}`, {}, 1);
-            const data = await res.json();
+            const data = await SB.getExpense(FinanceModule.getMonthStr(0));
             if (!data.records) return;
             const todayRecs = data.records.filter(r => r.date === mmdd);
             FinanceModule.todayRecords = todayRecs.map(r => ({
-                date:      dateStr,               // 完整 yyyy-MM-dd，供 delete/edit 用
+                _id:       r._id,                 // Supabase row id，delete/edit 用
+                date:      dateStr,               // 完整 yyyy-MM-dd
                 direction: r.income > 0 ? 'income' : 'expense',
                 amount:    r.income > 0 ? r.income : Math.abs(r.expense),
                 category:  r.category,
@@ -8911,7 +8906,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.71';
+    const CURRENT_VERSION = 'v2.72';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

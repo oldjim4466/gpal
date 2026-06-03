@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.81">
+    <meta name="version" content="v2.82">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.81</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.82</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.81</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.82</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3882,9 +3882,12 @@ const SB = {
     async editExpense(id, data) {
         if (!id) throw new Error('editExpense: missing id');
         const amt = Math.abs(Number(data.amount) || 0);
-        console.log('[SB.editExpense] id=', id, 'data=', data);
+        // 確保 date 格式正確 yyyy-MM-dd
+        const rawDate = String(data.date || '').replace(/[^0-9\-]/g, '');
+        const dateOK  = /^\d{4}-\d{2}-\d{2}$/.test(rawDate);
+        if (!dateOK) throw new Error(`Invalid date: "${data.date}"`);
         return SB.patch('expense_records', {
-            date:     data.date,
+            date:     rawDate,
             income:   data.direction === 'income'  ? amt : 0,
             expense:  data.direction === 'expense' ? amt : 0,
             category: data.category || 'Others',
@@ -7745,8 +7748,6 @@ const FinanceModule = {
 
         try {
             if (!orig._id) throw new Error(`Missing _id (source=${source}, idx=${idx})`);
-            // DEBUG: show what will be saved
-            alert(`儲存:\nID: ${orig._id}\n類別: ${newRec.category}\n金額: ${newRec.amount}\n方向: ${newRec.direction}`);
             await SB.editExpense(orig._id, newRec);
 
             // 顯示 Done 動畫
@@ -8934,7 +8935,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.81';
+    const CURRENT_VERSION = 'v2.82';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

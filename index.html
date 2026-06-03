@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.74">
+    <meta name="version" content="v2.75">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.74</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.75</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3191,7 +3191,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.74</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.75</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -7842,7 +7842,7 @@ const FinanceModule = {
         // Ensure records sorted by date ascending
         data.records.sort((a,b) => (b.date||'').localeCompare(a.date||'')); // 最近優先
         // 結餘直接使用雲端計算的 net_balance（= totalIncome − |totalExpense|）
-        const net = data.net_balance ?? (data.total_income - data.total_expense);
+        const net = Number(data.net_balance ?? (data.total_income - data.total_expense));
         data.net_balance = net;
         const netCard = document.getElementById('finance-net-card');
         netCard.className = `finance-stat net ${net >= 0 ? 'positive' : 'negative'}`;
@@ -7855,7 +7855,7 @@ const FinanceModule = {
         };
 
         document.getElementById('finance-income').textContent  = FinanceModule.fmt(data.total_income);
-        document.getElementById('finance-expense').textContent = FinanceModule.fmt(Math.abs(data.total_expense || 0));
+        document.getElementById('finance-expense').textContent = FinanceModule.fmt(data.total_expense || 0);
         document.getElementById('finance-net').textContent     = (net >= 0 ? '+' : '-') + FinanceModule.fmt(net);
         ['finance-income','finance-expense','finance-net'].forEach(flash);
 
@@ -8023,11 +8023,11 @@ const FinanceModule = {
             const data = await SB.getExpense(month);
             if (data.error) throw new Error(data.error);
             FinanceModule._lastData = data;
-            const net = data.net_balance ?? ((data.total_income || 0) - Math.abs(data.total_expense || 0));
+            const net = data.net_balance ?? ((data.total_income || 0) - (data.total_expense || 0));
             data.net_balance = net;
             document.getElementById('fm-summary').innerHTML = `
                 <div class="fm-sum-item income"><div class="fm-sum-label">收入</div><div class="fm-sum-val">$${FinanceModule.fmt(data.total_income).slice(1)}</div></div>
-                <div class="fm-sum-item expense"><div class="fm-sum-label">支出</div><div class="fm-sum-val">$${FinanceModule.fmt(Math.abs(data.total_expense||0)).slice(1)}</div></div>
+                <div class="fm-sum-item expense"><div class="fm-sum-label">支出</div><div class="fm-sum-val">$${FinanceModule.fmt(data.total_expense||0).slice(1)}</div></div>
                 <div class="fm-sum-item net ${net < 0 ? 'negative' : ''}"><div class="fm-sum-label">結餘</div><div class="fm-sum-val">${net >= 0 ? '+' : '-'}$${FinanceModule.fmt(Math.abs(net)).slice(1)}</div></div>
             `;
             FinanceModule._managerRecords = (data.records || [])
@@ -8129,11 +8129,11 @@ const FinanceModule = {
             const d = FinanceModule._lastData;
             if (d) {
                 if (r.direction === 'income') {
-                    d.total_income -= r.amount;
+                    d.total_income  = Math.max(0, (d.total_income  || 0) - r.amount);
                 } else {
-                    d.total_expense = -(Math.abs(d.total_expense || 0) - r.amount);
+                    d.total_expense = Math.max(0, (d.total_expense || 0) - r.amount);
                 }
-                d.net_balance = (d.total_income || 0) - Math.abs(d.total_expense || 0);
+                d.net_balance = (d.total_income || 0) - (d.total_expense || 0);
                 FinanceModule.render(d);
             }
         } catch(e) { alert(`刪除失敗：${e.message}`); }
@@ -8919,7 +8919,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.74';
+    const CURRENT_VERSION = 'v2.75';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

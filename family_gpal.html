@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.71">
+    <meta name="version" content="v2.97">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.71</title>
+    <title>GPAL FAMILY v2.97</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1002,12 +1002,28 @@
         .plan-list { display: flex; flex-direction: column; gap: 3px; }
         .plan-row {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             padding: 2px 4px;
             border-left: 2px solid transparent;
             transition: 0.3s var(--easing-smooth);
             animation: slide-in 0.3s var(--easing-smooth) both;
+        }
+        .plan-row .time-select-row {
+            flex: 0 0 auto;
+        }
+        .plan-row .plan-input {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .plan-row .plan-actions {
+            flex: 0 0 100%;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 6px;
+            padding-left: 4px;
         }
         .plan-row.active-now {
             background: rgba(255, 204, 0, 0.08);
@@ -1036,6 +1052,18 @@
             opacity: 0.75 !important;
             filter: grayscale(0.15) !important;
         }
+
+        /* Plan 成員標籤 */
+        .plan-members { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 3px; }
+        .plan-member-tag { font-family: 'Orbitron'; font-size: 0.5rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; cursor: pointer; border: 1px solid; opacity: 0.85; transition: 0.15s; letter-spacing: 0.5px; user-select: none; }
+        .plan-member-tag.dad  { color: #00f2ff; border-color: #00f2ff; background: rgba(0,242,255,0.08); }
+        .plan-member-tag.mom  { color: #ffcc00; border-color: #ffcc00; background: rgba(255,204,0,0.08); }
+        .plan-member-tag.kid  { color: #b47cff; border-color: #b47cff; background: rgba(180,124,255,0.08); }
+        .plan-member-tag.active.dad { background: rgba(0,242,255,0.25); }
+        .plan-member-tag.active.mom { background: rgba(255,204,0,0.25); }
+        .plan-member-tag.active.kid { background: rgba(180,124,255,0.25); }
+        .btn-member-toggle { font-family: 'Orbitron'; font-size: 0.48rem; color: rgba(255,255,255,0.5); background: transparent; border: 1px solid rgba(255,255,255,0.2); padding: 1px 4px; cursor: pointer; border-radius: 3px; }
+        .btn-member-toggle:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
         .plan-row.past .plan-time,
         .plan-row.past .plan-text,
         .plan-row.past input,
@@ -1085,6 +1113,7 @@
             align-items: center;
             gap: 6px;
             flex-shrink: 0;
+            justify-content: flex-end;
         }
         .loc-add-btn {
             font-family: 'Orbitron';
@@ -1868,7 +1897,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.71</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.97</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2250,7 +2279,7 @@ const SB = {
 
     // ── Expense ──────────────────────────────────────────────
     async getExpense(month, account) {
-        let q = `?date=gte.${month}-01&date=lt.${SB._nextMonth(month)}-01&select=date,income,expense,category,note,account&order=date.asc`;
+        let q = `?date=gte.${month}-01&date=lt.${SB._nextMonth(month)}-01&select=id,date,income,expense,category,note,account&order=date.asc`;
         if (account && account !== 'ALL') q += `&account=eq.${encodeURIComponent(account)}`;
         const rows = await SB.get('expense_records', q);
         let totalIncome = 0, totalExpense = 0;
@@ -2263,7 +2292,7 @@ const SB = {
             const mmdd = String(r.date).slice(5);
             records.push({ date: mmdd, income: inc, expense: exp > 0 ? -exp : 0,
                            category: r.category, note: r.note, account: r.account,
-                           _id: r.id });
+                           _id: r.id }); // r.id comes from Supabase SELECT id
             if (exp > 0) catMap[r.category] = (catMap[r.category] || 0) + exp;
         });
         const categories = Object.keys(catMap)
@@ -2351,7 +2380,38 @@ const SB = {
         return { items: rows.map(r => ({ ticker: r.ticker, note: r.note, added: r.added_at })) };
     },
 
-    // ── Helpers ───────────────────────────────────────────────
+        // ── Sync tagged plan rows to other members ───────────
+    async syncTaggedPlans(currentMember, date, planText) {
+        const lines = planText.split('\n');
+        const tagged = {};
+        lines.forEach(line => {
+            const parts = line.split('|');
+            if (parts.length < 2) return;
+            const membersRaw = parts[3] ? parts[3].match(/@(dad|mom|kid)/gi) || [] : [];
+            membersRaw.forEach(m => {
+                const member = m.slice(1).toLowerCase();
+                if (member === currentMember) return;
+                if (!tagged[member]) tagged[member] = [];
+                const cleanLine = parts.slice(0,3).join('|');
+                tagged[member].push({ timeKey: parts[0], line: cleanLine });
+            });
+        });
+        for (const [member, rows] of Object.entries(tagged)) {
+            if (!rows.length) continue;
+            try {
+                const existing = await SB.getBundle(member, date);
+                const existLines = (existing.plan || '').split('\n').filter(l => l.trim());
+                const existKeys = new Set(existLines.map(l => l.split('|')[0]));
+                const toAdd = rows.filter(r => !existKeys.has(r.timeKey)).map(r => r.line);
+                if (!toAdd.length) continue;
+                const newPlan = [...existLines, ...toAdd].join('\n');
+                await SB.saveBundle(member, date, { plan: newPlan });
+                console.log('[syncTaggedPlans] synced', toAdd.length, 'rows to', member);
+            } catch(e) { console.warn('syncTaggedPlans:', member, e); }
+        }
+    },
+
+// ── Helpers ───────────────────────────────────────────────
     _nextMonth(month) {
         const [y, m] = month.split('-').map(Number);
         return m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`;
@@ -2738,13 +2798,15 @@ const PlanModule = {
                 if (!cleanLine) return;
                 const parts = cleanLine.split('|');
                 if (parts.length < 2) return;
+                const membersRaw = parts[3] ? parts[3].match(/@(dad|mom|kid)/gi) || [] : [];
+                const parsedMembers = membersRaw.map(raw => raw.slice(1).toLowerCase());
                 const times = parts[0].split('-');
                 if (times.length !== 2) return;
                 // 清理時間字串的引號和空白
                 const start = times[0].trim().replace(/[^0-9:]/g, '');
                 const end   = times[1].trim().replace(/[^0-9:]/g, '');
                 if (!start || !end) return;
-                PlanModule.create(start, end, parts[1], parts[2] || '', frag);
+                PlanModule.create(start, end, parts[1], parts[2] || '', frag, parsedMembers);
             });
         }
         PlanModule.create('08:00', '08:30', '', '', frag);
@@ -2765,10 +2827,14 @@ const PlanModule = {
                 if (!txt) return null;
                 const locEl = row.querySelector('[data-role=loc-edit]');
                 const loc = locEl ? locEl.value.trim() : '';
+                const memberTags = Array.from(row.querySelectorAll('.plan-member-tag.active'))
+                    .map(t => '@' + t.dataset.member).join('');
                 // 確保時間欄位乾淨（清除引號等非數字/冒號字符）
                 const s = String(row.dataset.start || '').replace(/[^0-9:]/g, '');
                 const e = String(row.dataset.end   || '').replace(/[^0-9:]/g, '');
-                return `${s}-${e}|${txt}|${loc}`;
+                return memberTags
+                    ? `${s}-${e}|${txt}|${loc}|${memberTags}`
+                    : `${s}-${e}|${txt}|${loc}`;
             }).filter(Boolean).join('\n');
     },
 
@@ -2817,7 +2883,7 @@ const PlanModule = {
         return sel;
     },
 
-    create(start = '08:00', end = '08:30', text = '', location = '', parent = DOM.planList) {
+    create(start = '08:00', end = '08:30', text = '', location = '', parent = DOM.planList, members = []) {
         const row = document.createElement('div');
         row.className = 'plan-row';
         row.dataset.start = String(start || '').replace(/[^0-9:]/g, '');
@@ -2905,9 +2971,30 @@ const PlanModule = {
         moreBtn.title = 'More options';
         const actionsExtra = document.createElement('div');
         actionsExtra.className = 'row-actions-extra';
-        actionsExtra.append(addBtn, locEdit, locTagGroup, copyBtn, clockBtn, dupBtn);
+        // 成員標籤
+        const memberToggle2 = document.createElement('div');
+        memberToggle2.className = 'btn-member-toggle';
+        memberToggle2.textContent = '[TAG]';
+        memberToggle2.dataset.role = 'member-toggle';
+
+        const memberRow = document.createElement('div');
+        memberRow.className = 'plan-members';
+        ['dad','mom','kid'].forEach(mbr => {
+            const tag = document.createElement('div');
+            tag.className = `plan-member-tag ${mbr}${members.includes(mbr) ? ' active' : ''}`;
+            tag.textContent = mbr.toUpperCase();
+            tag.dataset.member = mbr;
+            tag.dataset.role = 'member-tag';
+            memberRow.appendChild(tag);
+        });
+
+        actionsExtra.append(addBtn, locEdit, locTagGroup, memberToggle2, memberRow);
         actions.append(moreBtn, actionsExtra, delBtn);
         row.append(timeRow, input, actions);
+        if (members.length > 0) {
+            actionsExtra.classList.add('open');
+            memberRow.classList.add('open');
+        }
         parent.appendChild(row);
         return row;
     },
@@ -4887,6 +4974,11 @@ const Sync = {
                 action: payload.action, learn: payload.learn,
             });
 
+            if (payload.plan && payload.plan.includes('@')) {
+                SB.syncTaggedPlans(MemberModule.current(), payload.date, payload.plan)
+                  .catch(e => console.warn('syncTaggedPlans:', e));
+            }
+
             Utils.setStatus(`ARCHIVE_SYNCED · ${mode}`, 'success');
             Utils.setConnState('online');
             State.isOnline = true;
@@ -4991,7 +5083,9 @@ const Events = {
             const t = e.target;
             const row = t.closest('.plan-row');
             if (!row) return;
-            const role = t.dataset.role;
+            // closest 確保點到子元素也能正確取得 role
+            const roleEl = t.closest('[data-role]');
+            const role = roleEl ? roleEl.dataset.role : t.dataset.role;
 
             if (role === 'loc-add') {
                 t.style.display = 'none';
@@ -5039,6 +5133,15 @@ const Events = {
             } else if (role === 'clock-start') {
                 const txt = row.querySelector('input[data-role=text]')?.value.trim();
                 if (txt) MissionClockModule.start(txt, row);
+            } else if (role === 'member-toggle') {
+                const planRow2 = (roleEl || t).closest('.plan-row');
+                const mRow = planRow2 ? planRow2.querySelector('.plan-members') : null;
+                if (!mRow) return;
+                mRow.classList.toggle('open');
+            } else if (role === 'member-tag') {
+                const tagEl = roleEl || t;
+                tagEl.classList.toggle('active');
+                SaveQueue.trigger();
             } else if (role === 'more-toggle') {
                 const extra = row.querySelector('.row-actions-extra');
                 const isOpen = extra.classList.contains('open');
@@ -5327,7 +5430,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v2.71 loaded - past dimming active');
+    console.log('[GPAL] Family v2.97 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5372,7 +5475,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.71';
+    const CURRENT_VERSION = 'v2.97';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

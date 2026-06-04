@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.90">
+    <meta name="version" content="v2.92">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.90</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.92</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3220,7 +3220,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.90</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.92</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4417,13 +4417,13 @@ const PlanModule = {
                 if (parts.length < 2) return;
                 // parts: [time, text, location?, members?]
                 const membersRaw = parts[3] ? parts[3].match(/@(dad|mom|kid)/gi) || [] : [];
-                const parsedMembers = membersRaw.map(m => m.slice(1).toLowerCase());
+                const parsedMembers = membersRaw.map(raw => raw.slice(1).toLowerCase());
                 const times = parts[0].split('-');
                 if (times.length !== 2) return;
                 const start = times[0].trim().replace(/[^0-9:]/g, '');
                 const end   = times[1].trim().replace(/[^0-9:]/g, '');
                 if (!start || !end) return;
-                PlanModule.create(start, end, parts[1], parts[2] || '', frag);
+                PlanModule.create(start, end, parts[1], parts[2] || '', frag, parsedMembers);
             });
         }
         PlanModule.create('08:00', '08:30', '', '', frag);
@@ -4452,7 +4452,9 @@ const PlanModule = {
                 // 確保時間欄位乾淨（清除引號等非數字/冒號字符）
                 const s = String(row.dataset.start || '').replace(/[^0-9:]/g, '');
                 const e = String(row.dataset.end   || '').replace(/[^0-9:]/g, '');
-                return `${s}-${e}|${txt}|${loc}`;
+                return memberTags
+                    ? `${s}-${e}|${txt}|${loc}|${memberTags}`
+                    : `${s}-${e}|${txt}|${loc}`;
             }).filter(Boolean).join('\n');
     },
 
@@ -9040,7 +9042,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.90';
+    const CURRENT_VERSION = 'v2.92';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

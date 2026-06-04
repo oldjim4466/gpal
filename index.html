@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.02">
+    <meta name="version" content="v3.03">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.02</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.03</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -514,10 +514,10 @@
         .row-actions-extra.open { display: flex; }
         /* ── Goal delete button ── */
         .goal-del-btn {
-            font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
+            font-family: 'Orbitron', sans-serif; font-size: 0.6rem; font-weight: 700;
             color: var(--stark-red); border: 1px solid var(--stark-red);
-            padding: 1px 4px; cursor: pointer; opacity: 0.75; transition: 0.2s;
-            flex-shrink: 0; background: transparent; outline: none;
+            padding: 3px 8px; cursor: pointer; opacity: 0.8; transition: 0.2s;
+            flex-shrink: 0; background: transparent; outline: none; border-radius: 3px;
             -webkit-tap-highlight-color: rgba(255,62,62,0.2);
         }
         .goal-del-btn:hover { opacity: 1; }
@@ -3244,7 +3244,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.02</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.03</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5331,10 +5331,26 @@ const LongTermModule = {
             }
             LongTermModule.triggerSave();
         } else if (role === 'lt-del') {
-            row.remove();                     // 即時 DOM 移除，無論快取狀態
+            const ltDelEl = e.target.closest('[data-role=lt-del]') || e.target;
+            if (!ltDelEl.dataset.confirming) {
+                ltDelEl.dataset.confirming = '1';
+                const origLt = ltDelEl.textContent;
+                ltDelEl.textContent = 'OK?';
+                ltDelEl.style.background = 'rgba(255,62,62,0.2)';
+                setTimeout(() => {
+                    if (ltDelEl.dataset.confirming) {
+                        delete ltDelEl.dataset.confirming;
+                        ltDelEl.textContent = origLt;
+                        ltDelEl.style.background = '';
+                    }
+                }, 2000);
+                return;
+            }
+            delete ltDelEl.dataset.confirming;
+            row.remove();
             goals.splice(idx, 1);
             LongTermModule.triggerSave();
-            LongTermModule.render();           // 同步完整 list（快取已失效）
+            LongTermModule.render();
         }
     },
     handleInput(e) {
@@ -5880,7 +5896,7 @@ const HabitModule = {
             // 刪除
             const delBtn = document.createElement('div');
             delBtn.className = 'del-btn';
-            delBtn.textContent = 'X';
+            delBtn.textContent = 'DEL';
             delBtn.dataset.role = 'habit-del';
 
             row.append(nameEl, dotsEl, streakEl, delBtn);
@@ -5926,11 +5942,25 @@ const HabitModule = {
             }
             HabitModule._scheduleSave(); // 靜默保存，不失效 render 快取
         } else if (role === 'habit-del') {
-            if (confirm('DELETE THIS HABIT?')) {
-                habits.splice(idx, 1);
-                HabitModule.triggerSave();
-                HabitModule.render();
+            const hDelEl = e.target.closest('[data-role=habit-del]') || e.target;
+            if (!hDelEl.dataset.confirming) {
+                hDelEl.dataset.confirming = '1';
+                const origText = hDelEl.textContent;
+                hDelEl.textContent = 'OK?';
+                hDelEl.style.background = 'rgba(255,62,62,0.2)';
+                setTimeout(() => {
+                    if (hDelEl.dataset.confirming) {
+                        delete hDelEl.dataset.confirming;
+                        hDelEl.textContent = origText;
+                        hDelEl.style.background = '';
+                    }
+                }, 2000);
+                return;
             }
+            delete hDelEl.dataset.confirming;
+            habits.splice(idx, 1);
+            HabitModule.triggerSave();
+            HabitModule.render();
         }
     },
 
@@ -9097,7 +9127,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.02';
+    const CURRENT_VERSION = 'v3.03';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

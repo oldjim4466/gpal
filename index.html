@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.92">
+    <meta name="version" content="v2.94">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.92</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.94</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1094,7 +1094,7 @@
         .plan-list { display: flex; flex-direction: column; gap: 3px; }
         .plan-row {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
             gap: 6px;
             padding: 2px 4px;
@@ -3189,9 +3189,10 @@
         /* ── Plan Member Tags ── */
         .plan-members {
             display: flex; gap: 4px; flex-wrap: wrap;
-            padding: 3px 0 2px 0; align-items: center;
-            width: 100%; /* 強制換行 */
-            flex-basis: 100%;
+            padding: 2px 0; align-items: center;
+            width: 100%; margin-top: 4px;
+            border-top: 1px solid rgba(0,242,255,0.08);
+            padding-top: 4px;
         }
         .btn-member-toggle {
             font-size: 0.75rem; background: transparent;
@@ -3207,6 +3208,8 @@
             -webkit-tap-highlight-color: rgba(0,242,255,0.2);
             user-select: none; transition: background 0.15s;
         }
+        .plan-members:not(.open) { display: none !important; }
+        .plan-members.open { display: flex !important; }
         .plan-member-tag.dad  { color: #00f2ff; border-color: rgba(0,242,255,0.5); background: transparent; }
         .plan-member-tag.mom  { color: #ffcc00; border-color: rgba(255,204,0,0.5);  background: transparent; }
         .plan-member-tag.kid  { color: #b47cff; border-color: rgba(180,124,255,0.5); background: transparent; }
@@ -3220,7 +3223,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.92</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.94</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4592,27 +4595,32 @@ const PlanModule = {
         moreBtn.title = 'More options';
         const actionsExtra = document.createElement('div');
         actionsExtra.className = 'row-actions-extra';
-        actionsExtra.append(addBtn, locEdit, locTagGroup, clockBtn, copyBtn, dupBtn);
-        actions.append(moreBtn, actionsExtra, delBtn);
-        // 成員標籤區
-        const memberRow = document.createElement('div');
-        memberRow.className = 'plan-members';
-        const memberToggle = document.createElement('button');
+        // 成員標籤
+        const memberToggle = document.createElement('div');
         memberToggle.className = 'btn-member-toggle';
         memberToggle.textContent = '👥';
         memberToggle.title = '標記參與成員';
         memberToggle.dataset.role = 'member-toggle';
-        memberRow.appendChild(memberToggle);
-        ['dad','mom','kid'].forEach(m => {
+
+        const memberRow = document.createElement('div');
+        memberRow.className = 'plan-members';
+        ['dad','mom','kid'].forEach(mbr => {
             const tag = document.createElement('div');
-            tag.className = `plan-member-tag ${m}${members.includes(m) ? ' active' : ''}`;
-            tag.textContent = m.toUpperCase();
-            tag.dataset.member = m;
+            tag.className = `plan-member-tag ${mbr}${members.includes(mbr) ? ' active' : ''}`;
+            tag.textContent = mbr.toUpperCase();
+            tag.dataset.member = mbr;
             tag.dataset.role = 'member-tag';
-            tag.style.display = members.includes(m) ? '' : 'none';
             memberRow.appendChild(tag);
         });
-        row.append(timeRow, input, actions, memberRow);
+
+        actionsExtra.append(addBtn, locEdit, locTagGroup, clockBtn, copyBtn, dupBtn, memberToggle, memberRow);
+        actions.append(moreBtn, actionsExtra, delBtn);
+        row.append(timeRow, input, actions);
+        // 如有成員 tag 自動展開 actionsExtra
+        if (members.length > 0) {
+            actionsExtra.classList.add('open');
+            memberRow.classList.add('open');
+        }
         parent.appendChild(row);
         return row;
     },
@@ -7506,12 +7514,10 @@ const Events = {
                 const txt = row.querySelector('input[data-role=text]')?.value.trim();
                 if (txt) MissionClockModule.start(txt, row);
             } else if (role === 'member-toggle') {
-                const memberRow = (roleEl || t).closest('.plan-members');
-                const tags = Array.from(memberRow.querySelectorAll('.plan-member-tag'));
-                const anyVisible = tags.some(tag => tag.style.display !== 'none');
-                tags.forEach(tag => tag.style.display = anyVisible ? 'none' : '');
-                if (anyVisible) tags.forEach(tag => tag.classList.remove('active'));
-                SaveQueue.trigger();
+                const planRow = (roleEl || t).closest('.plan-row');
+                const memberRow = planRow ? planRow.querySelector('.plan-members') : null;
+                if (!memberRow) return;
+                memberRow.classList.toggle('open');
             } else if (role === 'member-tag') {
                 const tagEl = roleEl || t;
                 tagEl.classList.toggle('active');
@@ -9042,7 +9048,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.92';
+    const CURRENT_VERSION = 'v2.94';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

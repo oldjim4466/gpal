@@ -1390,6 +1390,15 @@
             color: rgba(255,255,255,0.6);
             margin-left: 8px;
         }
+        .tz-setting-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 4px 0; border-bottom: 1px solid rgba(0,242,255,0.08);
+            margin-bottom: 6px;
+        }
+        .tz-setting-label {
+            font-family: 'Orbitron'; font-size: 0.55rem;
+            color: rgba(0,242,255,0.7); white-space: nowrap;
+        }
         .btn-tz-edit {
             background: transparent;
             border: 1px solid rgba(0,242,255,0.45);
@@ -3695,6 +3704,19 @@
 const CONFIG = Object.freeze({
     WEB_APP_URL: "https://script.google.com/macros/s/AKfycbwJzPU4lFpkHR4RuiQVypAiXW8mkopvVk0e9VB8lJ7yeFyeJKlMgo1LfIjPnPTFdPcX/exec",
     SB_URL: 'https://wbsassmpynuxqlpxcbcd.supabase.co',
+    TZ_LS_KEY: 'gpal_app_timezone',
+    DEFAULT_TZ: 'America/Los_Angeles',
+    TIMEZONES: [
+        ['Los Angeles (PST/PDT)', 'America/Los_Angeles'],
+        ['New York (EST/EDT)',     'America/New_York'],
+        ['London (GMT/BST)',       'Europe/London'],
+        ['Paris (CET/CEST)',       'Europe/Paris'],
+        ['Dubai (GST)',            'Asia/Dubai'],
+        ['Hong Kong (HKT)',        'Asia/Hong_Kong'],
+        ['Taipei (CST)',           'Asia/Taipei'],
+        ['Tokyo (JST)',            'Asia/Tokyo'],
+        ['Sydney (AEST)',          'Australia/Sydney'],
+    ],
     SB_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indic2Fzc21weW51eHFscHhjYmNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODM5NDMsImV4cCI6MjA5NTg1OTk0M30.dhEw4_P0f-t-wk8N1SblbZum9lalaqF66YXgMt5pBSI',
     AUTO_SAVE_DELAY: 1500,
     PORTFOLIO_REFRESH: 120_000,
@@ -4100,11 +4122,15 @@ const Utils = {
     },
 
     // 統一用加州時間（America/Los_Angeles），與用戶所在地一致
+    getTZ() {
+        return localStorage.getItem(CONFIG.TZ_LS_KEY) || CONFIG.DEFAULT_TZ;
+    },
+
     todayISO() {
         // Safari-safe: 用 Intl.DateTimeFormat 確保正確格式
         const d = new Date();
         const la = new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'America/Los_Angeles',
+            timeZone: Utils.getTZ(),
             year: 'numeric', month: '2-digit', day: '2-digit'
         }).format(d);
         return la; // 格式：2026-05-29
@@ -5434,6 +5460,17 @@ const TimezoneModule = {
     },
 
     startTimer() {
+        // Populate app timezone selector
+        const sel = document.getElementById('tz-app-select');
+        if (sel && sel.options.length === 0) {
+            const cur = Utils.getTZ();
+            CONFIG.TIMEZONES.forEach(([label, tz]) => {
+                const opt = document.createElement('option');
+                opt.value = tz; opt.textContent = label;
+                if (tz === cur) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        }
         TimezoneModule.render();
         TimezoneModule.stopTimer();
         TimezoneModule.timer = setInterval(() => TimezoneModule.render(), 1000);

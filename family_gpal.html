@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.97">
+    <meta name="version" content="v3.03">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v2.97</title>
+    <title>GPAL FAMILY v3.03</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -489,12 +489,13 @@
         .btn-copy-plan.copied { border-color: var(--stark-green); color: var(--stark-green); }
         /* ── Row "more" toggle & extras ── */
         .row-more-btn {
-            font-family: 'Orbitron', sans-serif; font-size: 0.36rem; font-weight: 700;
-            color: rgba(0,242,255,0.7); background: transparent;
-            border: 1px solid rgba(0,242,255,0.4);
-            padding: 1px 5px; cursor: pointer; flex-shrink: 0;
+            font-family: 'Orbitron', sans-serif; font-size: 0.6rem; font-weight: 700;
+            color: rgba(0,242,255,0.8); background: transparent;
+            border: 1px solid rgba(0,242,255,0.5);
+            padding: 3px 8px; cursor: pointer; flex-shrink: 0;
             transition: all 0.2s; outline: none; user-select: none;
             -webkit-tap-highlight-color: transparent; letter-spacing: 1px;
+            border-radius: 3px;
         }
         .row-more-btn:hover, .row-more-btn.open { color: var(--stark-cyan); border-color: var(--stark-cyan); }
         .row-actions-extra {
@@ -503,10 +504,10 @@
         .row-actions-extra.open { display: flex; }
         /* ── Goal delete button ── */
         .goal-del-btn {
-            font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
+            font-family: 'Orbitron', sans-serif; font-size: 0.6rem; font-weight: 700;
             color: var(--stark-red); border: 1px solid var(--stark-red);
-            padding: 1px 4px; cursor: pointer; opacity: 0.75; transition: 0.2s;
-            flex-shrink: 0; background: transparent; outline: none;
+            padding: 3px 8px; cursor: pointer; opacity: 0.8; transition: 0.2s;
+            flex-shrink: 0; background: transparent; outline: none; border-radius: 3px;
             -webkit-tap-highlight-color: rgba(255,62,62,0.2);
         }
         .goal-del-btn:hover { opacity: 1; }
@@ -1117,12 +1118,13 @@
         }
         .loc-add-btn {
             font-family: 'Orbitron';
-            font-size: 0.5rem;
+            font-size: 0.6rem;
             color: var(--stark-gold);
             cursor: pointer;
-            opacity: 0.8;
+            opacity: 0.85;
             border: 1px dashed var(--stark-gold);
-            padding: 1px 4px;
+            padding: 3px 8px;
+            border-radius: 3px;
             transition: 0.2s;
         }
         .loc-add-btn:hover { opacity: 1; }
@@ -1173,10 +1175,10 @@
         .loc-copy-btn.copied { background: var(--stark-green); border-color: var(--stark-green); color: var(--stark-dark); }
         .del-btn {
             color: var(--stark-red); border: 1px solid var(--stark-red);
-            font-family: 'Orbitron'; font-size: 0.38rem; font-weight: 700;
-            padding: 1px 4px; cursor: pointer; opacity: 0.75; transition: 0.2s;
+            font-family: 'Orbitron'; font-size: 0.6rem; font-weight: 700;
+            padding: 3px 8px; cursor: pointer; opacity: 0.8; transition: 0.2s;
             flex-shrink: 0; position: relative; z-index: 5;
-            background: transparent; outline: none;
+            background: transparent; outline: none; border-radius: 3px;
             -webkit-tap-highlight-color: rgba(255,62,62,0.2);
         }
         .del-btn:hover { opacity: 1; background: var(--stark-red); color: white; }
@@ -1897,7 +1899,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.97</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.03</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2409,6 +2411,7 @@ const SB = {
                 console.log('[syncTaggedPlans] synced', toAdd.length, 'rows to', member);
             } catch(e) { console.warn('syncTaggedPlans:', member, e); }
         }
+        return Object.keys(tagged).length > 0;
     },
 
 // ── Helpers ───────────────────────────────────────────────
@@ -2974,7 +2977,7 @@ const PlanModule = {
         // 成員標籤
         const memberToggle2 = document.createElement('div');
         memberToggle2.className = 'btn-member-toggle';
-        memberToggle2.textContent = '[TAG]';
+        memberToggle2.textContent = 'TAG';
         memberToggle2.dataset.role = 'member-toggle';
 
         const memberRow = document.createElement('div');
@@ -4123,7 +4126,7 @@ const HabitModule = {
             const s = HabitModule.getStreak(habit);
             streakEl.textContent = s > 0 ? (s >= 7 ? '🔥' : '✦') + s + 'd' : '';
             const delBtn = document.createElement('div');
-            delBtn.className = 'del-btn'; delBtn.textContent = 'X'; delBtn.dataset.role = 'habit-del';
+            delBtn.className = 'del-btn'; delBtn.textContent = 'DEL'; delBtn.dataset.role = 'habit-del';
             row.append(nameEl, dotsEl, streakEl, delBtn);
             frag.appendChild(row);
         });
@@ -5034,6 +5037,21 @@ const Events = {
                 });
                 if (!isOpen) { extra.classList.add('open'); t.classList.add('open'); }
             } else if (t.dataset.role === 'goal-del') {
+                const gDelEl = t;
+                if (!gDelEl.dataset.confirming) {
+                    gDelEl.dataset.confirming = '1';
+                    gDelEl.textContent = 'OK?';
+                    gDelEl.style.background = 'rgba(255,62,62,0.2)';
+                    setTimeout(() => {
+                        if (gDelEl.dataset.confirming) {
+                            delete gDelEl.dataset.confirming;
+                            gDelEl.textContent = 'DEL';
+                            gDelEl.style.background = '';
+                        }
+                    }, 2000);
+                    return;
+                }
+                delete gDelEl.dataset.confirming;
                 row.style.transition = 'opacity 0.2s, transform 0.2s';
                 row.style.opacity = '0'; row.style.transform = 'translateX(20px)';
                 setTimeout(() => {
@@ -5152,10 +5170,27 @@ const Events = {
                 });
                 if (!isOpen) { extra.classList.add('open'); t.classList.add('open'); }
             } else if (role === 'del') {
-                // close extras on del
-                row.querySelector('.row-actions-extra')?.classList.remove('open');
-                row.querySelector('[data-role=more-toggle]')?.classList.remove('open');
-                if (confirm('DELETE THIS TASK?')) {
+                const delEl = roleEl || t;
+                // 第一次按：顯示確認狀態
+                if (!delEl.dataset.confirming) {
+                    delEl.dataset.confirming = '1';
+                    delEl.textContent = 'OK?';
+                    delEl.style.background = 'rgba(255,62,62,0.2)';
+                    delEl.style.color = 'var(--stark-red)';
+                    // 2秒後自動取消
+                    setTimeout(() => {
+                        if (delEl.dataset.confirming) {
+                            delete delEl.dataset.confirming;
+                            delEl.textContent = 'DEL';
+                            delEl.style.background = '';
+                            delEl.style.color = '';
+                        }
+                    }, 2000);
+                    return;
+                }
+                // 第二次按：確認刪除
+                delete delEl.dataset.confirming;
+                if (true) {
                     row.style.transition = 'opacity 0.2s, transform 0.2s';
                     row.style.opacity = '0';
                     row.style.transform = 'translateX(-20px)';
@@ -5430,7 +5465,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v2.97 loaded - past dimming active');
+    console.log('[GPAL] Family v3.03 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5475,7 +5510,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v2.97';
+    const CURRENT_VERSION = 'v3.03';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

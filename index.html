@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.04">
+    <meta name="version" content="v3.05">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.04</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.05</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3253,7 +3253,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.04</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.05</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3641,6 +3641,14 @@
         ">▸ TIMEZONE</button>
         <div class="tz-hud" style="display:none;">
             <div id="tz-display"></div>
+            <div class="tz-setting-row">
+                <span class="tz-setting-label">APP TIME ZONE</span>
+                <select id="tz-app-select" onchange="
+                    localStorage.setItem(CONFIG.TZ_LS_KEY, this.value);
+                    Sync.fetchData();
+                " style="background:rgba(0,0,0,0.4);border:1px solid rgba(0,242,255,0.3);color:#fff;font-family:Orbitron;font-size:0.6rem;padding:4px 6px;border-radius:4px;flex:1;">
+                </select>
+            </div>
             <button class="btn-tz-edit" onclick="TimezoneModule.openEditor()">✎ EDIT ZONES</button>
         </div>
     </div>
@@ -9187,7 +9195,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.04';
+    const CURRENT_VERSION = 'v3.05';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

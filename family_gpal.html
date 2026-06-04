@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.03">
+    <meta name="version" content="v3.06">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v3.03</title>
+    <title>GPAL FAMILY v3.06</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1049,10 +1049,7 @@
         .plan-row.active-now::after {
             display: none;
         }
-        .plan-row.past {
-            opacity: 0.75 !important;
-            filter: grayscale(0.15) !important;
-        }
+        .plan-row.past { /* past dimming disabled */ }
 
         /* Plan 成員標籤 */
         .plan-members { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 3px; }
@@ -1065,13 +1062,7 @@
         .plan-member-tag.active.kid { background: rgba(180,124,255,0.25); }
         .btn-member-toggle { font-family: 'Orbitron'; font-size: 0.48rem; color: rgba(255,255,255,0.5); background: transparent; border: 1px solid rgba(255,255,255,0.2); padding: 1px 4px; cursor: pointer; border-radius: 3px; }
         .btn-member-toggle:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
-        .plan-row.past .plan-time,
-        .plan-row.past .plan-text,
-        .plan-row.past input,
-        .plan-row.past .plan-loc {
-            color: rgba(255,255,255,0.7) !important;
-            opacity: 0.75 !important;
-        }
+        
 
         .time-select-row {
             display: flex;
@@ -1276,6 +1267,15 @@
             color: #fff; text-shadow: 0 0 8px rgba(0,242,255,0.4);
         }
         .tz-date { font-size: 0.72rem; color: rgba(255,255,255,0.6); margin-left: 8px; }
+        .tz-setting-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 4px 0; border-bottom: 1px solid rgba(0,242,255,0.08);
+            margin-bottom: 6px;
+        }
+        .tz-setting-label {
+            font-family: 'Orbitron'; font-size: 0.55rem;
+            color: rgba(0,242,255,0.7); white-space: nowrap;
+        }
         .btn-tz-edit {
             background: transparent; border: 1px solid rgba(0,242,255,0.45);
             color: rgba(0,242,255,0.8); font-family: 'Orbitron', sans-serif;
@@ -1307,7 +1307,8 @@
             flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,242,255,0.3);
             color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.7rem;
         }
-        .tz-edit-row select {
+        .tz-edit-row select,
+        .tz-edit-row input[list] {
             flex: 1.4; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,242,255,0.3);
             color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.65rem;
         }
@@ -1899,7 +1900,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.03</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.06</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2041,6 +2042,14 @@
     ">▸ TIMEZONE</button>
     <div class="tz-hud" style="display:none;">
         <div id="tz-display"></div>
+        <div class="tz-setting-row">
+            <span class="tz-setting-label">APP TIME ZONE</span>
+            <select id="tz-app-select" onchange="
+                localStorage.setItem(CONFIG.TZ_LS_KEY, this.value);
+                Sync.fetchData();
+            " style="background:rgba(0,0,0,0.4);border:1px solid rgba(0,242,255,0.3);color:#fff;font-family:Orbitron;font-size:0.6rem;padding:4px 6px;border-radius:4px;flex:1;">
+            </select>
+        </div>
         <button class="btn-tz-edit" onclick="TimezoneModule.openEditor()">✎ EDIT ZONES</button>
     </div>
     <button class="btn-spotify-toggle" id="btn-spotify-toggle" onclick="
@@ -2102,6 +2111,19 @@
 const CONFIG = Object.freeze({
     WEB_APP_URL: "https://script.google.com/macros/s/AKfycbwJzPU4lFpkHR4RuiQVypAiXW8mkopvVk0e9VB8lJ7yeFyeJKlMgo1LfIjPnPTFdPcX/exec",
     SB_URL: 'https://wbsassmpynuxqlpxcbcd.supabase.co',
+    TZ_LS_KEY: 'gpal_app_timezone',
+    DEFAULT_TZ: 'America/Los_Angeles',
+    TIMEZONES: [
+        ['Los Angeles (PST/PDT)', 'America/Los_Angeles'],
+        ['New York (EST/EDT)',     'America/New_York'],
+        ['London (GMT/BST)',       'Europe/London'],
+        ['Paris (CET/CEST)',       'Europe/Paris'],
+        ['Dubai (GST)',            'Asia/Dubai'],
+        ['Hong Kong (HKT)',        'Asia/Hong_Kong'],
+        ['Taipei (CST)',           'Asia/Taipei'],
+        ['Tokyo (JST)',            'Asia/Tokyo'],
+        ['Sydney (AEST)',          'Australia/Sydney'],
+    ],
     SB_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indic2Fzc21weW51eHFscHhjYmNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODM5NDMsImV4cCI6MjA5NTg1OTk0M30.dhEw4_P0f-t-wk8N1SblbZum9lalaqF66YXgMt5pBSI',
     AUTO_SAVE_DELAY: 1500,
     PORTFOLIO_REFRESH: 120_000,
@@ -2480,11 +2502,15 @@ const Utils = {
         return `${Utils.pad2(d.getHours())}:${Utils.pad2(d.getMinutes())}`;
     },
 
+    getTZ() {
+        return localStorage.getItem(CONFIG.TZ_LS_KEY) || CONFIG.DEFAULT_TZ;
+    },
+
     todayISO() {
         // Safari-safe: 用 Intl.DateTimeFormat 確保正確格式
         const d = new Date();
         const la = new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'America/Los_Angeles',
+            timeZone: Utils.getTZ(),
             year: 'numeric', month: '2-digit', day: '2-digit'
         }).format(d);
         return la; // 格式：2026-05-29
@@ -3039,11 +3065,11 @@ const PlanModule = {
                 if (end && cur >= start && cur < end) {
                     row.classList.add('active-now');
                 } else if (end && cur >= end) {
-                    row.classList.add('past');
+                    row.classList.remove('past'); // dimming disabled
                 } else if (!end && cur > start) {
                     const [sh,sm] = start.split(':').map(Number);
                     const [ch,cm] = cur.split(':').map(Number);
-                    if ((ch*60+cm) - (sh*60+sm) > 30) row.classList.add('past');
+                    if ((ch*60+cm) - (sh*60+sm) > 30) row.classList.remove('past'); // dimming disabled
                 }
             });
         }
@@ -3782,6 +3808,17 @@ const TimezoneModule = {
         return [...TimezoneModule.DEFAULT];
     },
     startTimer() {
+        // Populate app timezone selector
+        const sel = document.getElementById('tz-app-select');
+        if (sel && sel.options.length === 0) {
+            const cur = Utils.getTZ();
+            CONFIG.TIMEZONES.forEach(([label, tz]) => {
+                const opt = document.createElement('option');
+                opt.value = tz; opt.textContent = label;
+                if (tz === cur) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        }
         TimezoneModule.render();
         TimezoneModule.stopTimer();
         TimezoneModule.timer = setInterval(() => TimezoneModule.render(), 1000);
@@ -3834,9 +3871,17 @@ const TimezoneModule = {
         const zones = [];
         for (let i = 0; i < 3; i++) {
             const name = document.getElementById(`tz-name-${i}`).value.trim();
-            const tz   = document.getElementById(`tz-sel-${i}`).value;
-            zones.push({ city: name || 'Zone ' + (i + 1), tz });
+            const tz   = document.getElementById(`tz-sel-${i}`).value.trim();
+            // 驗證時區格式
+            if (!tz) continue;
+            try { Intl.DateTimeFormat('en', { timeZone: tz }); } catch {
+                alert(`Zone ${i+1}: Invalid timezone "${tz}"
+Example: America/New_York`);
+                return;
+            }
+            zones.push({ city: name || tz.split('/').pop().replace(/_/g,' '), tz });
         }
+        if (zones.length !== 3) return;
         try { localStorage.setItem(TimezoneModule.LS_KEY, JSON.stringify(zones)); } catch {}
         TimezoneModule.closeEditor();
         TimezoneModule.render();
@@ -5465,7 +5510,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v3.03 loaded - past dimming active');
+    console.log('[GPAL] Family v3.06 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5510,7 +5555,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v3.03';
+    const CURRENT_VERSION = 'v3.06';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

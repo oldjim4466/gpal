@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.05">
+    <meta name="version" content="v3.06">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.05</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.06</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1141,18 +1141,8 @@
         .plan-row.active-now::after {
             display: none;
         }
-        .plan-row.past {
-            opacity: 0.75 !important;
-            filter: grayscale(0.15) !important;
-        }
-        .plan-row.past .plan-time,
-        .plan-row.past .plan-text,
-        .plan-row.past input,
-        .plan-row.past .plan-loc,
-        .plan-row.past .plan-location {
-            color: rgba(255,255,255,0.7) !important;
-            opacity: 0.75 !important;
-        }
+        .plan-row.past { /* past dimming disabled */ }
+        
 
         .time-select-row {
             display: flex;
@@ -3190,7 +3180,7 @@
             .card-header::before { animation: none !important; }
             .lt-days.lt-overdue { animation: none !important; }
             .plan-row.active-now::before { animation: none !important; }
-            .plan-row.past { opacity: 0.38 !important; filter: grayscale(0.4) !important; }
+            .plan-row.past { /* past dimming disabled */ }
             .portfolio-hud::after { animation: none !important; }
             .mc-time.urgent { animation: none !important; }
         }
@@ -3253,7 +3243,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.05</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.06</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4719,14 +4709,14 @@ const PlanModule = {
                     row.classList.add('active-now');
                 } else if (end && cur >= end) {
                     // 結束時間已過 → 變暗
-                    row.classList.add('past');
+                    row.classList.remove('past'); // dimming disabled
                 } else if (!end && cur > start) {
                     // 只有開始時間，超過開始時間 30 分鐘後變暗
                     const [sh, sm] = start.split(':').map(Number);
                     const [ch, cm] = cur.split(':').map(Number);
                     const startMins = sh * 60 + sm;
                     const curMins   = ch * 60 + cm;
-                    if (curMins - startMins > 30) row.classList.add('past');
+                    if (curMins - startMins > 30) row.classList.remove('past'); // dimming disabled
                 }
             });
         }
@@ -9195,7 +9185,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.05';
+    const CURRENT_VERSION = 'v3.06';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

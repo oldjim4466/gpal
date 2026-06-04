@@ -7475,6 +7475,21 @@ const Events = {
                 });
                 if (!isOpen) { extra.classList.add('open'); t.classList.add('open'); }
             } else if (t.dataset.role === 'goal-del') {
+                const gDelEl = t;
+                if (!gDelEl.dataset.confirming) {
+                    gDelEl.dataset.confirming = '1';
+                    gDelEl.textContent = 'OK?';
+                    gDelEl.style.background = 'rgba(255,62,62,0.2)';
+                    setTimeout(() => {
+                        if (gDelEl.dataset.confirming) {
+                            delete gDelEl.dataset.confirming;
+                            gDelEl.textContent = 'DEL';
+                            gDelEl.style.background = '';
+                        }
+                    }, 2000);
+                    return;
+                }
+                delete gDelEl.dataset.confirming;
                 row.style.transition = 'opacity 0.2s, transform 0.2s';
                 row.style.opacity = '0'; row.style.transform = 'translateX(20px)';
                 setTimeout(() => {

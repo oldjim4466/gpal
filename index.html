@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.00">
+    <meta name="version" content="v3.01">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.00</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.01</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3244,7 +3244,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.00</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.01</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4029,6 +4029,7 @@ const SB = {
                 console.log('[syncTaggedPlans] synced', toAdd.length, 'rows to', member);
             } catch(e) { console.warn('syncTaggedPlans:', member, e); }
         }
+        return Object.keys(tagged).length > 0;
     },
 
 // ── Helpers ───────────────────────────────────────────────
@@ -7293,6 +7294,16 @@ const Sync = {
             // 同步有 @member tag 的 plan 行到其他成員
             if (payload.plan && payload.plan.includes('@')) {
                 SB.syncTaggedPlans(MemberModule.current(), payload.date, payload.plan)
+                  .then(synced => {
+                      if (!synced) return;
+                      // 視覺反饋：active TAG 按鈕顯示 ✓
+                      document.querySelectorAll('.plan-member-tag.active').forEach(tag => {
+                          const orig = tag.textContent;
+                          tag.textContent = '✓';
+                          tag.style.opacity = '1';
+                          setTimeout(() => { tag.textContent = orig; tag.style.opacity = ''; }, 1500);
+                      });
+                  })
                   .catch(e => console.warn('syncTaggedPlans:', e));
             }
 
@@ -9069,7 +9080,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.00';
+    const CURRENT_VERSION = 'v3.01';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

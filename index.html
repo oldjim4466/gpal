@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.97">
+    <meta name="version" content="v2.99">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.97</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.99</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -499,12 +499,13 @@
         .btn-copy-plan.copied { border-color: var(--stark-green); color: var(--stark-green); }
         /* ── Row "more" toggle & extras ── */
         .row-more-btn {
-            font-family: 'Orbitron', sans-serif; font-size: 0.36rem; font-weight: 700;
-            color: rgba(0,242,255,0.7); background: transparent;
-            border: 1px solid rgba(0,242,255,0.4);
-            padding: 1px 5px; cursor: pointer; flex-shrink: 0;
+            font-family: 'Orbitron', sans-serif; font-size: 0.6rem; font-weight: 700;
+            color: rgba(0,242,255,0.8); background: transparent;
+            border: 1px solid rgba(0,242,255,0.5);
+            padding: 3px 8px; cursor: pointer; flex-shrink: 0;
             transition: all 0.2s; outline: none; user-select: none;
             -webkit-tap-highlight-color: transparent; letter-spacing: 1px;
+            border-radius: 3px;
         }
         .row-more-btn:hover, .row-more-btn.open { color: var(--stark-cyan); border-color: var(--stark-cyan); }
         .row-actions-extra {
@@ -1198,12 +1199,13 @@
         }
         .loc-add-btn {
             font-family: 'Orbitron';
-            font-size: 0.5rem;
+            font-size: 0.6rem;
             color: var(--stark-gold);
             cursor: pointer;
-            opacity: 0.8;
+            opacity: 0.85;
             border: 1px dashed var(--stark-gold);
-            padding: 1px 4px;
+            padding: 3px 8px;
+            border-radius: 3px;
             transition: 0.2s;
         }
         .loc-add-btn:hover { opacity: 1; }
@@ -1254,10 +1256,10 @@
         .loc-copy-btn.copied { background: var(--stark-green); border-color: var(--stark-green); color: var(--stark-dark); }
         .del-btn {
             color: var(--stark-red); border: 1px solid var(--stark-red);
-            font-family: 'Orbitron'; font-size: 0.38rem; font-weight: 700;
-            padding: 1px 4px; cursor: pointer; opacity: 0.75; transition: 0.2s;
+            font-family: 'Orbitron'; font-size: 0.6rem; font-weight: 700;
+            padding: 3px 8px; cursor: pointer; opacity: 0.8; transition: 0.2s;
             flex-shrink: 0; position: relative; z-index: 5;
-            background: transparent; outline: none;
+            background: transparent; outline: none; border-radius: 3px;
             -webkit-tap-highlight-color: rgba(255,62,62,0.2);
         }
         .del-btn:hover { opacity: 1; background: var(--stark-red); color: white; }
@@ -3211,11 +3213,14 @@
             padding-top: 4px;
         }
         .btn-member-toggle {
-            font-size: 0.75rem; background: transparent;
-            border: none; cursor: pointer; padding: 0 2px;
-            opacity: 0.7; line-height: 1;
+            font-family: 'Orbitron'; font-size: 0.6rem; font-weight: 700;
+            color: rgba(0,242,255,0.8); background: transparent;
+            border: 1px solid rgba(0,242,255,0.5);
+            padding: 3px 8px; cursor: pointer; letter-spacing: 1px;
+            border-radius: 3px; transition: all 0.2s;
             -webkit-tap-highlight-color: rgba(0,242,255,0.2);
         }
+        .btn-member-toggle:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); background: rgba(0,242,255,0.08); }
         .btn-member-toggle:hover { opacity: 1; }
         .plan-member-tag {
             font-family: 'Orbitron'; font-size: 0.52rem; font-weight: 700;
@@ -3239,7 +3244,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.97</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.99</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4614,7 +4619,7 @@ const PlanModule = {
         // 成員標籤
         const memberToggle = document.createElement('div');
         memberToggle.className = 'btn-member-toggle';
-        memberToggle.textContent = '[TAG]';
+        memberToggle.textContent = 'TAG';
         memberToggle.title = '標記參與成員';
         memberToggle.dataset.role = 'member-toggle';
 
@@ -9064,7 +9069,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.97';
+    const CURRENT_VERSION = 'v2.99';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

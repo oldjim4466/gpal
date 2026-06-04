@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v2.94">
+    <meta name="version" content="v2.96">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v2.94</title>
+    <title>GPAL MK-VII // OPTIMIZED v2.96</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3223,7 +3223,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.94</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v2.96</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4598,7 +4598,7 @@ const PlanModule = {
         // 成員標籤
         const memberToggle = document.createElement('div');
         memberToggle.className = 'btn-member-toggle';
-        memberToggle.textContent = '👥';
+        memberToggle.textContent = '[TAG]';
         memberToggle.title = '標記參與成員';
         memberToggle.dataset.role = 'member-toggle';
 
@@ -4613,7 +4613,7 @@ const PlanModule = {
             memberRow.appendChild(tag);
         });
 
-        actionsExtra.append(addBtn, locEdit, locTagGroup, clockBtn, copyBtn, dupBtn, memberToggle, memberRow);
+        actionsExtra.append(addBtn, locEdit, locTagGroup, memberToggle, memberRow);
         actions.append(moreBtn, actionsExtra, delBtn);
         row.append(timeRow, input, actions);
         // 如有成員 tag 自動展開 actionsExtra
@@ -9048,7 +9048,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v2.94';
+    const CURRENT_VERSION = 'v2.96';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

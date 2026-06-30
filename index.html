@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.06">
+    <meta name="version" content="v3.08">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.06</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.08</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3243,7 +3243,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.06</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.08</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3977,19 +3977,44 @@ const SB = {
         const cached = SB._cache.get(key);
         if (!forceRefresh && cached && Date.now() - cached.ts < 30000) return cached.data;
         const rows = await SB.get('portfolio', `?select=ticker,shares,avg_cost,current_price`);
+
+        // 嘗試用 Finnhub 取得即時股價
+        const apiKey = (typeof WatchlistModule !== 'undefined') ? WatchlistModule.getKey() : '';
+        let livePrices = {};
+        if (apiKey && rows.length) {
+            try {
+                const quotes = await Promise.all(rows.map(async r => {
+                    try {
+                        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${r.ticker}&token=${apiKey}`);
+                        if (!res.ok) return null;
+                        const q = await res.json();
+                        return (q && q.c > 0) ? { ticker: r.ticker, price: q.c } : null;
+                    } catch { return null; }
+                }));
+                quotes.forEach(q => { if (q) livePrices[q.ticker] = q.price; });
+                // 把即時價格寫回 Supabase（背景）
+                Object.entries(livePrices).forEach(([ticker, price]) => {
+                    SB.patch('portfolio', { current_price: price }, `?ticker=eq.${ticker}`).catch(()=>{});
+                });
+            } catch {}
+        }
+
         let totalValue = 0, totalCost = 0;
         const holdings = rows.map(r => {
-            const shares = Number(r.shares), avg = Number(r.avg_cost), cur = Number(r.current_price) || avg;
+            const shares = Number(r.shares), avg = Number(r.avg_cost);
+            const cur = livePrices[r.ticker] || Number(r.current_price) || avg;
             const mkt = shares * cur, cost = shares * avg, pl = mkt - cost;
             totalValue += mkt; totalCost += cost;
             return { ticker: r.ticker, symbol: r.ticker, shares, avg_cost: avg,
                      current_price: cur, value: mkt, market_value: mkt, pl,
-                     pl_pct: cost ? ((pl/cost)*100).toFixed(2) : '0' };
+                     pl_pct: cost ? ((pl/cost)*100).toFixed(2) : '0',
+                     live: !!livePrices[r.ticker] };
         });
         const pfResult = {
             summary: { total_value: totalValue, total_cost: totalCost,
                        total_pl: totalValue - totalCost,
-                       total_pl_pct: totalCost ? (totalValue-totalCost)/totalCost*100 : 0 },
+                       total_pl_pct: totalCost ? (totalValue-totalCost)/totalCost*100 : 0,
+                       live: Object.keys(livePrices).length > 0 },
             holdings,
         };
         SB._cache.set('portfolio', { data: pfResult, ts: Date.now() });
@@ -4121,6 +4146,12 @@ const Utils = {
 
     // 統一用加州時間（America/Los_Angeles），與用戶所在地一致
     getTZ() {
+        // 一次性遷移:強制設為太平洋時間
+        const MIGRATION_FLAG = 'gpal_tz_reset_pacific';
+        if (!localStorage.getItem(MIGRATION_FLAG)) {
+            localStorage.setItem(CONFIG.TZ_LS_KEY, 'America/Los_Angeles');
+            localStorage.setItem(MIGRATION_FLAG, '1');
+        }
         return localStorage.getItem(CONFIG.TZ_LS_KEY) || CONFIG.DEFAULT_TZ;
     },
 
@@ -9185,7 +9216,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.06';
+    const CURRENT_VERSION = 'v3.08';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

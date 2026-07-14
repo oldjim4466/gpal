@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.09">
+    <meta name="version" content="v3.10">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.09</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.10</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3246,7 +3246,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.09</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.10</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -8134,8 +8134,9 @@ const FinanceModule = {
     render(data) {
         FinanceModule._lastData = data;
         // 確保所有欄位都有預設值
-        data.records    = Array.isArray(data.records)    ? data.records    : [];
-        data.categories = Array.isArray(data.categories) ? data.categories : [];
+        data.records          = Array.isArray(data.records)          ? data.records          : [];
+        data.categories       = Array.isArray(data.categories)       ? data.categories       : [];
+        data.income_categories = Array.isArray(data.income_categories) ? data.income_categories : [];
         data.total_income  = Number(data.total_income  || 0);
         data.total_expense = Number(data.total_expense || 0);
         // Ensure records sorted by date ascending
@@ -8198,11 +8199,7 @@ const FinanceModule = {
                 `;
                 incEl.appendChild(row);
             });
-            requestAnimationFrame(() => {
-                incEl.querySelectorAll('.finance-cat-bar').forEach(bar => {
-                    bar.style.width = bar.dataset.pct + '%';
-                });
-            });
+            // 動畫在 finance-body 顯示後執行（見下方）
         }
 
         // 動畫延遲展開
@@ -8212,9 +8209,20 @@ const FinanceModule = {
             });
         });
 
+        // 顯示 finance-body 後再做收入條動畫（確保有寬度）
         document.getElementById('finance-loading').style.display = 'none';
         document.getElementById('finance-error').style.display   = 'none';
         document.getElementById('finance-body').style.display    = 'block';
+
+        // 收入條動畫（要在 display:block 後才有效）
+        requestAnimationFrame(() => {
+            const incEl2 = document.getElementById('finance-inc-cats');
+            if (incEl2) {
+                incEl2.querySelectorAll('.finance-cat-bar').forEach(bar => {
+                    bar.style.width = bar.dataset.pct + '%';
+                });
+            }
+        });
     },
 
     showError(msg) {
@@ -8505,14 +8513,20 @@ const FinanceModule = {
             const todayRecs = data.records.filter(r => r.date === mmdd);
             FinanceModule.todayRecords = todayRecs.map(r => ({
                 _id:       r._id,
-                date:      dateStr,     // 完整 yyyy-MM-dd
-                direction: r.direction, // 已由 getExpense 設定
-                amount:    r.amount,    // 已是正數
+                date:      dateStr,
+                direction: r.direction,
+                amount:    r.amount,
                 category:  r.category,
                 note:      r.note,
                 account:   r.account || '',
             }));
             FinanceModule.renderRecords();
+            // 更新收入/支出類別報告（用當月完整資料）
+            if (FinanceModule._lastData) {
+                FinanceModule._lastData.income_categories = data.income_categories || [];
+                FinanceModule._lastData.categories        = data.categories || [];
+                FinanceModule.render(FinanceModule._lastData);
+            }
         } catch(e) { /* 靜默失敗 */ }
     },
 };
@@ -9255,7 +9269,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.09';
+    const CURRENT_VERSION = 'v3.10';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.08">
+    <meta name="version" content="v3.09">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.08</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.09</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3096,6 +3096,9 @@
             position: relative;
             overflow: hidden;
         }
+        .finance-cat-bar.income-bar {
+            background: linear-gradient(90deg, rgba(0,255,136,0.3), var(--stark-green)) !important;
+        }
         .finance-cat-bar {
             height: 100%;
             background: linear-gradient(90deg, rgba(255,62,62,0.6), rgba(255,100,62,0.8));
@@ -3243,7 +3246,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.08</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.09</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3382,6 +3385,8 @@
             </div>
             <div class="finance-cat-title" id="finance-cat-title"><i class="finance-cat-arrow">▸</i> 支出類別分析</div>
             <div class="finance-cats" id="finance-cats"></div>
+            <div class="finance-cat-title" id="finance-inc-title" style="color:var(--stark-green);"><i class="finance-cat-arrow">▸</i> 收入類別分析</div>
+            <div class="finance-cats" id="finance-inc-cats"></div>
         </div>
     </section>
 
@@ -3908,7 +3913,7 @@ const SB = {
         if (account && account !== 'ALL') q += `&account=eq.${encodeURIComponent(account)}`;
         const rows = await SB.get('expense_records', q);
         let totalIncome = 0, totalExpense = 0;
-        const records = [], catMap = {};
+        const records = [], catMap = {}, incMap = {};
         rows.forEach(r => {
             const inc = Number(r.income) || 0;
             const exp = Number(r.expense) || 0;
@@ -3929,11 +3934,16 @@ const SB = {
                 _id:       r.id,
             });
             if (exp > 0) catMap[r.category] = (catMap[r.category] || 0) + exp;
+            if (inc > 0) incMap[r.category] = (incMap[r.category] || 0) + inc;
         });
         const categories = Object.keys(catMap)
             .map(k => ({ name: k, amount: catMap[k] }))
             .sort((a,b) => b.amount - a.amount);
+        const incomeCategories = Object.keys(incMap)
+            .map(k => ({ name: k, amount: incMap[k] }))
+            .sort((a,b) => b.amount - a.amount);
         return { total_income: totalIncome, total_expense: totalExpense,
+                 income_categories: incomeCategories,
                  net_balance: totalIncome - totalExpense, records, categories };
     },
 
@@ -8166,6 +8176,35 @@ const FinanceModule = {
             `;
             catsEl.appendChild(row);
         });
+
+        // 收入類別條
+        const incEl = document.getElementById('finance-inc-cats');
+        if (incEl) {
+            incEl.replaceChildren();
+            const incCats = Array.isArray(data.income_categories) ? data.income_categories : [];
+            const incTitle = document.getElementById('finance-inc-title');
+            if (incTitle) incTitle.style.display = incCats.length ? '' : 'none';
+            const incMax = incCats[0]?.amount || 1;
+            incCats.slice(0, 6).forEach(cat => {
+                const pct = (cat.amount / incMax * 100).toFixed(1);
+                const row = document.createElement('div');
+                row.className = 'finance-cat-row';
+                row.innerHTML = `
+                    <span class="finance-cat-name">${cat.name}</span>
+                    <div class="finance-cat-bar-wrap">
+                        <div class="finance-cat-bar income-bar" style="width:0%" data-pct="${pct}"></div>
+                    </div>
+                    <span class="finance-cat-amt" style="color:var(--stark-green);">${FinanceModule.fmt(cat.amount)}</span>
+                `;
+                incEl.appendChild(row);
+            });
+            requestAnimationFrame(() => {
+                incEl.querySelectorAll('.finance-cat-bar').forEach(bar => {
+                    bar.style.width = bar.dataset.pct + '%';
+                });
+            });
+        }
+
         // 動畫延遲展開
         requestAnimationFrame(() => {
             catsEl.querySelectorAll('.finance-cat-bar').forEach(bar => {
@@ -9216,7 +9255,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.08';
+    const CURRENT_VERSION = 'v3.09';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

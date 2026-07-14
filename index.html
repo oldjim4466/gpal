@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.23">
+    <meta name="version" content="v3.24">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.23</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.24</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3259,7 +3259,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.23</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.24</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3302,6 +3302,7 @@
         <div class="card-header">
             <h2>[ 02 ] STRATEGIC_PLAN</h2>
             <button class="btn-tmpl" id="btn-plan-tmpl" title="Plan Templates" onclick="PlanTemplateModule.togglePanel()">TMPL</button>
+            <button class="btn-tmpl" id="btn-plan-reset" title="Clear all plan rows" data-role="plan-reset-btn">RESET</button>
         </div>
         <div id="plan-date-label" class="plan-date-label"></div>
         <div id="plan-tmpl-panel" class="goal-tmpl-panel" style="display:none;"></div>
@@ -4611,6 +4612,18 @@ const PlanModule = {
             const endTime = last ? last.dataset.end : '08:00';
             PlanModule.create(endTime, Utils.getOffsetTime(endTime, 30));
         }
+    },
+
+    // 清空當天所有 Plan 項目
+    clearAll() {
+        const listEl = document.getElementById('plan-list-0');
+        if (!listEl) return;
+        listEl.replaceChildren();
+        PlanModule.ensureTrailingEmpty();
+        if (PlanModule._rendered) PlanModule._rendered[0] = true;
+        SaveQueue.trigger();
+        PlanModule.saveCurrent();
+        Utils.setStatus('PLAN_CLEARED', 'success');
     },
 
     updateRowTime(row, newStart, newDurationMins) {
@@ -7704,6 +7717,36 @@ const Events = {
         const btnTmpl = document.getElementById('btn-tmpl');
         if (btnTmpl) btnTmpl.addEventListener('click', () => GoalTemplateModule.togglePanel());
 
+        // PLAN RESET 事件（雙擊確認）
+        const btnPlanReset = document.getElementById('btn-plan-reset');
+        if (btnPlanReset) {
+            btnPlanReset.addEventListener('click', () => {
+                if (!btnPlanReset.dataset.confirming) {
+                    btnPlanReset.dataset.confirming = '1';
+                    btnPlanReset.textContent = 'OK?';
+                    btnPlanReset.style.background = 'rgba(255,62,62,0.2)';
+                    btnPlanReset.style.borderColor = 'var(--stark-red)';
+                    btnPlanReset.style.color = 'var(--stark-red)';
+                    setTimeout(() => {
+                        if (btnPlanReset.dataset.confirming) {
+                            delete btnPlanReset.dataset.confirming;
+                            btnPlanReset.textContent = 'RESET';
+                            btnPlanReset.style.background = '';
+                            btnPlanReset.style.borderColor = '';
+                            btnPlanReset.style.color = '';
+                        }
+                    }, 2000);
+                    return;
+                }
+                delete btnPlanReset.dataset.confirming;
+                btnPlanReset.textContent = 'RESET';
+                btnPlanReset.style.background = '';
+                btnPlanReset.style.borderColor = '';
+                btnPlanReset.style.color = '';
+                PlanModule.clearAll();
+            });
+        }
+
         // JARVIS BRIEF 事件
         const btnJarvis = document.getElementById('btn-jarvis');
         if (btnJarvis) btnJarvis.addEventListener('click', () => JarvisModule.speak());
@@ -9120,7 +9163,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.23';
+    const CURRENT_VERSION = 'v3.24';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

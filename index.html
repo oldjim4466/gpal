@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.11">
+    <meta name="version" content="v3.22">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.10</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.22</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -52,9 +52,9 @@
             background: var(--stark-dark);
             color: var(--stark-cyan);
             background-image:
-                radial-gradient(circle at 20% 30%, rgba(0, 242, 255, 0.08), transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(255, 204, 0, 0.04), transparent 50%),
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05), transparent 45%),
+                radial-gradient(circle at 80% 75%, rgba(255,255,255,0.03), transparent 50%),
+                linear-gradient(135deg, #0b0b0d 0%, #1a1a1d 25%, #0d0d0f 50%, #17171a 75%, #08080a 100%);
             background-size: 100% 100%, 100% 100%, 100% 3px;
             background-attachment: fixed;
             display: flex;
@@ -804,6 +804,18 @@
         .sp-disconnect-btn:hover { color: rgba(255,80,80,0.8); border-color: rgba(255,80,80,0.4); }
 
         /* === GOAL TEMPLATE === */
+        .plan-date-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            color: rgba(0,242,255,0.75);
+            letter-spacing: 1px;
+            white-space: nowrap;
+            padding: 3px 12px 5px 12px;
+            display: block;
+        }
+        .plan-date-label .wd {
+            color: var(--stark-gold);
+        }
         .btn-tmpl {
             font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700;
             color: rgba(0,242,255,0.8); border: 1px solid rgba(0,242,255,0.45);
@@ -3246,7 +3258,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.11</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.22</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3290,6 +3302,7 @@
             <h2>[ 02 ] STRATEGIC_PLAN</h2>
             <button class="btn-tmpl" id="btn-plan-tmpl" title="Plan Templates" onclick="PlanTemplateModule.togglePanel()">TMPL</button>
         </div>
+        <div id="plan-date-label" class="plan-date-label"></div>
         <div id="plan-tmpl-panel" class="goal-tmpl-panel" style="display:none;"></div>
         <div id="plan-container">
             <div id="plan-list-0" class="plan-list"></div>
@@ -3390,83 +3403,7 @@
         </div>
     </section>
 
-    <section class="intel-card">
-        <div class="card-header">
-            <h2>[ 06 ] FINANCIAL_INTEL</h2>
-        </div>
-
-        <!-- Trade Log -->
-        <div class="intel-section-label">▸ TRADE LOG</div>
-        <div class="trade-entry">
-            <div class="trade-type-toggle">
-                <button class="trade-type-btn active" data-type="BUY">BUY</button>
-                <button class="trade-type-btn" data-type="SELL">SELL</button>
-            </div>
-            <input type="text"   class="trade-input ticker" id="trade-ticker" placeholder="TICKER" autocomplete="off">
-            <input type="number" class="trade-input shares" id="trade-shares" placeholder="SHARES" step="any" min="0">
-            <input type="number" class="trade-input price"  id="trade-price"  placeholder="PRICE"  step="0.01" min="0">
-            <button class="trade-add-btn" id="trade-add-btn">+</button>
-        </div>
-        <div class="trade-list" id="trade-list"></div>
-        <div class="trade-summary" id="trade-summary"></div>
-        <div class="portfolio-edit-link">
-            <button class="btn-portfolio-edit" onclick="PortfolioEditor.open()">✎ EDIT POSITIONS</button>
-        </div>
-        <div class="intel-divider"></div>
-
-        <!-- Stock Watchlist -->
-        <div class="intel-section-label">▸ STOCK WATCHLIST</div>
-        <div class="wl-key-row">
-            <span class="wl-key-label">FINNHUB KEY</span>
-            <input class="wl-key-input" id="wl-key-input" type="password" placeholder="ct1234abcde...">
-            <button class="btn-wl-key-save" onclick="WatchlistModule.saveKey()">SAVE</button>
-            <span class="key-status" id="wl-key-status"></span>
-        </div>
-        <div class="wl-header-row">
-            <div class="wl-add-row">
-                <input class="wl-ticker-input" id="wl-add-input" placeholder="TICKER" autocomplete="off">
-                <button class="btn-wl-add" onclick="WatchlistModule.addTicker()">+</button>
-            </div>
-            <button class="btn-wl-refresh" onclick="WatchlistModule.fetchAll()">↺ REFRESH</button>
-            <span class="wl-countdown" id="wl-countdown"></span>
-        </div>
-        <div id="wl-error" class="wl-error" style="display:none;"></div>
-        <div class="wl-list" id="wl-list">
-            <div class="wl-loading">輸入 Finnhub API Key 後新增股票代號</div>
-        </div>
-
-        <div class="intel-divider"></div>
-
-        <!-- Claude 分析 -->
-        <div class="intel-section-label">▸ AI ANALYSIS</div>
-        <div class="intel-key-row">
-            <span class="intel-key-label">API KEY</span>
-            <input class="intel-key-input" id="intel-key-input" type="password" placeholder="sk-ant-api03-...">
-            <button class="btn-key-save" id="btn-key-save">SAVE</button>
-            <span class="key-status" id="key-status"></span>
-        </div>
-        <div class="intel-trigger-row">
-            <button class="btn-intel" id="btn-intel">⚡ 分析持倉</button>
-            <span class="intel-timestamp" id="intel-timestamp"></span>
-        </div>
-        <div class="intel-loading" id="intel-loading">
-            <div class="intel-spinner"></div>
-            <span>CLAUDE 分析持倉中...</span>
-        </div>
-        <div class="intel-error" id="intel-error"></div>
-        <div class="intel-body" id="intel-body">
-            <div class="intel-panels">
-                <div class="intel-panel risk">
-                    <div class="intel-panel-label">⚠ 風險評估</div>
-                    <div class="intel-panel-content" id="intel-risk"></div>
-                </div>
-                <div class="intel-panel action">
-                    <div class="intel-panel-label">▶ 操作建議</div>
-                    <div class="intel-panel-content" id="intel-action"></div>
-                </div>
-            </div>
-        </div>
-    </section>
+    
     <!-- Portfolio Editor -->
     <div class="fm-overlay" id="pe-overlay">
         <div class="fm-page">
@@ -3617,51 +3554,12 @@
     </div>
 </main>
 <footer>
-    <div class="hud-row">
-        <button class="btn-portfolio-toggle" id="btn-portfolio-toggle" onclick="
-            const hud = this.nextElementSibling;
-            const show = hud.style.display === 'none';
-            hud.style.display = show ? '' : 'none';
-            this.textContent = show ? '▾ PORTFOLIO' : '▸ PORTFOLIO';
-        ">▸ PORTFOLIO</button>
-        <div class="portfolio-hud" style="display:none;">
-            <div id="portfolio-display">NET WORTH: SYNCING...</div>
-        </div>
-        <button class="btn-portfolio-toggle" id="btn-tz-toggle" onclick="
-            const hud = this.nextElementSibling;
-            const show = hud.style.display === 'none';
-            hud.style.display = show ? '' : 'none';
-            this.textContent = show ? '▾ TIMEZONE' : '▸ TIMEZONE';
-            if (show) TimezoneModule.startTimer(); else TimezoneModule.stopTimer();
-        ">▸ TIMEZONE</button>
-        <div class="tz-hud" style="display:none;">
-            <div id="tz-display"></div>
-            <div class="tz-setting-row">
-                <span class="tz-setting-label">APP TIME ZONE</span>
-                <select id="tz-app-select" onchange="
-                    localStorage.setItem(CONFIG.TZ_LS_KEY, this.value);
-                    Sync.fetchData();
-                " style="background:rgba(0,0,0,0.4);border:1px solid rgba(0,242,255,0.3);color:#fff;font-family:Orbitron;font-size:0.6rem;padding:4px 6px;border-radius:4px;flex:1;">
-                </select>
-            </div>
-            <button class="btn-tz-edit" onclick="TimezoneModule.openEditor()">✎ EDIT ZONES</button>
-        </div>
-    </div>
-    <button class="btn-spotify-toggle" id="btn-spotify-toggle" onclick="
-        const bar = document.getElementById('spotify-bar');
-        const lb  = document.getElementById('sp-lyrics-bar');
-        const show = bar.style.display === 'none';
-        bar.style.display = show ? '' : 'none';
-        this.textContent = show ? '▾ SPOTIFY' : '▸ SPOTIFY';
-    ">▸ SPOTIFY</button>
-    <div id="spotify-bar" style="display:none;"></div>
-    <div id="sp-lyrics-bar"></div>
 
     <div class="footer-dt-row">
         <div class="member-selector" id="member-selector">
-            <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">DAD</button>
-            <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">MOM</button>
-            <button class="mbr-btn" data-mbr="kid" onclick="MemberModule.select('kid')">KID</button>
+            <button class="mbr-btn" data-mbr="dad" onclick="MemberModule.select('dad')">G#01</button>
+            <button class="mbr-btn" data-mbr="mom" onclick="MemberModule.select('mom')">G#02</button>
+            <button class="mbr-btn" data-mbr="kid" onclick="MemberModule.select('kid')">G#03</button>
         </div>
         <button class="nav-btn" data-action="prev-day" aria-label="前一天">❮</button>
         <div class="date-display">
@@ -3674,26 +3572,9 @@
     <div class="action-area">
         <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
         <button class="btn-refresh-icon" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())" title="Refresh page">↺</button>
-        <select id="jarvis-lang" class="jarvis-lang-sel" title="JARVIS voice language">
-            <option value="en-US">EN</option>
-            <option value="zh-HK">粵語</option>
-            <option value="zh-CN">國語</option>
-        </select>
-        <button class="btn-sync" id="btn-jarvis" title="JARVIS Status Report">◎ BRIEF</button>
     </div>
 </footer>
 
-<!-- Timezone Edit Modal -->
-<div class="tz-edit-modal" id="tz-edit-modal">
-    <div class="tz-edit-box">
-        <div class="tz-edit-title">◷ EDIT TIME ZONES</div>
-        <div id="tz-edit-rows"></div>
-        <div class="tz-edit-btns">
-            <button class="tz-cancel-btn" onclick="TimezoneModule.closeEditor()">CANCEL</button>
-            <button class="tz-save-btn" onclick="TimezoneModule.saveZones()">SAVE</button>
-        </div>
-    </div>
-</div>
 
 <script>
 'use strict';
@@ -4189,13 +4070,23 @@ const Utils = {
     },
 
     updateDateLabel(dateStr) {
-        const label = document.getElementById('date-label');
-        if (!label) return;
         const days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
         // 用 T12:00:00 避免時區偏移導致日期跑掉
         const d = new Date(dateStr + 'T12:00:00');
-        label.textContent = days[d.getDay()];
-        label.classList.remove('hidden');
+        const label = document.getElementById('date-label');
+        if (label) {
+            label.textContent = days[d.getDay()];
+            label.classList.remove('hidden');
+        }
+        // Strategic Plan 標題旁的日期／星期：[ 07/14/2026. TUE ]
+        const planLabel = document.getElementById('plan-date-label');
+        if (planLabel) {
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            const abbrev = ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
+            planLabel.innerHTML = `[ ${mm}/${dd}/${yyyy}. <span class="wd">${abbrev}</span> ]`;
+        }
     },
 
     setStatus(msg, type = 'normal') {
@@ -4694,7 +4585,7 @@ const PlanModule = {
         ['dad','mom','kid'].forEach(mbr => {
             const tag = document.createElement('div');
             tag.className = `plan-member-tag ${mbr}${members.includes(mbr) ? ' active' : ''}`;
-            tag.textContent = mbr.toUpperCase();
+            tag.textContent = ({dad:'G#01',mom:'G#02',kid:'G#03'})[mbr] || mbr.toUpperCase();
             tag.dataset.member = mbr;
             tag.dataset.role = 'member-tag';
             memberRow.appendChild(tag);
@@ -9168,51 +9059,27 @@ ${positionText}
 };
 
 // ---------- DAY THEME ----------
-const DAY_THEMES = [
-    // Sun — amber gold
-    { ov: 'rgba(255,160,40,0.22)',
-      bg: 'radial-gradient(circle at 15% 25%, rgba(255,160,40,0.20), transparent 55%), radial-gradient(circle at 82% 75%, rgba(255,100,0,0.12), transparent 50%)',
-      grid: 'rgba(255,160,40,0.07)' },
-    // Mon — cyan (home colour — give it presence too)
-    { ov: 'rgba(0,242,255,0.14)',
-      bg: 'radial-gradient(circle at 20% 30%, rgba(0,242,255,0.14), transparent 50%), radial-gradient(circle at 80% 70%, rgba(255,204,0,0.07), transparent 50%)',
-      grid: 'rgba(0,242,255,0.04)' },
-    // Tue — electric blue
-    { ov: 'rgba(40,100,255,0.22)',
-      bg: 'radial-gradient(circle at 25% 20%, rgba(40,120,255,0.20), transparent 55%), radial-gradient(circle at 75% 78%, rgba(0,200,255,0.12), transparent 50%)',
-      grid: 'rgba(40,120,255,0.07)' },
-    // Wed — violet
-    { ov: 'rgba(180,40,255,0.22)',
-      bg: 'radial-gradient(circle at 18% 35%, rgba(180,40,255,0.20), transparent 55%), radial-gradient(circle at 80% 65%, rgba(100,0,255,0.12), transparent 50%)',
-      grid: 'rgba(180,40,255,0.07)' },
-    // Thu — teal green
-    { ov: 'rgba(0,220,110,0.20)',
-      bg: 'radial-gradient(circle at 20% 28%, rgba(0,220,110,0.18), transparent 55%), radial-gradient(circle at 80% 72%, rgba(0,180,200,0.10), transparent 50%)',
-      grid: 'rgba(0,220,110,0.07)' },
-    // Fri — crimson
-    { ov: 'rgba(255,40,40,0.22)',
-      bg: 'radial-gradient(circle at 20% 30%, rgba(255,40,40,0.20), transparent 55%), radial-gradient(circle at 80% 70%, rgba(255,120,0,0.12), transparent 50%)',
-      grid: 'rgba(255,40,40,0.07)' },
-    // Sat — magenta
-    { ov: 'rgba(230,0,185,0.22)',
-      bg: 'radial-gradient(circle at 18% 30%, rgba(230,0,185,0.20), transparent 55%), radial-gradient(circle at 80% 70%, rgba(160,0,255,0.12), transparent 50%)',
-      grid: 'rgba(230,0,185,0.07)' },
-];
+// 金屬黑主題（固定，不隨日期變化）
+const METAL_THEME = {
+    ov:   'rgba(0,0,0,0)',
+    bg:   'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05), transparent 45%), ' +
+          'radial-gradient(circle at 80% 75%, rgba(255,255,255,0.03), transparent 50%), ' +
+          'linear-gradient(135deg, #0b0b0d 0%, #1a1a1d 25%, #0d0d0f 50%, #17171a 75%, #08080a 100%)',
+    grid: 'rgba(255,255,255,0.05)',
+};
 
 function applyDayTheme(dateStr, animate = false) {
-    const day = new Date(dateStr + 'T12:00:00').getDay();
-    const t   = DAY_THEMES[day];
+    const t = METAL_THEME;
     const overlay = document.getElementById('day-overlay');
     if (overlay) {
         overlay.style.backgroundColor = t.ov;
         if (animate) {
             overlay.classList.remove('shift');
-            void overlay.offsetWidth; // reflow
+            void overlay.offsetWidth;
             overlay.classList.add('shift');
             setTimeout(() => overlay.classList.remove('shift'), 700);
         }
     }
-    // Swap body radial glows instantly — overlay transition masks the cut
     document.body.style.backgroundImage = t.bg;
     document.documentElement.style.setProperty('--day-grid', t.grid);
 }
@@ -9241,43 +9108,18 @@ window.addEventListener('DOMContentLoaded', () => {
     Events.init();
     HealthModule.bindEvents();
     HealthModule.render(DOM.datePicker.value);
-    TradeModule.init();
-    IntelModule.init();
     MissionClockModule.init();
 
     // Step 3: 主資料請求（最優先）
     Sync.fetchData();
 
-    // 從 localStorage 即時顯示上次 Portfolio（零延遲）
-    try {
-        const pfRaw = localStorage.getItem('gpal_pf_cache');
-        if (pfRaw) {
-            const { summary, ts } = JSON.parse(pfRaw);
-            if (Date.now() - ts < 3600000) {
-                Sync._pfCache   = summary;
-                Sync._pfCacheTs = ts;
-                Sync._renderPortfolio(summary);
-            }
-        }
-    } catch {}
-
     // Finance：init 端點已載入當月資料，僅需設定 UI 標籤
     setTimeout(() => FinanceModule.init(), 500);
 
-    // Watchlist（最低優先）
-    setTimeout(() => WatchlistModule.init(), 3000);
-
-    // Spotify: defer until user opens
-    document.getElementById('btn-spotify-toggle').addEventListener('click', function _spInit() {
-        this.removeEventListener('click', _spInit);
-        SpotifyModule.init();
-    }, { once: false });
-
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
-    setInterval(() => Sync.refreshPortfolio(), CONFIG.PORTFOLIO_REFRESH);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.11';
+    const CURRENT_VERSION = 'v3.22';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

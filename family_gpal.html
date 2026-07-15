@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.24">
+    <meta name="version" content="v3.25">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v3.24</title>
+    <title>GPAL FAMILY v3.25</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -788,6 +788,11 @@
         }
         .plan-date-label .wd {
             color: var(--stark-gold);
+        }
+        .plan-date-label .mbr-code {
+            color: var(--stark-cyan);
+            font-weight: 700;
+            margin-right: 4px;
         }
         .btn-tmpl { font-family: 'Orbitron', sans-serif; font-size: 0.38rem; font-weight: 700; color: rgba(0,242,255,0.8); border: 1px solid rgba(0,242,255,0.45); background: transparent; padding: 1px 6px; cursor: pointer; transition: all 0.2s; margin-left: 4px; outline: none; }
         .btn-tmpl:hover { color: var(--stark-cyan); border-color: var(--stark-cyan); }
@@ -1913,7 +1918,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.24</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.25</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2541,14 +2546,15 @@ const Utils = {
             label.textContent = days[d.getDay()];
             label.classList.remove('hidden');
         }
-        // Strategic Plan 標題旁的日期／星期：[ 07/14/2026. TUE ]
+        // Strategic Plan 標題旁的成員／日期／星期：G#01 [ 07/14/2026. TUE ]
         const planLabel = document.getElementById('plan-date-label');
         if (planLabel) {
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const dd = String(d.getDate()).padStart(2, '0');
             const yyyy = d.getFullYear();
             const abbrev = ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
-            planLabel.innerHTML = `[ ${mm}/${dd}/${yyyy}. <span class="wd">${abbrev}</span> ]`;
+            const mbrCode = ({dad:'G#01',mom:'G#02',kid:'G#03'})[MemberModule.current()] || '';
+            planLabel.innerHTML = `<span class="mbr-code">${mbrCode}</span> [ ${mm}/${dd}/${yyyy}. <span class="wd">${abbrev}</span> ]`;
         }
     },
 
@@ -5549,7 +5555,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v3.24 loaded - past dimming active');
+    console.log('[GPAL] Family v3.25 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5588,7 +5594,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v3.24';
+    const CURRENT_VERSION = 'v3.25';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

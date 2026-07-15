@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.31">
+    <meta name="version" content="v3.32">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.31</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.32</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3234,6 +3234,50 @@
             .finance-entry-row { flex-wrap: wrap; }
             .exp-date-wrap { width: 100%; }
             .finance-input.exp-date-input { flex: 1; width: auto; min-width: 0; }
+
+            /* 支出/收入/金額/類別/來源/加入 — 手機版強制同一行 */
+            .finance-main-row {
+                flex-wrap: nowrap !important;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                gap: 3px !important;
+            }
+            .finance-main-row .btn-dir {
+                font-size: 0.5rem !important;
+                padding: 0 5px !important;
+            }
+            .finance-main-row .amt-wrap {
+                flex: 0 0 62px !important;
+                min-width: 62px !important;
+            }
+            .finance-main-row .finance-input.amt {
+                font-size: 0.68rem !important;
+                padding: 4px 3px !important;
+            }
+            .finance-main-row .amt-prefix {
+                font-size: 0.68rem !important;
+                padding: 0 4px !important;
+            }
+            .finance-main-row select.finance-input.cat {
+                flex: 0 0 78px !important;
+                min-width: 78px !important;
+                max-width: 78px !important;
+                font-size: 0.58rem !important;
+                padding: 4px 2px !important;
+                text-overflow: ellipsis;
+            }
+            .finance-main-row select#exp-account {
+                flex: 0 0 58px !important;
+                min-width: 58px !important;
+                max-width: 58px !important;
+                font-size: 0.58rem !important;
+                padding: 4px 2px !important;
+            }
+            .finance-main-row .btn-expense-add {
+                flex: 0 0 auto !important;
+                font-size: 0.9rem !important;
+                padding: 0 9px !important;
+            }
         }
             @media (max-width: 768px) {
             .time-sel {
@@ -3294,7 +3338,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.31</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.32</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3359,7 +3403,7 @@
             <h2>[ 05 ] FINANCE_HUD</h2>
         </div>
         <div class="finance-entry">
-            <div class="finance-entry-row">
+            <div class="finance-entry-row finance-main-row">
                 <div class="finance-dir-toggle">
                     <button class="btn-dir active" data-dir="expense">支出</button>
                     <button class="btn-dir" data-dir="income">收入</button>
@@ -9213,7 +9257,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.31';
+    const CURRENT_VERSION = 'v3.32';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

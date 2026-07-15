@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.53">
+    <meta name="version" content="v3.56">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.53</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.56</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3157,10 +3157,17 @@
             display: flex; flex-direction: column; gap: 8px;
         }
         .wealth-proj-row {
-            display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+            display: flex; flex-direction: column; gap: 6px;
             padding: 8px; background: rgba(0,0,0,0.2);
             border-left: 3px solid var(--stark-cyan);
             border-radius: 3px;
+        }
+        .wealth-line1 {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+        }
+        .wealth-line2 {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+            padding-top: 6px; border-top: 1px solid rgba(0,242,255,0.08);
         }
         .wealth-proj-name {
             flex: 1 1 120px; min-width: 90px;
@@ -3182,11 +3189,11 @@
             padding: 0 6px; display: flex; align-items: center;
         }
         .wealth-capital-input {
-            width: 76px;
+            width: 100px;
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,242,255,0.3);
-            color: #fff; font-family: 'Orbitron'; font-size: 0.65rem;
-            padding: 4px 6px; outline: none; flex-shrink: 0;
+            color: #fff; font-family: 'Orbitron'; font-size: 0.7rem;
+            padding: 5px 7px; outline: none; flex-shrink: 0;
         }
         .wealth-gl-display {
             font-family: 'Orbitron'; font-size: 0.75rem; font-weight: 900;
@@ -3196,6 +3203,24 @@
         }
         .wealth-gl-display.pos { color: var(--stark-green); }
         .wealth-gl-display.neg { color: var(--stark-red); }
+
+        .wealth-date-wrap {
+            display: flex; align-items: center; gap: 3px; flex-shrink: 0;
+        }
+        .wealth-date-arrow {
+            background: transparent;
+            border: 1px solid rgba(0,242,255,0.35);
+            color: var(--stark-cyan);
+            font-family: 'Orbitron'; font-size: 0.6rem; font-weight: 900;
+            padding: 4px 6px; cursor: pointer; border-radius: 3px;
+        }
+        .wealth-date-input {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(0,242,255,0.3);
+            color: #fff; font-family: 'Orbitron'; font-size: 0.62rem;
+            padding: 4px 5px; outline: none; color-scheme: dark;
+        }
+
         .wealth-pm-toggle {
             display: flex; flex-shrink: 0; gap: 2px;
         }
@@ -3210,11 +3235,11 @@
         .wealth-pm-btn.active.plus  { background: rgba(0,255,136,0.2); }
         .wealth-pm-btn.active.minus { background: rgba(255,62,62,0.2); }
         .wealth-amount-input {
-            width: 76px;
+            width: 90px;
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,242,255,0.3);
-            color: #fff; font-family: 'Orbitron'; font-size: 0.65rem;
-            padding: 4px 6px; outline: none; flex-shrink: 0;
+            color: #fff; font-family: 'Orbitron'; font-size: 0.7rem;
+            padding: 5px 7px; outline: none; flex-shrink: 0;
         }
         .wealth-enter-btn {
             background: rgba(0,242,255,0.12);
@@ -3225,6 +3250,11 @@
             flex-shrink: 0; transition: 0.2s;
         }
         .wealth-enter-btn:hover { background: rgba(0,242,255,0.25); }
+        .wealth-last-entry {
+            font-family: 'Rajdhani'; font-size: 0.7rem;
+            color: rgba(255,255,255,0.4); flex-shrink: 0;
+            margin-left: auto;
+        }
 
         .finance-cat-arrow {
             display: inline-block;
@@ -3502,7 +3532,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.53</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.56</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5391,9 +5421,11 @@ function switchMember(idx) {
 }
 
 // ---------- WEALTH HUD MODULE (Project Ledger) ----------
+// ---------- WEALTH HUD MODULE (Project Ledger) ----------
+// ---------- WEALTH HUD MODULE (Project Ledger) ----------
 const WealthModule = {
     LS_KEY: 'gpal_wealth_data',
-    data: [], // [{ id, name, capital, gl }]
+    data: [], // [{ id, name, capital, value, entries:[{date,amount}] }]
     _saveTimer: null,
 
     _lsKey() { return `${WealthModule.LS_KEY}_${MemberModule.current()}`; },
@@ -5401,6 +5433,33 @@ const WealthModule = {
     fmt(n) {
         const v = Number(n) || 0;
         return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    },
+
+    // G/L = (Cap $ - Value $) + 手動記錄總和
+    calcGl(p) {
+        const base = (Number(p.capital) || 0) - (Number(p.value) || 0);
+        const manual = (p.entries || []).reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        return base + manual;
+    },
+
+    updateSummaryOnly() {
+        let totalCapital = 0, totalGl = 0;
+        WealthModule.data.forEach(p => {
+            totalCapital += Number(p.capital) || 0;
+            totalGl      += WealthModule.calcGl(p);
+        });
+        const capEl = document.getElementById('wealth-total-capital');
+        if (capEl) capEl.textContent = WealthModule.fmt(totalCapital);
+        const glEl2 = document.getElementById('wealth-total-gl');
+        if (glEl2) {
+            glEl2.textContent = WealthModule.fmt(totalGl);
+            glEl2.style.color = totalGl >= 0 ? 'var(--stark-green)' : 'var(--stark-red)';
+        }
+    },
+
+    _todayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     },
 
     render() {
@@ -5411,12 +5470,17 @@ const WealthModule = {
         let totalCapital = 0, totalGl = 0;
 
         WealthModule.data.forEach(p => {
+            const gl = WealthModule.calcGl(p);
             totalCapital += Number(p.capital) || 0;
-            totalGl      += Number(p.gl) || 0;
+            totalGl      += gl;
 
             const row = document.createElement('div');
             row.className = 'wealth-proj-row';
             row.dataset.wid = p.id;
+
+            // ── 第一行：Project Name / Capital / Value / G/L / DEL ──
+            const line1 = document.createElement('div');
+            line1.className = 'wealth-line1';
 
             const nameEl = document.createElement('input');
             nameEl.type = 'text';
@@ -5439,26 +5503,66 @@ const WealthModule = {
             capInput.dataset.role = 'wealth-capital';
             capWrap.append(capPrefix, capInput);
 
+            const valWrap = document.createElement('div');
+            valWrap.className = 'wealth-capital-wrap';
+            const valPrefix = document.createElement('span');
+            valPrefix.className = 'wealth-prefix';
+            valPrefix.textContent = 'VALUE $';
+            const valInput = document.createElement('input');
+            valInput.type = 'number';
+            valInput.className = 'wealth-capital-input';
+            valInput.placeholder = '0.00';
+            valInput.step = '0.01';
+            valInput.value = p.value || '';
+            valInput.dataset.role = 'wealth-value';
+            valWrap.append(valPrefix, valInput);
+
             const glEl = document.createElement('span');
-            const glVal = Number(p.gl) || 0;
-            glEl.className = 'wealth-gl-display ' + (glVal >= 0 ? 'pos' : 'neg');
-            glEl.textContent = 'G/L ' + WealthModule.fmt(glVal);
+            glEl.className = 'wealth-gl-display ' + (gl >= 0 ? 'pos' : 'neg');
+            glEl.textContent = 'G/L ' + WealthModule.fmt(gl);
+
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'del-btn';
+            delBtn.textContent = 'DEL';
+            delBtn.dataset.role = 'wealth-del';
+
+            line1.append(nameEl, capWrap, valWrap, glEl, delBtn);
+
+            // ── 第二行：手動 G/L 記錄（日期 + +/- + 金額 + Enter）──
+            const line2 = document.createElement('div');
+            line2.className = 'wealth-line2';
+
+            const dateWrap = document.createElement('div');
+            dateWrap.className = 'wealth-date-wrap';
+            const datePrev = document.createElement('button');
+            datePrev.type = 'button'; datePrev.className = 'wealth-date-arrow';
+            datePrev.textContent = '⟨'; datePrev.dataset.role = 'wealth-date-prev';
+            const dateInput = document.createElement('input');
+            dateInput.type = 'date'; dateInput.className = 'wealth-date-input';
+            dateInput.value = WealthModule._todayStr();
+            dateInput.dataset.role = 'wealth-date';
+            const dateNext = document.createElement('button');
+            dateNext.type = 'button'; dateNext.className = 'wealth-date-arrow';
+            dateNext.textContent = '⟩'; dateNext.dataset.role = 'wealth-date-next';
+            dateWrap.append(datePrev, dateInput, dateNext);
 
             const pmToggle = document.createElement('div');
             pmToggle.className = 'wealth-pm-toggle';
             const plusBtn = document.createElement('button');
             plusBtn.type = 'button';
-            plusBtn.className = 'wealth-pm-btn plus' + ((p._dir || '+') === '+' ? ' active' : '');
+            plusBtn.className = 'wealth-pm-btn plus active';
             plusBtn.textContent = '+';
             plusBtn.dataset.role = 'wealth-pm';
             plusBtn.dataset.dir = '+';
             const minusBtn = document.createElement('button');
             minusBtn.type = 'button';
-            minusBtn.className = 'wealth-pm-btn minus' + ((p._dir || '+') === '-' ? ' active' : '');
+            minusBtn.className = 'wealth-pm-btn minus';
             minusBtn.textContent = '−';
             minusBtn.dataset.role = 'wealth-pm';
             minusBtn.dataset.dir = '-';
             pmToggle.append(plusBtn, minusBtn);
+            row.dataset.dir = '+';
 
             const amtWrap = document.createElement('div');
             amtWrap.className = 'wealth-amount-wrap';
@@ -5479,13 +5583,16 @@ const WealthModule = {
             enterBtn.textContent = 'Enter';
             enterBtn.dataset.role = 'wealth-enter';
 
-            const delBtn = document.createElement('button');
-            delBtn.type = 'button';
-            delBtn.className = 'del-btn';
-            delBtn.textContent = 'DEL';
-            delBtn.dataset.role = 'wealth-del';
+            const lastEntry = (p.entries || []).slice(-1)[0];
+            const historyEl = document.createElement('span');
+            historyEl.className = 'wealth-last-entry';
+            historyEl.textContent = lastEntry
+                ? `last: ${lastEntry.date} ${lastEntry.amount >= 0 ? '+' : ''}${WealthModule.fmt(lastEntry.amount)}`
+                : '';
 
-            row.append(nameEl, capWrap, glEl, pmToggle, amtWrap, enterBtn, delBtn);
+            line2.append(dateWrap, pmToggle, amtWrap, enterBtn, historyEl);
+
+            row.append(line1, line2);
             listEl.appendChild(row);
         });
 
@@ -5499,7 +5606,7 @@ const WealthModule = {
     },
 
     add() {
-        WealthModule.data.push({ id: 'wp_' + Date.now(), name: '', capital: 0, gl: 0, _dir: '+' });
+        WealthModule.data.push({ id: 'wp_' + Date.now(), name: '', capital: 0, value: 0, entries: [] });
         WealthModule.triggerSave();
         WealthModule.render();
         const listEl = document.getElementById('wealth-list');
@@ -5520,12 +5627,21 @@ const WealthModule = {
         if (!row) return;
         const proj = WealthModule.data.find(p => p.id === row.dataset.wid);
         if (!proj) return;
-        if (role === 'wealth-name')    proj.name = e.target.value;
-        if (role === 'wealth-capital') {
-            proj.capital = parseFloat(e.target.value) || 0;
-            WealthModule.render();
+        if (role === 'wealth-name') {
+            proj.name = e.target.value;
         }
-        WealthModule.triggerSave();
+        if (role === 'wealth-capital' || role === 'wealth-value') {
+            if (role === 'wealth-capital') proj.capital = parseFloat(e.target.value) || 0;
+            if (role === 'wealth-value')   proj.value   = parseFloat(e.target.value) || 0;
+            const gl = WealthModule.calcGl(proj);
+            const glEl = row.querySelector('.wealth-gl-display');
+            if (glEl) {
+                glEl.className = 'wealth-gl-display ' + (gl >= 0 ? 'pos' : 'neg');
+                glEl.textContent = 'G/L ' + WealthModule.fmt(gl);
+            }
+            WealthModule.updateSummaryOnly();
+            WealthModule.triggerSave();
+        }
     },
 
     handleClick(e) {
@@ -5537,14 +5653,24 @@ const WealthModule = {
         if (!proj) return;
 
         if (role === 'wealth-pm') {
-            proj._dir = t.dataset.dir;
+            row.dataset.dir = t.dataset.dir;
             row.querySelectorAll('.wealth-pm-btn').forEach(b => b.classList.remove('active'));
             t.classList.add('active');
+        } else if (role === 'wealth-date-prev' || role === 'wealth-date-next') {
+            const dateInput = row.querySelector('[data-role=wealth-date]');
+            if (!dateInput) return;
+            const cur = dateInput.value ? new Date(dateInput.value + 'T12:00:00') : new Date();
+            cur.setDate(cur.getDate() + (role === 'wealth-date-prev' ? -1 : 1));
+            dateInput.value = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
         } else if (role === 'wealth-enter') {
             const amtInput = row.querySelector('[data-role=wealth-amount]');
-            const amt = parseFloat(amtInput?.value) || 0;
+            const dateInput = row.querySelector('[data-role=wealth-date]');
+            let amt = parseFloat(amtInput?.value) || 0;
             if (!amt) return;
-            proj.gl = (Number(proj.gl) || 0) + ((proj._dir || '+') === '-' ? -amt : amt);
+            if (row.dataset.dir === '-') amt = -Math.abs(amt);
+            else amt = Math.abs(amt);
+            if (!proj.entries) proj.entries = [];
+            proj.entries.push({ date: dateInput?.value || WealthModule._todayStr(), amount: amt });
             if (amtInput) amtInput.value = '';
             WealthModule.triggerSave();
             WealthModule.render();
@@ -9785,7 +9911,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.53';
+    const CURRENT_VERSION = 'v3.56';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

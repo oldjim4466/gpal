@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.26">
+    <meta name="version" content="v3.31">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.26</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.31</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -2553,11 +2553,11 @@
         .btn-dir[data-dir="expense"].active { background: var(--stark-red);   color: white;             border-color: var(--stark-red);   box-shadow: 0 0 8px rgba(255,62,62,0.4); }
         .finance-input {
             background: rgba(0,0,0,0.35);
-            border: 1px solid rgba(0,255,136,0.2);
+            border: 1px solid rgba(0,255,136,0.3);
             color: white;
             font-family: 'Orbitron';
-            font-size: 0.62rem;
-            padding: 3px 7px;
+            font-size: 0.8rem;
+            padding: 5px 9px;
             outline: none;
             min-width: 0;
         }
@@ -2571,13 +2571,13 @@
         }
         .amt-prefix {
             background: rgba(0,255,136,0.12);
-            border: 1px solid rgba(0,255,136,0.2);
+            border: 1px solid rgba(0,255,136,0.3);
             border-right: none;
             color: var(--stark-green);
             font-family: 'Orbitron';
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             font-weight: 900;
-            padding: 0 6px;
+            padding: 0 8px;
             display: flex;
             align-items: center;
             flex-shrink: 0;
@@ -2595,18 +2595,42 @@
         .finance-input.cat      { flex: 1.2; min-width: 70px; }
         .finance-input.exp-date-input {
             flex-shrink: 0;
-            width: 130px;
+            width: 150px;
+            min-width: 150px;
+            box-sizing: border-box;
             color-scheme: dark;
-            font-size: 0.58rem;
+            font-size: 0.68rem;
+            padding: 5px 6px;
         }
-        .finance-input.note-inp { flex: 2; min-width: 80px; font-family: 'Rajdhani'; font-size: 0.85rem; }
-        .finance-acct-sel {
-            background: rgba(0,0,0,0.35);
-            border: 1px solid rgba(0,255,136,0.2);
+        .exp-date-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .btn-exp-date {
+            background: transparent;
+            border: 1px solid rgba(0,255,136,0.35);
             color: var(--stark-green);
             font-family: 'Orbitron';
-            font-size: 0.52rem;
-            padding: 3px 5px;
+            font-size: 0.7rem;
+            font-weight: 900;
+            padding: 4px 8px;
+            cursor: pointer;
+            transition: 0.2s var(--easing-cyber);
+            flex-shrink: 0;
+            touch-action: manipulation;
+        }
+        .btn-exp-date:hover { background: rgba(0,255,136,0.12); box-shadow: 0 0 6px rgba(0,255,136,0.3); }
+        .btn-exp-date:active { transform: scale(0.9); }
+        .finance-input.note-inp { flex: 2; min-width: 80px; font-family: 'Rajdhani'; font-size: 1rem; }
+        .finance-acct-sel {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(0,255,136,0.3);
+            color: var(--stark-green);
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            padding: 5px 7px;
             outline: none;
             cursor: pointer;
             flex-shrink: 0;
@@ -2617,12 +2641,13 @@
             border: 1px solid var(--stark-green);
             color: var(--stark-green);
             font-family: 'Orbitron';
-            font-size: 0.85rem;
+            font-size: 1.05rem;
             font-weight: 900;
-            padding: 0 10px;
+            padding: 0 14px;
             cursor: pointer;
             transition: 0.2s var(--easing-cyber);
             flex-shrink: 0;
+            border-radius: 3px;
         }
         .btn-expense-add:hover  { background: var(--stark-green); color: var(--stark-dark); box-shadow: 0 0 10px rgba(0,255,136,0.4); }
         .btn-expense-add:active { transform: scale(0.92); }
@@ -2634,20 +2659,20 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 4px 8px;
+            padding: 6px 8px;
             background: rgba(0,0,0,0.2);
             border-left: 3px solid;
             font-family: 'Rajdhani';
-            font-size: 0.88rem;
+            font-size: 1rem;
             animation: slide-in 0.2s var(--easing-smooth) both;
         }
         .finance-rec-row.rec-income  { border-left-color: var(--stark-green); }
         .finance-rec-row.rec-expense { border-left-color: var(--stark-red); }
         .rec-dir-badge {
             font-family: 'Orbitron';
-            font-size: 0.48rem;
+            font-size: 0.62rem;
             font-weight: 900;
-            padding: 1px 5px;
+            padding: 2px 7px;
             flex-shrink: 0;
         }
         .rec-income  .rec-dir-badge { background: var(--stark-green); color: var(--stark-dark); }
@@ -2674,11 +2699,12 @@
             background: transparent;
             border: 1px solid;
             font-family: 'Orbitron';
-            font-size: 0.42rem;
-            padding: 1px 5px;
+            font-size: 0.58rem;
+            padding: 3px 8px;
             cursor: pointer;
             transition: 0.15s;
             letter-spacing: 0.5px;
+            border-radius: 3px;
         }
         .rec-btn.edit-btn  { border-color: rgba(0,242,255,0.4); color: var(--stark-cyan); }
         .rec-btn.del-btn   { border-color: rgba(255,62,62,0.4);  color: var(--stark-red); }
@@ -2953,15 +2979,16 @@
         }
         .btn-account {
             background: transparent;
-            border: 1px solid rgba(0,255,136,0.2);
-            color: rgba(0,255,136,0.5);
+            border: 1px solid rgba(0,255,136,0.35);
+            color: rgba(0,255,136,0.7);
             font-family: 'Orbitron';
-            font-size: 0.46rem;
+            font-size: 0.62rem;
             letter-spacing: 1px;
-            padding: 3px 8px;
+            padding: 5px 11px;
             cursor: pointer;
             transition: 0.2s var(--easing-cyber);
             white-space: nowrap;
+            border-radius: 3px;
         }
         .btn-account:hover { border-color: rgba(0,255,136,0.5); color: var(--stark-green); }
         .btn-account.active {
@@ -2980,12 +3007,12 @@
         }
         .btn-month {
             background: transparent;
-            border: 1px solid rgba(0,255,136,0.35);
+            border: 1px solid rgba(0,255,136,0.45);
             color: var(--stark-green);
             font-family: 'Orbitron';
-            font-size: 0.7rem;
+            font-size: 1rem;
             font-weight: 900;
-            padding: 4px 10px;
+            padding: 6px 14px;
             cursor: pointer;
             transition: 0.2s var(--easing-cyber);
             clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
@@ -2995,7 +3022,7 @@
         .btn-month:active { transform: scale(0.92); }
         .finance-month-label {
             font-family: 'Orbitron';
-            font-size: 0.65rem;
+            font-size: 0.85rem;
             font-weight: 900;
             color: var(--stark-green);
             letter-spacing: 2px;
@@ -3036,7 +3063,7 @@
         .finance-stat.net.negative { border-color: rgba(255,62,62,0.35); }
         .finance-stat-label {
             font-family: 'Orbitron';
-            font-size: 0.65rem;
+            font-size: 0.8rem;
             letter-spacing: 1.5px;
             margin-bottom: 8px;
         }
@@ -3046,7 +3073,7 @@
         .finance-stat-value {
             font-family: 'Orbitron';
             font-weight: 900;
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-variant-numeric: tabular-nums;
             letter-spacing: 2px;
             line-height: 1;
@@ -3062,9 +3089,9 @@
         /* 類別支出條 */
         .finance-cat-title {
             font-family: 'Orbitron';
-            font-size: 0.48rem;
+            font-size: 0.65rem;
             letter-spacing: 2px;
-            color: rgba(255,255,255,0.35);
+            color: rgba(255,255,255,0.45);
             margin-bottom: 6px;
             cursor: pointer;
             display: flex;
@@ -3100,7 +3127,7 @@
         }
         .finance-cat-name {
             font-family: 'Rajdhani';
-            font-size: 0.85rem;
+            font-size: 1rem;
             color: rgba(255,255,255,0.7);
             min-width: 70px;
             white-space: nowrap;
@@ -3125,8 +3152,8 @@
         }
         .finance-cat-amt {
             font-family: 'Orbitron';
-            font-size: 0.55rem;
-            color: rgba(255,255,255,0.5);
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
             min-width: 55px;
             text-align: right;
             font-variant-numeric: tabular-nums;
@@ -3204,6 +3231,9 @@
             .plan-row.past { /* past dimming disabled */ }
             .portfolio-hud::after { animation: none !important; }
             .mc-time.urgent { animation: none !important; }
+            .finance-entry-row { flex-wrap: wrap; }
+            .exp-date-wrap { width: 100%; }
+            .finance-input.exp-date-input { flex: 1; width: auto; min-width: 0; }
         }
             @media (max-width: 768px) {
             .time-sel {
@@ -3264,7 +3294,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.26</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.31</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3355,6 +3385,7 @@
                         <option value="#Refund">#Refund</option>
                         <option value="#Bonus">#Bonus</option>
                         <option value="#Reimbursement">#Reimbursement</option>
+                        <option value="#Rent">#Rent</option>
                     </optgroup>
                 </select>
                 <select class="finance-acct-sel" id="exp-account">
@@ -3367,7 +3398,11 @@
                 <button class="btn-expense-add" id="btn-expense-add">+</button>
             </div>
             <div class="finance-entry-row">
-                <input type="date" class="finance-input exp-date-input" id="exp-date">
+                <div class="exp-date-wrap">
+                    <button class="btn-exp-date" id="btn-exp-date-prev" type="button" title="前一天">⟨</button>
+                    <input type="date" class="finance-input exp-date-input" id="exp-date">
+                    <button class="btn-exp-date" id="btn-exp-date-next" type="button" title="後一天">⟩</button>
+                </div>
                 <input type="text" class="finance-input note-inp" id="exp-note" placeholder="備注（選填）">
             </div>
         </div>
@@ -3493,6 +3528,7 @@
                             <option value="#Refund">#Refund</option>
                             <option value="#Bonus">#Bonus</option>
                             <option value="#Reimbursement">#Reimbursement</option>
+                            <option value="#Rent">#Rent</option>
                         </optgroup>
                     </select>
                 </div>
@@ -8218,6 +8254,18 @@ const FinanceModule = {
         document.getElementById('exp-date').value =
             `${_td.getFullYear()}-${String(_td.getMonth()+1).padStart(2,'0')}-${String(_td.getDate()).padStart(2,'0')}`;
 
+        // 支出/收入日期 前一天／後一天
+        const _shiftExpDate = (delta) => {
+            const inp = document.getElementById('exp-date');
+            const cur = inp.value ? new Date(inp.value + 'T12:00:00') : new Date();
+            cur.setDate(cur.getDate() + delta);
+            inp.value = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+        };
+        const btnExpDatePrev = document.getElementById('btn-exp-date-prev');
+        const btnExpDateNext = document.getElementById('btn-exp-date-next');
+        if (btnExpDatePrev) btnExpDatePrev.addEventListener('click', () => _shiftExpDate(-1));
+        if (btnExpDateNext) btnExpDateNext.addEventListener('click', () => _shiftExpDate(1));
+
         // 收入/支出切換
         document.querySelectorAll('.btn-dir').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -9165,7 +9213,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.26';
+    const CURRENT_VERSION = 'v3.31';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

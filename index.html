@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.33">
+    <meta name="version" content="v3.35">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.33</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.35</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3231,9 +3231,33 @@
             .plan-row.past { /* past dimming disabled */ }
             .portfolio-hud::after { animation: none !important; }
             .mc-time.urgent { animation: none !important; }
-            .finance-entry-row { flex-wrap: wrap; }
-            .exp-date-wrap { width: 100%; }
-            .finance-input.exp-date-input { flex: 1; width: auto; min-width: 0; }
+            .finance-entry-row { flex-wrap: nowrap; }
+
+            /* 日期＋備注 — 手機版強制同一行 */
+            .finance-date-row {
+                flex-wrap: nowrap !important;
+                gap: 4px !important;
+                align-items: center !important;
+            }
+            .exp-date-wrap {
+                flex: 0 0 auto;
+                width: auto;
+            }
+            .finance-input.exp-date-input {
+                flex: 0 0 108px !important;
+                width: 108px !important;
+                min-width: 108px !important;
+                font-size: 0.56rem !important;
+                padding: 4px 3px !important;
+            }
+            .btn-exp-date {
+                font-size: 0.6rem !important;
+                padding: 4px 5px !important;
+            }
+            .finance-date-row .note-inp {
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+            }
 
             /* 支出/收入/金額/類別/來源/加入 — 手機版強制同一行 */
             .finance-main-row {
@@ -3241,6 +3265,7 @@
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 gap: 2px !important;
+                align-items: center !important;
             }
             .finance-main-row .btn-dir {
                 font-size: 0.58rem !important;
@@ -3277,6 +3302,20 @@
                 flex: 0 0 auto !important;
                 font-size: 0.85rem !important;
                 padding: 0 8px !important;
+            }
+
+            /* ALL/RH/CITIBANK/CASH/CREDIT CARD/OTHERS — 手機版盡量同一行 */
+            .finance-account-row {
+                flex-wrap: nowrap !important;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                gap: 3px !important;
+            }
+            .finance-account-row .btn-account {
+                font-size: 0.44rem !important;
+                letter-spacing: 0.3px !important;
+                padding: 4px 6px !important;
+                flex-shrink: 0;
             }
         }
             @media (max-width: 768px) {
@@ -3338,7 +3377,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.33</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.35</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3441,7 +3480,7 @@
                 </select>
                 <button class="btn-expense-add" id="btn-expense-add">+</button>
             </div>
-            <div class="finance-entry-row">
+            <div class="finance-entry-row finance-date-row">
                 <div class="exp-date-wrap">
                     <button class="btn-exp-date" id="btn-exp-date-prev" type="button" title="前一天">⟨</button>
                     <input type="date" class="finance-input exp-date-input" id="exp-date">
@@ -9257,7 +9296,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.33';
+    const CURRENT_VERSION = 'v3.35';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.25">
+    <meta name="version" content="v3.26">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v3.25</title>
+    <title>GPAL FAMILY v3.26</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1918,7 +1918,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.25</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.26</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3039,10 +3039,7 @@ const PlanModule = {
         actionsExtra.append(addBtn, locEdit, locTagGroup, memberToggle2, memberRow);
         actions.append(moreBtn, actionsExtra, delBtn);
         row.append(timeRow, input, actions);
-        if (members.length > 0) {
-            actionsExtra.classList.add('open');
-            memberRow.classList.add('open');
-        }
+        // TAG 列預設隱藏，不因有成員標記而強制展開（避免每次刷新都彈開）
         parent.appendChild(row);
         return row;
     },
@@ -5555,7 +5552,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v3.25 loaded - past dimming active');
+    console.log('[GPAL] Family v3.26 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5594,7 +5591,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v3.25';
+    const CURRENT_VERSION = 'v3.26';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

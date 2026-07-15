@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.50">
+    <meta name="version" content="v3.53">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.50</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.53</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -813,7 +813,11 @@
             white-space: nowrap;
             padding: 3px 12px 5px 12px;
             display: block;
+            cursor: pointer;
+            -webkit-tap-highlight-color: rgba(0,242,255,0.2);
+            transition: opacity 0.2s;
         }
+        .plan-date-label:hover, .plan-date-label:active { opacity: 0.7; }
         .plan-date-label .wd {
             color: var(--stark-gold);
         }
@@ -3129,6 +3133,99 @@
             transition: color 0.2s;
         }
         .finance-cat-title:hover { color: rgba(255,255,255,0.6); }
+
+        .wealth-summary-row {
+            display: flex; gap: 8px; margin-bottom: 12px;
+        }
+        .wealth-summary-item {
+            flex: 1; text-align: center; padding: 10px;
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(0,242,255,0.15);
+            border-radius: 4px;
+        }
+        .wealth-summary-label {
+            font-family: 'Orbitron'; font-size: 0.6rem;
+            letter-spacing: 1.5px; color: rgba(255,255,255,0.5);
+            margin-bottom: 5px;
+        }
+        .wealth-summary-value {
+            font-family: 'Orbitron'; font-weight: 900; font-size: 1.2rem;
+            font-variant-numeric: tabular-nums; letter-spacing: 1px;
+            color: var(--stark-cyan);
+        }
+        .wealth-list {
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .wealth-proj-row {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+            padding: 8px; background: rgba(0,0,0,0.2);
+            border-left: 3px solid var(--stark-cyan);
+            border-radius: 3px;
+        }
+        .wealth-proj-name {
+            flex: 1 1 120px; min-width: 90px;
+            background: transparent; border: none; border-bottom: 1px solid transparent;
+            color: #fff; font-family: 'Rajdhani'; font-size: 0.95rem;
+            outline: none; padding: 3px 0; transition: 0.2s;
+        }
+        .wealth-proj-name:focus { border-bottom-color: rgba(0,242,255,0.6); }
+        .wealth-proj-name::placeholder { color: rgba(255,255,255,0.3); }
+        .wealth-capital-wrap, .wealth-amount-wrap {
+            display: flex; align-items: center; flex-shrink: 0;
+        }
+        .wealth-prefix {
+            background: rgba(0,242,255,0.12);
+            border: 1px solid rgba(0,242,255,0.3);
+            border-right: none;
+            color: var(--stark-cyan);
+            font-family: 'Orbitron'; font-size: 0.65rem; font-weight: 900;
+            padding: 0 6px; display: flex; align-items: center;
+        }
+        .wealth-capital-input {
+            width: 76px;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(0,242,255,0.3);
+            color: #fff; font-family: 'Orbitron'; font-size: 0.65rem;
+            padding: 4px 6px; outline: none; flex-shrink: 0;
+        }
+        .wealth-gl-display {
+            font-family: 'Orbitron'; font-size: 0.75rem; font-weight: 900;
+            padding: 4px 8px; border-radius: 3px; flex-shrink: 0;
+            min-width: 70px; text-align: center;
+            background: rgba(0,0,0,0.25);
+        }
+        .wealth-gl-display.pos { color: var(--stark-green); }
+        .wealth-gl-display.neg { color: var(--stark-red); }
+        .wealth-pm-toggle {
+            display: flex; flex-shrink: 0; gap: 2px;
+        }
+        .wealth-pm-btn {
+            background: transparent; border: 1px solid;
+            font-family: 'Orbitron'; font-size: 0.7rem; font-weight: 900;
+            width: 26px; height: 26px; cursor: pointer; border-radius: 3px;
+            transition: 0.2s;
+        }
+        .wealth-pm-btn.plus  { color: var(--stark-green); border-color: var(--stark-green); }
+        .wealth-pm-btn.minus { color: var(--stark-red);   border-color: var(--stark-red); }
+        .wealth-pm-btn.active.plus  { background: rgba(0,255,136,0.2); }
+        .wealth-pm-btn.active.minus { background: rgba(255,62,62,0.2); }
+        .wealth-amount-input {
+            width: 76px;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(0,242,255,0.3);
+            color: #fff; font-family: 'Orbitron'; font-size: 0.65rem;
+            padding: 4px 6px; outline: none; flex-shrink: 0;
+        }
+        .wealth-enter-btn {
+            background: rgba(0,242,255,0.12);
+            border: 1px solid var(--stark-cyan);
+            color: var(--stark-cyan);
+            font-family: 'Orbitron'; font-size: 0.65rem; font-weight: 900;
+            padding: 5px 10px; cursor: pointer; border-radius: 3px;
+            flex-shrink: 0; transition: 0.2s;
+        }
+        .wealth-enter-btn:hover { background: rgba(0,242,255,0.25); }
+
         .finance-cat-arrow {
             display: inline-block;
             transition: transform 0.25s var(--easing-cyber);
@@ -3405,7 +3502,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.50</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.53</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3558,7 +3655,25 @@
         </div>
     </section>
 
-    
+    <section class="gpal-card">
+        <div class="card-header">
+            <h2>[ 06 ] WEALTH_HUD</h2>
+            <button class="btn-lt-add" id="btn-wealth-add">+ ADD PROJECT</button>
+            <button class="btn-lt-add" id="btn-wealth-reset" title="Clear all projects">RESET</button>
+        </div>
+        <div class="wealth-summary-row">
+            <div class="wealth-summary-item">
+                <div class="wealth-summary-label">TOTAL CAPITAL</div>
+                <div class="wealth-summary-value" id="wealth-total-capital">$0</div>
+            </div>
+            <div class="wealth-summary-item">
+                <div class="wealth-summary-label">TOTAL G/L</div>
+                <div class="wealth-summary-value" id="wealth-total-gl">$0</div>
+            </div>
+        </div>
+        <div class="wealth-list" id="wealth-list"></div>
+    </section>
+
     <!-- Portfolio Editor -->
     <div class="fm-overlay" id="pe-overlay">
         <div class="fm-page">
@@ -3874,13 +3989,14 @@ const SB = {
 
     // ── Init（一次取得所有資料）──────────────────────────────
     async getInit(member, date) {
-        const [bundle, longterm, habit, templates, portfolio, expense] = await Promise.all([
+        const [bundle, longterm, habit, templates, portfolio, expense, wealth] = await Promise.all([
             SB.getBundle(member, date),
             SB.getLongterm(member),
             SB.getHabit(member),
             SB.getTemplates(),
             SB.getPortfolio(),
             SB.getExpense(date.slice(0,7)),
+            SB.getWealth(member),
         ]);
         return {
             ...bundle,
@@ -3889,8 +4005,24 @@ const SB = {
             templates: templates.templates,
             portfolio,
             expense,
+            wealth: wealth.data,
             success: true,
         };
+    },
+
+    // ── Wealth HUD ────────────────────────────────────────────
+    async getWealth(member) {
+        const key = `wealth_${member}`;
+        if (SB._cache.has(key)) return SB._cache.get(key);
+        const rows = await SB.get('wealth_hud', `?member=eq.${member}&select=data`);
+        const result = { data: rows.length ? rows[0].data : null, found: rows.length > 0 };
+        SB._cache.set(key, result);
+        return result;
+    },
+
+    async saveWealth(member, data) {
+        SB._cache.delete(`wealth_${member}`);
+        return SB.upsert('wealth_hud', { member, data }, 'member');
     },
 
     // ── Longterm Goals ───────────────────────────────────────
@@ -5258,7 +5390,194 @@ function switchMember(idx) {
     Sync.fetchData();
 }
 
-// ---------- LONGTERM GOAL MODULE ----------
+// ---------- WEALTH HUD MODULE (Project Ledger) ----------
+const WealthModule = {
+    LS_KEY: 'gpal_wealth_data',
+    data: [], // [{ id, name, capital, gl }]
+    _saveTimer: null,
+
+    _lsKey() { return `${WealthModule.LS_KEY}_${MemberModule.current()}`; },
+
+    fmt(n) {
+        const v = Number(n) || 0;
+        return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    },
+
+    render() {
+        const listEl = document.getElementById('wealth-list');
+        if (!listEl) return;
+        listEl.replaceChildren();
+
+        let totalCapital = 0, totalGl = 0;
+
+        WealthModule.data.forEach(p => {
+            totalCapital += Number(p.capital) || 0;
+            totalGl      += Number(p.gl) || 0;
+
+            const row = document.createElement('div');
+            row.className = 'wealth-proj-row';
+            row.dataset.wid = p.id;
+
+            const nameEl = document.createElement('input');
+            nameEl.type = 'text';
+            nameEl.className = 'wealth-proj-name';
+            nameEl.placeholder = 'Project Name...';
+            nameEl.value = p.name || '';
+            nameEl.dataset.role = 'wealth-name';
+
+            const capWrap = document.createElement('div');
+            capWrap.className = 'wealth-capital-wrap';
+            const capPrefix = document.createElement('span');
+            capPrefix.className = 'wealth-prefix';
+            capPrefix.textContent = 'CAP $';
+            const capInput = document.createElement('input');
+            capInput.type = 'number';
+            capInput.className = 'wealth-capital-input';
+            capInput.placeholder = '0.00';
+            capInput.step = '0.01';
+            capInput.value = p.capital || '';
+            capInput.dataset.role = 'wealth-capital';
+            capWrap.append(capPrefix, capInput);
+
+            const glEl = document.createElement('span');
+            const glVal = Number(p.gl) || 0;
+            glEl.className = 'wealth-gl-display ' + (glVal >= 0 ? 'pos' : 'neg');
+            glEl.textContent = 'G/L ' + WealthModule.fmt(glVal);
+
+            const pmToggle = document.createElement('div');
+            pmToggle.className = 'wealth-pm-toggle';
+            const plusBtn = document.createElement('button');
+            plusBtn.type = 'button';
+            plusBtn.className = 'wealth-pm-btn plus' + ((p._dir || '+') === '+' ? ' active' : '');
+            plusBtn.textContent = '+';
+            plusBtn.dataset.role = 'wealth-pm';
+            plusBtn.dataset.dir = '+';
+            const minusBtn = document.createElement('button');
+            minusBtn.type = 'button';
+            minusBtn.className = 'wealth-pm-btn minus' + ((p._dir || '+') === '-' ? ' active' : '');
+            minusBtn.textContent = '−';
+            minusBtn.dataset.role = 'wealth-pm';
+            minusBtn.dataset.dir = '-';
+            pmToggle.append(plusBtn, minusBtn);
+
+            const amtWrap = document.createElement('div');
+            amtWrap.className = 'wealth-amount-wrap';
+            const amtPrefix = document.createElement('span');
+            amtPrefix.className = 'wealth-prefix';
+            amtPrefix.textContent = '$';
+            const amtInput = document.createElement('input');
+            amtInput.type = 'number';
+            amtInput.className = 'wealth-amount-input';
+            amtInput.placeholder = 'Amount';
+            amtInput.step = '0.01';
+            amtInput.dataset.role = 'wealth-amount';
+            amtWrap.append(amtPrefix, amtInput);
+
+            const enterBtn = document.createElement('button');
+            enterBtn.type = 'button';
+            enterBtn.className = 'wealth-enter-btn';
+            enterBtn.textContent = 'Enter';
+            enterBtn.dataset.role = 'wealth-enter';
+
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'del-btn';
+            delBtn.textContent = 'DEL';
+            delBtn.dataset.role = 'wealth-del';
+
+            row.append(nameEl, capWrap, glEl, pmToggle, amtWrap, enterBtn, delBtn);
+            listEl.appendChild(row);
+        });
+
+        const capEl = document.getElementById('wealth-total-capital');
+        if (capEl) capEl.textContent = WealthModule.fmt(totalCapital);
+        const glEl2 = document.getElementById('wealth-total-gl');
+        if (glEl2) {
+            glEl2.textContent = WealthModule.fmt(totalGl);
+            glEl2.style.color = totalGl >= 0 ? 'var(--stark-green)' : 'var(--stark-red)';
+        }
+    },
+
+    add() {
+        WealthModule.data.push({ id: 'wp_' + Date.now(), name: '', capital: 0, gl: 0, _dir: '+' });
+        WealthModule.triggerSave();
+        WealthModule.render();
+        const listEl = document.getElementById('wealth-list');
+        const lastInput = listEl?.lastElementChild?.querySelector('[data-role=wealth-name]');
+        if (lastInput) lastInput.focus();
+    },
+
+    clearAll() {
+        WealthModule.data = [];
+        WealthModule.triggerSave();
+        WealthModule.render();
+        Utils.setStatus('WEALTH_CLEARED', 'success');
+    },
+
+    handleInput(e) {
+        const role = e.target.dataset.role;
+        const row  = e.target.closest('.wealth-proj-row');
+        if (!row) return;
+        const proj = WealthModule.data.find(p => p.id === row.dataset.wid);
+        if (!proj) return;
+        if (role === 'wealth-name')    proj.name = e.target.value;
+        if (role === 'wealth-capital') {
+            proj.capital = parseFloat(e.target.value) || 0;
+            WealthModule.render();
+        }
+        WealthModule.triggerSave();
+    },
+
+    handleClick(e) {
+        const t = e.target;
+        const role = t.dataset.role;
+        const row  = t.closest('.wealth-proj-row');
+        if (!row) return;
+        const proj = WealthModule.data.find(p => p.id === row.dataset.wid);
+        if (!proj) return;
+
+        if (role === 'wealth-pm') {
+            proj._dir = t.dataset.dir;
+            row.querySelectorAll('.wealth-pm-btn').forEach(b => b.classList.remove('active'));
+            t.classList.add('active');
+        } else if (role === 'wealth-enter') {
+            const amtInput = row.querySelector('[data-role=wealth-amount]');
+            const amt = parseFloat(amtInput?.value) || 0;
+            if (!amt) return;
+            proj.gl = (Number(proj.gl) || 0) + ((proj._dir || '+') === '-' ? -amt : amt);
+            if (amtInput) amtInput.value = '';
+            WealthModule.triggerSave();
+            WealthModule.render();
+        } else if (role === 'wealth-del') {
+            if (!t.dataset.confirming) {
+                t.dataset.confirming = '1';
+                t.textContent = 'OK?';
+                t.style.background = 'rgba(255,62,62,0.2)';
+                setTimeout(() => {
+                    if (t.dataset.confirming) {
+                        delete t.dataset.confirming;
+                        t.textContent = 'DEL';
+                        t.style.background = '';
+                    }
+                }, 2000);
+                return;
+            }
+            WealthModule.data = WealthModule.data.filter(p => p.id !== proj.id);
+            WealthModule.triggerSave();
+            WealthModule.render();
+        }
+    },
+
+    triggerSave() {
+        try { localStorage.setItem(WealthModule._lsKey(), JSON.stringify(WealthModule.data)); } catch {}
+        clearTimeout(WealthModule._saveTimer);
+        WealthModule._saveTimer = setTimeout(async () => {
+            try { await SB.saveWealth(MemberModule.current(), WealthModule.data); }
+            catch(e) { Utils.setStatus('WEALTH_SAVE_ERR · LOCAL_SAVED', 'error'); }
+        }, 1200);
+    },
+};
+
 const LongTermModule = {
     data: [],
     _saveTimer: null,
@@ -7394,6 +7713,11 @@ const Sync = {
                     try { localStorage.setItem(HabitModule._lsKey(), JSON.stringify(data.habits)); } catch {}
                     HabitModule.render();
                 }
+                if (Array.isArray(data.wealth)) {
+                    WealthModule.data = data.wealth;
+                    try { localStorage.setItem(WealthModule._lsKey(), JSON.stringify(WealthModule.data)); } catch {}
+                    WealthModule.render();
+                }
                 if (Array.isArray(data.templates)) {
                     const goalTmpls = data.templates.filter(t => t.type === 'goal');
                     const planTmpls = data.templates.filter(t => t.type === 'plan');
@@ -7919,6 +8243,19 @@ const Events = {
         const btnTmpl = document.getElementById('btn-tmpl');
         if (btnTmpl) btnTmpl.addEventListener('click', () => GoalTemplateModule.togglePanel());
 
+        // Plan 標題日期點擊 → 打開日期選擇器
+        const planDateLabel = document.getElementById('plan-date-label');
+        if (planDateLabel) {
+            planDateLabel.addEventListener('click', () => {
+                if (typeof DOM.datePicker.showPicker === 'function') {
+                    try { DOM.datePicker.showPicker(); } catch { DOM.datePicker.click(); }
+                } else {
+                    DOM.datePicker.focus();
+                    DOM.datePicker.click();
+                }
+            });
+        }
+
         // PLAN RESET 事件（雙擊確認）
         const btnPlanReset = document.getElementById('btn-plan-reset');
         if (btnPlanReset) {
@@ -7971,6 +8308,44 @@ const Events = {
         }
         const btnHabitAdd = document.getElementById('btn-habit-add');
         if (btnHabitAdd) btnHabitAdd.addEventListener('click', () => HabitModule.add());
+
+        // WEALTH HUD 事件
+        const wealthList = document.getElementById('wealth-list');
+        if (wealthList) {
+            wealthList.addEventListener('input', WealthModule.handleInput);
+            wealthList.addEventListener('click', WealthModule.handleClick);
+        }
+        const btnWealthAdd = document.getElementById('btn-wealth-add');
+        if (btnWealthAdd) btnWealthAdd.addEventListener('click', () => WealthModule.add());
+
+        const btnWealthReset = document.getElementById('btn-wealth-reset');
+        if (btnWealthReset) {
+            btnWealthReset.addEventListener('click', () => {
+                if (!btnWealthReset.dataset.confirming) {
+                    btnWealthReset.dataset.confirming = '1';
+                    btnWealthReset.textContent = 'OK?';
+                    btnWealthReset.style.background = 'rgba(255,62,62,0.2)';
+                    btnWealthReset.style.borderColor = 'var(--stark-red)';
+                    btnWealthReset.style.color = 'var(--stark-red)';
+                    setTimeout(() => {
+                        if (btnWealthReset.dataset.confirming) {
+                            delete btnWealthReset.dataset.confirming;
+                            btnWealthReset.textContent = 'RESET';
+                            btnWealthReset.style.background = '';
+                            btnWealthReset.style.borderColor = '';
+                            btnWealthReset.style.color = '';
+                        }
+                    }, 2000);
+                    return;
+                }
+                delete btnWealthReset.dataset.confirming;
+                btnWealthReset.textContent = 'RESET';
+                btnWealthReset.style.background = '';
+                btnWealthReset.style.borderColor = '';
+                btnWealthReset.style.color = '';
+                WealthModule.clearAll();
+            });
+        }
 
         // LONGTERM GOAL 事件
         const ltList = document.getElementById('lt-goal-list');
@@ -9410,7 +9785,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.50';
+    const CURRENT_VERSION = 'v3.53';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

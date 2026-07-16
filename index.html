@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.99">
+    <meta name="version" content="v4.02">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.99</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.02</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3160,7 +3160,7 @@
             justify-content: flex-start;
         }
         .wealth-line-datecap {
-            display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+            display: flex; width: 100%; align-items: center; gap: 8px;
             padding-top: 6px; border-top: 1px solid rgba(0,242,255,0.08);
         }
         .wealth-line2-group {
@@ -3217,7 +3217,7 @@
         }
 
         .wealth-date-wrap {
-            display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+            display: flex; align-items: center; gap: 4px; flex: 1; width: 100%;
         }
         .wealth-date-arrow {
             background: transparent;
@@ -3230,9 +3230,8 @@
         }
         .wealth-date-arrow:hover { background: rgba(0,242,255,0.12); box-shadow: 0 0 6px rgba(0,242,255,0.3); }
         .wealth-date-input {
-            flex-shrink: 0;
-            width: 195px;
-            min-width: 195px;
+            flex: 1;
+            width: 100%;
             box-sizing: border-box;
             color-scheme: dark;
             font-size: 0.7rem;
@@ -3243,12 +3242,12 @@
         }
 
         .wealth-pm-toggle {
-            display: flex; flex-shrink: 0; gap: 2px;
+            display: flex; flex-shrink: 0; gap: 10px;
         }
         .wealth-pm-btn {
             background: transparent; border: 1px solid;
-            font-family: 'Orbitron'; font-size: 0.7rem; font-weight: 900;
-            width: 26px; height: 26px; cursor: pointer; border-radius: 3px;
+            font-family: 'Orbitron'; font-size: 0.85rem; font-weight: 900;
+            width: 68px; height: 34px; cursor: pointer; border-radius: 3px;
             transition: 0.2s;
         }
         .wealth-pm-btn.plus  { color: var(--stark-green); border-color: var(--stark-green); }
@@ -3256,11 +3255,13 @@
         .wealth-pm-btn.active.plus  { background: rgba(0,255,136,0.2); }
         .wealth-pm-btn.active.minus { background: rgba(255,62,62,0.2); }
         .wealth-amount-input {
-            width: 90px;
+            width: 100px;
+            height: 34px;
+            box-sizing: border-box;
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,242,255,0.3);
-            color: #fff; font-family: 'Orbitron'; font-size: 0.7rem;
-            padding: 6px 7px; outline: none; flex-shrink: 0;
+            color: #fff; font-family: 'Orbitron'; font-size: 0.85rem;
+            padding: 6px 8px; outline: none; flex-shrink: 0;
             -moz-appearance: textfield;
             appearance: textfield;
         }
@@ -3273,18 +3274,22 @@
             background: rgba(0,242,255,0.12);
             border: 1px solid var(--stark-cyan);
             color: var(--stark-cyan);
-            font-family: 'Orbitron'; font-size: 0.9rem; font-weight: 900;
-            padding: 5px 10px; cursor: pointer; border-radius: 3px;
+            font-family: 'Orbitron'; font-size: 1rem; font-weight: 900;
+            width: 34px; height: 34px;
+            cursor: pointer; border-radius: 3px;
             flex-shrink: 0; transition: 0.2s;
-            line-height: 1;
+            line-height: 1; display: flex; align-items: center; justify-content: center;
+            box-sizing: border-box;
         }
         .wealth-enter-btn:hover { background: rgba(0,242,255,0.25); }
         .wealth-cat-select {
+            height: 34px;
+            box-sizing: border-box;
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,242,255,0.3);
             color: var(--stark-cyan);
-            font-family: 'Orbitron'; font-size: 0.7rem; font-weight: 900;
-            padding: 5px 6px; outline: none; cursor: pointer; flex-shrink: 0;
+            font-family: 'Orbitron'; font-size: 0.85rem; font-weight: 900;
+            padding: 6px 8px; outline: none; cursor: pointer; flex-shrink: 0;
             -webkit-appearance: none; appearance: none;
         }
         .wealth-report-cat {
@@ -3579,12 +3584,13 @@
             .wealth-proj-name { min-width: 70px !important; font-size: 0.95rem !important; }
             .wealth-capital-input { width: 70px !important; font-size: 0.6rem !important; }
             .wealth-gl-display { font-size: 0.62rem !important; min-width: 50px !important; padding: 3px 5px !important; }
-            .wealth-amount-input { width: 60px !important; font-size: 0.6rem !important; }
-            .wealth-date-input { width: 58px !important; font-size: 0.56rem !important; }
+            .wealth-amount-input { width: 78px !important; height: 28px !important; font-size: 0.68rem !important; padding: 4px 6px !important; }
+            .wealth-date-input { font-size: 0.56rem !important; }
             .wealth-date-arrow { padding: 3px 6px !important; font-size: 0.6rem !important; }
-            .wealth-pm-btn { width: 20px !important; height: 20px !important; font-size: 0.6rem !important; }
-            .wealth-cat-select { font-size: 0.5rem !important; padding: 3px 2px !important; width: 58px !important; max-width: 58px !important; box-sizing: border-box !important; }
-            .wealth-enter-btn { font-size: 0.8rem !important; padding: 3px 8px !important; }
+            .wealth-pm-btn { width: 56px !important; height: 28px !important; font-size: 0.68rem !important; }
+            .wealth-pm-toggle { gap: 8px !important; }
+            .wealth-cat-select { font-size: 0.62rem !important; padding: 4px 4px !important; height: 28px !important; width: 66px !important; max-width: 66px !important; box-sizing: border-box !important; }
+            .wealth-enter-btn { font-size: 0.85rem !important; width: 28px !important; height: 28px !important; padding: 0 !important; }
             .wealth-last-entry { display: none; }
         }
             @media (max-width: 768px) {
@@ -3646,7 +3652,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.99</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.02</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5766,7 +5772,7 @@ const WealthModule = {
             midGroup.className = 'wealth-line2-group';
             midGroup.append(pmToggle, amtWrap, catSelect);
 
-            lineDateCap.append(dateWrap, capWrap);
+            lineDateCap.append(dateWrap);
             line2.append(midGroup, enterBtn);
 
             // ── 第三行：REPORT / 最近記錄 / DEL ──
@@ -5778,7 +5784,7 @@ const WealthModule = {
             const count = (p.entries || []).length;
             reportBtn.textContent = `REPORT (${count})`;
             reportBtn.dataset.role = 'wealth-report-open';
-            line3.append(reportBtn, historyEl, delBtn);
+            line3.append(capWrap, reportBtn, historyEl, delBtn);
 
             row.append(line1, lineDateCap, line2, line3);
             listEl.appendChild(row);
@@ -9976,7 +9982,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.99';
+    const CURRENT_VERSION = 'v4.02';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

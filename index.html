@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.79">
+    <meta name="version" content="v3.82">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.79</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.82</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3665,7 +3665,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.79</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.82</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5638,33 +5638,30 @@ const WealthModule = {
         let maxAbs = 1;
         rows.forEach(r => { maxAbs = Math.max(maxAbs, Math.abs(r.value)); });
 
-        const rowH    = 26;
-        const labelW  = 46;
-        const chartW  = 240;
-        const centerX = labelW + chartW / 2;
-        const halfW   = chartW / 2 - 6;
-        const width   = labelW + chartW + 70; // 右側預留金額文字空間
-        const height  = rows.length * rowH + 10;
+        const rowH   = 36;
+        const labelW = 52;
+        const barX0  = labelW + 6;   // 所有柱子統一從這裡開始
+        const chartW = 220;          // 柱子最大延伸長度
+        const width  = barX0 + chartW + 70; // 右側預留金額文字空間
+        const height = rows.length * rowH + 10;
 
-        let svg = `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`;
-        svg += `<line x1="${centerX}" y1="0" x2="${centerX}" y2="${height}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
+        let svg = `<svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" preserveAspectRatio="xMinYMid meet" xmlns="http://www.w3.org/2000/svg">`;
+        svg += `<line x1="${barX0}" y1="0" x2="${barX0}" y2="${height}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
 
         rows.forEach((r, i) => {
             const y = 5 + i * rowH;
-            const barH = 14;
-            const barW = Math.abs(r.value) / maxAbs * halfW;
+            const barH = 22;
+            const barW = Math.abs(r.value) / maxAbs * chartW;
             const isPos = r.value >= 0;
             const color = isPos ? 'var(--stark-green)' : 'var(--stark-red)';
-            const x = isPos ? centerX : centerX - barW;
 
-            svg += `<text x="${labelW - 6}" y="${y + barH/2 + 4}" font-size="10" fill="rgba(255,255,255,0.7)" font-family="Orbitron" font-weight="700" text-anchor="end">${r.label}</text>`;
-            svg += `<rect x="${x}" y="${y}" width="${Math.max(barW,1)}" height="${barH}" fill="${color}" opacity="0.85" rx="2">`;
+            svg += `<text x="${labelW - 6}" y="${y + barH/2 + 4}" font-size="12" fill="rgba(255,255,255,0.7)" font-family="Orbitron" font-weight="700" text-anchor="end">${r.label}</text>`;
+            svg += `<rect x="${barX0}" y="${y}" width="${Math.max(barW,1)}" height="${barH}" fill="${color}" opacity="0.85" rx="2">`;
             svg += `<title>${projects[i].name || 'Untitled'} · ${WealthModule.fmt(r.value)}</title>`;
             svg += `</rect>`;
 
-            const amtX = isPos ? centerX + barW + 6 : centerX - barW - 6;
-            const anchor = isPos ? 'start' : 'end';
-            svg += `<text x="${amtX}" y="${y + barH/2 + 4}" font-size="10" fill="${color}" font-family="Orbitron" font-weight="700" text-anchor="${anchor}">${WealthModule.fmt(r.value)}</text>`;
+            const amtX = barX0 + barW + 6;
+            svg += `<text x="${amtX}" y="${y + barH/2 + 4}" font-size="12" fill="${color}" font-family="Orbitron" font-weight="700" text-anchor="start">${WealthModule.fmt(r.value)}</text>`;
         });
 
         svg += `</svg>`;
@@ -10249,7 +10246,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.79';
+    const CURRENT_VERSION = 'v3.82';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.98">
+    <meta name="version" content="v3.99">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.98</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.99</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3159,6 +3159,10 @@
             padding-top: 6px; border-top: 1px solid rgba(0,242,255,0.08);
             justify-content: flex-start;
         }
+        .wealth-line-datecap {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+            padding-top: 6px; border-top: 1px solid rgba(0,242,255,0.08);
+        }
         .wealth-line2-group {
             display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
         }
@@ -3561,7 +3565,7 @@
             }
 
             /* WEALTH HUD — 手機版盡量同一行 */
-            .wealth-line1, .wealth-line2, .wealth-line3 {
+            .wealth-line1, .wealth-line2, .wealth-line3, .wealth-line-datecap {
                 flex-wrap: nowrap !important;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
@@ -3642,7 +3646,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.98</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.99</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5677,6 +5681,10 @@ const WealthModule = {
 
             line1.append(nameEl, glEl, investEl);
 
+            // ── 新增行：Date + Cap $ ──
+            const lineDateCap = document.createElement('div');
+            lineDateCap.className = 'wealth-line-datecap';
+
             // ── 第二行：手動 G/L 記錄（日期 + +/- + 金額 + Enter）+ DEL ──
             const line2 = document.createElement('div');
             line2.className = 'wealth-line2';
@@ -5758,7 +5766,8 @@ const WealthModule = {
             midGroup.className = 'wealth-line2-group';
             midGroup.append(pmToggle, amtWrap, catSelect);
 
-            line2.append(dateWrap, midGroup, enterBtn);
+            lineDateCap.append(dateWrap, capWrap);
+            line2.append(midGroup, enterBtn);
 
             // ── 第三行：REPORT / 最近記錄 / DEL ──
             const line3 = document.createElement('div');
@@ -5769,9 +5778,9 @@ const WealthModule = {
             const count = (p.entries || []).length;
             reportBtn.textContent = `REPORT (${count})`;
             reportBtn.dataset.role = 'wealth-report-open';
-            line3.append(capWrap, reportBtn, historyEl, delBtn);
+            line3.append(reportBtn, historyEl, delBtn);
 
-            row.append(line1, line2, line3);
+            row.append(line1, lineDateCap, line2, line3);
             listEl.appendChild(row);
         });
 
@@ -9967,7 +9976,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.98';
+    const CURRENT_VERSION = 'v3.99';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

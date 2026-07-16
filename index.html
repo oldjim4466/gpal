@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.02">
+    <meta name="version" content="v4.03">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.02</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.03</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3175,8 +3175,17 @@
         .wealth-proj-name:focus { border-bottom-color: rgba(0,242,255,0.6); }
         .wealth-proj-name::placeholder { color: rgba(255,255,255,0.3); }
         .wealth-capital-wrap, .wealth-amount-wrap {
-            display: flex; align-items: center; flex-shrink: 0;
+            display: flex; align-items: center; flex-shrink: 0; gap: 6px;
         }
+        .wealth-cap-update-btn {
+            background: rgba(0,242,255,0.12);
+            border: 1px solid var(--stark-cyan);
+            color: var(--stark-cyan);
+            font-family: 'Orbitron'; font-size: 0.62rem; font-weight: 900;
+            padding: 6px 10px; cursor: pointer; border-radius: 3px;
+            flex-shrink: 0; transition: 0.2s;
+        }
+        .wealth-cap-update-btn:hover { background: rgba(0,242,255,0.25); }
         .wealth-prefix {
             background: rgba(0,242,255,0.12);
             border: 1px solid rgba(0,242,255,0.3);
@@ -3583,6 +3592,7 @@
             }
             .wealth-proj-name { min-width: 70px !important; font-size: 0.95rem !important; }
             .wealth-capital-input { width: 70px !important; font-size: 0.6rem !important; }
+            .wealth-cap-update-btn { font-size: 0.5rem !important; padding: 4px 7px !important; }
             .wealth-gl-display { font-size: 0.62rem !important; min-width: 50px !important; padding: 3px 5px !important; }
             .wealth-amount-input { width: 78px !important; height: 28px !important; font-size: 0.68rem !important; padding: 4px 6px !important; }
             .wealth-date-input { font-size: 0.56rem !important; }
@@ -3652,7 +3662,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.02</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.03</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5679,7 +5689,12 @@ const WealthModule = {
             capInput.step = '0.01';
             capInput.value = p.capital || '';
             capInput.dataset.role = 'wealth-capital';
-            capWrap.append(capPrefix, capInput);
+            const capUpdateBtn = document.createElement('button');
+            capUpdateBtn.type = 'button';
+            capUpdateBtn.className = 'wealth-cap-update-btn';
+            capUpdateBtn.textContent = 'Update';
+            capUpdateBtn.dataset.role = 'wealth-cap-update';
+            capWrap.append(capPrefix, capInput, capUpdateBtn);
 
             const investEl = document.createElement('span');
             investEl.className = 'wealth-gl-display';
@@ -5881,6 +5896,22 @@ const WealthModule = {
             WealthModule.render();
         } else if (role === 'wealth-report-open') {
             WealthModule.openReport(proj.id);
+        } else if (role === 'wealth-cap-update') {
+            const capInput = row.querySelector('[data-role=wealth-capital]');
+            proj.capital = parseFloat(capInput?.value) || 0;
+            const gl = WealthModule.calcGl(proj);
+            const glEl = row.querySelector('.wealth-gl-display');
+            if (glEl) {
+                glEl.className = 'wealth-gl-display ' + (gl >= 0 ? 'pos' : 'neg');
+                glEl.textContent = 'G/L ' + WealthModule.fmt(gl);
+            }
+            WealthModule.updateSummaryOnly();
+            WealthModule.renderChart();
+            WealthModule.triggerSave();
+            // 視覺確認
+            t.textContent = '✓';
+            t.style.background = 'rgba(0,255,136,0.2)';
+            setTimeout(() => { t.textContent = 'Update'; t.style.background = ''; }, 1000);
         } else if (role === 'wealth-del') {
             if (!t.dataset.confirming) {
                 t.dataset.confirming = '1';
@@ -9982,7 +10013,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.02';
+    const CURRENT_VERSION = 'v4.03';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

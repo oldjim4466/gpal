@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.76">
+    <meta name="version" content="v3.79">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.76</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.79</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3153,6 +3153,36 @@
             font-variant-numeric: tabular-nums; letter-spacing: 1px;
             color: var(--stark-cyan);
         }
+        .wealth-chart-wrap {
+            margin-bottom: 12px; padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(0,242,255,0.15);
+            border-radius: 4px;
+        }
+        .wealth-chart-title {
+            font-family: 'Orbitron'; font-size: 0.55rem;
+            letter-spacing: 1.5px; color: rgba(255,255,255,0.45);
+            margin-bottom: 8px;
+        }
+        .wealth-chart-scroll {
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+        }
+        .wealth-chart-legend {
+            display: flex; flex-wrap: wrap; gap: 10px;
+            margin-top: 8px;
+        }
+        .wealth-chart-legend-item {
+            display: flex; align-items: center; gap: 5px;
+            font-family: 'Rajdhani'; font-size: 0.75rem;
+            color: rgba(255,255,255,0.65);
+        }
+        .wealth-chart-legend-swatch {
+            width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+        }
+        .wealth-chart-empty {
+            font-family: 'Rajdhani'; font-size: 0.85rem;
+            color: rgba(255,255,255,0.3); text-align: center; padding: 20px 0;
+        }
         .wealth-list {
             display: flex; flex-direction: column; gap: 8px;
         }
@@ -3635,7 +3665,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.76</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.79</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3803,6 +3833,11 @@
                 <div class="wealth-summary-label">TOTAL G/L</div>
                 <div class="wealth-summary-value" id="wealth-total-gl">$0</div>
             </div>
+        </div>
+        <div class="wealth-chart-wrap" id="wealth-chart-wrap">
+            <div class="wealth-chart-title">TOTAL G/L BY PROJECT</div>
+            <div class="wealth-chart-scroll" id="wealth-chart-scroll"></div>
+            <div class="wealth-chart-legend" id="wealth-chart-legend"></div>
         </div>
         <div class="wealth-list" id="wealth-list"></div>
     </section>
@@ -5582,6 +5617,60 @@ const WealthModule = {
         }
     },
 
+    // 每個 project 的總 G/L 橫向柱狀圖（正=綠，負=紅）
+    renderChart() {
+        const scrollEl = document.getElementById('wealth-chart-scroll');
+        const legendEl = document.getElementById('wealth-chart-legend');
+        if (!scrollEl || !legendEl) return;
+        legendEl.replaceChildren(); // 不再需要圖例（顏色只代表正/負）
+
+        const projects = WealthModule.data;
+        if (!projects.length) {
+            scrollEl.innerHTML = '<div class="wealth-chart-empty">尚無資料可繪圖</div>';
+            return;
+        }
+
+        const rows = projects.map(p => ({
+            label: (p.name || 'Untitled').slice(0, 5),
+            value: WealthModule.calcGl(p),
+        }));
+
+        let maxAbs = 1;
+        rows.forEach(r => { maxAbs = Math.max(maxAbs, Math.abs(r.value)); });
+
+        const rowH    = 26;
+        const labelW  = 46;
+        const chartW  = 240;
+        const centerX = labelW + chartW / 2;
+        const halfW   = chartW / 2 - 6;
+        const width   = labelW + chartW + 70; // 右側預留金額文字空間
+        const height  = rows.length * rowH + 10;
+
+        let svg = `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">`;
+        svg += `<line x1="${centerX}" y1="0" x2="${centerX}" y2="${height}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
+
+        rows.forEach((r, i) => {
+            const y = 5 + i * rowH;
+            const barH = 14;
+            const barW = Math.abs(r.value) / maxAbs * halfW;
+            const isPos = r.value >= 0;
+            const color = isPos ? 'var(--stark-green)' : 'var(--stark-red)';
+            const x = isPos ? centerX : centerX - barW;
+
+            svg += `<text x="${labelW - 6}" y="${y + barH/2 + 4}" font-size="10" fill="rgba(255,255,255,0.7)" font-family="Orbitron" font-weight="700" text-anchor="end">${r.label}</text>`;
+            svg += `<rect x="${x}" y="${y}" width="${Math.max(barW,1)}" height="${barH}" fill="${color}" opacity="0.85" rx="2">`;
+            svg += `<title>${projects[i].name || 'Untitled'} · ${WealthModule.fmt(r.value)}</title>`;
+            svg += `</rect>`;
+
+            const amtX = isPos ? centerX + barW + 6 : centerX - barW - 6;
+            const anchor = isPos ? 'start' : 'end';
+            svg += `<text x="${amtX}" y="${y + barH/2 + 4}" font-size="10" fill="${color}" font-family="Orbitron" font-weight="700" text-anchor="${anchor}">${WealthModule.fmt(r.value)}</text>`;
+        });
+
+        svg += `</svg>`;
+        scrollEl.innerHTML = svg;
+    },
+
     _todayStr() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -5739,6 +5828,7 @@ const WealthModule = {
             glEl2.textContent = WealthModule.fmt(totalGl);
             glEl2.style.color = totalGl >= 0 ? 'var(--stark-green)' : 'var(--stark-red)';
         }
+        WealthModule.renderChart();
     },
 
     add() {
@@ -10159,7 +10249,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.76';
+    const CURRENT_VERSION = 'v3.79';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

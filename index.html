@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.04">
+    <meta name="version" content="v4.05">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.04</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.05</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3256,13 +3256,13 @@
         .wealth-pm-btn {
             background: transparent; border: 1px solid;
             font-family: 'Orbitron'; font-size: 0.85rem; font-weight: 900;
-            width: 68px; height: 34px; cursor: pointer; border-radius: 3px;
+            width: 54px; height: 27px; cursor: pointer; border-radius: 3px;
             transition: 0.2s;
         }
         .wealth-pm-btn.plus  { color: var(--stark-green); border-color: var(--stark-green); }
         .wealth-pm-btn.minus { color: var(--stark-red);   border-color: var(--stark-red); }
-        .wealth-pm-btn.active.plus  { background: rgba(0,255,136,0.2); }
-        .wealth-pm-btn.active.minus { background: rgba(255,62,62,0.2); }
+        .wealth-pm-btn.active.plus  { background: rgba(0,255,136,0.35); box-shadow: 0 0 12px rgba(0,255,136,0.7); }
+        .wealth-pm-btn.active.minus { background: rgba(255,62,62,0.35); box-shadow: 0 0 12px rgba(255,62,62,0.7); }
         .wealth-amount-input {
             width: 100px;
             height: 34px;
@@ -3597,7 +3597,7 @@
             .wealth-amount-input { width: 78px !important; height: 28px !important; font-size: 0.68rem !important; padding: 4px 6px !important; }
             .wealth-date-input { font-size: 0.56rem !important; }
             .wealth-date-arrow { padding: 3px 6px !important; font-size: 0.6rem !important; }
-            .wealth-pm-btn { width: 56px !important; height: 28px !important; font-size: 0.68rem !important; }
+            .wealth-pm-btn { width: 45px !important; height: 22px !important; font-size: 0.68rem !important; }
             .wealth-pm-toggle { gap: 8px !important; }
             .wealth-cat-select { font-size: 0.62rem !important; padding: 4px 4px !important; height: 28px !important; width: 66px !important; max-width: 66px !important; box-sizing: border-box !important; }
             .wealth-enter-btn { font-size: 0.85rem !important; width: 28px !important; height: 28px !important; padding: 0 !important; }
@@ -3662,7 +3662,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.04</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.05</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -10013,7 +10013,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.04';
+    const CURRENT_VERSION = 'v4.05';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

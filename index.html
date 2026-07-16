@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.05">
+    <meta name="version" content="v4.06">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.05</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.06</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3662,7 +3662,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.05</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.06</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -8621,7 +8621,7 @@ const Events = {
 
         // COPY PLAN 按鈕（已移至每行，此區塊保留以防舊版引用）
 
-        // UPLOAD TO CLOUD 按鈕
+        // UPLOAD TO CLOUD 按鈕（強制立即儲存全部：Goal/Plan/Action/Learn + LongTerm + Wealth）
         document.querySelector('[data-action="sync"]').addEventListener('click', async (e) => {
             const btn = e.currentTarget;
             if (btn.disabled) return;
@@ -8629,6 +8629,15 @@ const Events = {
             btn.textContent = 'UPLOADING...';
             try {
                 await Sync.save('MANUAL');
+
+                // 強制立即儲存 LongTerm Goals（跳過原本的 debounce）
+                clearTimeout(LongTermModule._saveTimer);
+                await SB.saveLongterm(MemberModule.current(), LongTermModule.data);
+
+                // 強制立即儲存 Wealth HUD（跳過原本的 debounce）
+                clearTimeout(WealthModule._saveTimer);
+                await SB.saveWealth(MemberModule.current(), WealthModule.data);
+
                 btn.textContent = 'UPLOAD DONE ✓';
                 btn.style.borderColor = 'var(--stark-green)';
                 btn.style.color = 'var(--stark-green)';
@@ -10013,7 +10022,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.05';
+    const CURRENT_VERSION = 'v4.06';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

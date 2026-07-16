@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.06">
+    <meta name="version" content="v4.07">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.06</title>
+    <title>GPAL FAMILY v4.07</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1949,7 +1949,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.06</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.07</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3394,15 +3394,24 @@ const LongTermModule = {
         LongTermModule._dataVersion++;
         try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
         if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
+        const targetMember = MemberModule.current(); // 立刻鎖定當下成員，避免之後切換成員造成寫錯人
+        const snapshot = LongTermModule.data;
         LongTermModule._saveTimer = setTimeout(async () => {
             try {
-                await SB.saveLongterm(MemberModule.current(), LongTermModule.data);
-                const json = { success: true };
-                if (!json.success) throw new Error('save failed');
+                await SB.saveLongterm(targetMember, snapshot);
             } catch(e) {
                 Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error');
             }
         }, 3000);
+    },
+
+    // 立即執行還未儲存的變更（跳過 debounce），在切換成員/日期前呼叫，避免資料遺失或寫錯人
+    async flushSave() {
+        if (!LongTermModule._saveTimer) return;
+        clearTimeout(LongTermModule._saveTimer);
+        LongTermModule._saveTimer = null;
+        try { await SB.saveLongterm(MemberModule.current(), LongTermModule.data); }
+        catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
     },
 
     render() {
@@ -4240,13 +4249,22 @@ const HabitModule = {
     _scheduleSave() {
         try { localStorage.setItem(HabitModule._lsKey(), JSON.stringify(HabitModule.data)); } catch {}
         if (HabitModule._saveTimer) clearTimeout(HabitModule._saveTimer);
+        const targetMember = MemberModule.current(); // 立刻鎖定當下成員，避免之後切換成員造成寫錯人
+        const snapshot = HabitModule.data;
         HabitModule._saveTimer = setTimeout(async () => {
             try {
-                await SB.saveHabit(MemberModule.current(), HabitModule.data);
-                const json = { success: true };
-                if (!json.success) throw new Error('save failed');
+                await SB.saveHabit(targetMember, snapshot);
             } catch { Utils.setStatus('HABIT_SAVE_ERR · LOCAL_SAVED', 'error'); }
         }, 3000);
+    },
+
+    // 立即執行還未儲存的變更（跳過 debounce），在切換成員/日期前呼叫，避免資料遺失或寫錯人
+    async flushSave() {
+        if (!HabitModule._saveTimer) return;
+        clearTimeout(HabitModule._saveTimer);
+        HabitModule._saveTimer = null;
+        try { await SB.saveHabit(MemberModule.current(), HabitModule.data); }
+        catch(e) { Utils.setStatus('HABIT_SAVE_ERR · LOCAL_SAVED', 'error'); }
     },
 
     render() {
@@ -4884,9 +4902,14 @@ const MemberModule = {
         return MemberModule.MEMBERS.includes(v) ? v : 'dad';
     },
 
-    select(name) {
+    async select(name) {
         if (!MemberModule.MEMBERS.includes(name)) return;
         if (name === MemberModule.current()) return; // 已是當前成員
+
+        // 切換成員前，先把還沒存的 LongTerm / Habit 變更立即存到「原本」的成員
+        await LongTermModule.flushSave();
+        await HabitModule.flushSave();
+
         localStorage.setItem(MemberModule.LS_KEY, name);
         MemberModule.updateUI();
         // 不刪快取（各成員獨立快取），即時從本地載入
@@ -5559,15 +5582,8 @@ const Events = {
             btn.textContent = 'UPLOADING...';
             try {
                 await Sync.save('MANUAL');
-
-                // 強制立即儲存 LongTerm Goals（跳過原本的 debounce）
-                clearTimeout(LongTermModule._saveTimer);
-                await SB.saveLongterm(MemberModule.current(), LongTermModule.data);
-
-                // 強制立即儲存 Habit Tracker（跳過原本的 debounce）
-                clearTimeout(HabitModule._saveTimer);
-                await SB.saveHabit(MemberModule.current(), HabitModule.data);
-
+                await LongTermModule.flushSave();
+                await HabitModule.flushSave();
                 btn.textContent = 'UPLOAD DONE ✓';
                 btn.style.borderColor = 'var(--stark-green)';
                 btn.style.color = 'var(--stark-green)';
@@ -5608,6 +5624,8 @@ const Events = {
             Utils.updateDateLabel(DOM.datePicker.value);
             applyDayTheme(DOM.datePicker.value, true);
                             await SaveQueue.flushImmediate();
+            await LongTermModule.flushSave();
+            await HabitModule.flushSave();
             Sync.fetchData();
         });
 
@@ -5644,6 +5662,8 @@ const Events = {
 
     async changeDate(days) {
         await SaveQueue.flushImmediate();
+        await LongTermModule.flushSave();
+        await HabitModule.flushSave();
         const d = new Date(DOM.datePicker.value + 'T12:00:00');
         d.setDate(d.getDate() + days);
         DOM.datePicker.value = `${d.getFullYear()}-${Utils.pad2(d.getMonth() + 1)}-${Utils.pad2(d.getDate())}`;
@@ -5689,7 +5709,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.06 loaded - past dimming active');
+    console.log('[GPAL] Family v4.07 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5728,7 +5748,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.06';
+    const CURRENT_VERSION = 'v4.07';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

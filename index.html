@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.82">
+    <meta name="version" content="v3.89">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.82</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.89</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3196,8 +3196,12 @@
             display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
         }
         .wealth-line2 {
-            display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
             padding-top: 6px; border-top: 1px solid rgba(0,242,255,0.08);
+            justify-content: flex-start;
+        }
+        .wealth-line2-group {
+            display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
         }
         .wealth-proj-name {
             flex: 1 1 120px; min-width: 90px;
@@ -3250,21 +3254,29 @@
         }
 
         .wealth-date-wrap {
-            display: flex; align-items: center; gap: 3px; flex-shrink: 0;
+            display: flex; align-items: center; gap: 4px; flex-shrink: 0;
         }
         .wealth-date-arrow {
             background: transparent;
             border: 1px solid rgba(0,242,255,0.35);
             color: var(--stark-cyan);
-            font-family: 'Orbitron'; font-size: 0.55rem; font-weight: 900;
-            padding: 3px 5px; cursor: pointer; border-radius: 3px;
+            font-family: 'Orbitron'; font-size: 0.7rem; font-weight: 900;
+            padding: 4px 8px; cursor: pointer;
+            transition: 0.2s var(--easing-cyber);
+            flex-shrink: 0; touch-action: manipulation;
         }
+        .wealth-date-arrow:hover { background: rgba(0,242,255,0.12); box-shadow: 0 0 6px rgba(0,242,255,0.3); }
         .wealth-date-input {
+            flex-shrink: 0;
+            width: 108px;
+            min-width: 108px;
+            box-sizing: border-box;
+            color-scheme: dark;
+            font-size: 0.56rem;
+            padding: 5px 6px;
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,242,255,0.3);
-            color: #fff; font-family: 'Orbitron'; font-size: 0.58rem;
-            padding: 4px 5px; outline: none; color-scheme: dark;
-            width: 130px; box-sizing: border-box;
+            color: #fff; font-family: 'Orbitron'; outline: none;
         }
 
         .wealth-pm-toggle {
@@ -3599,8 +3611,8 @@
             .wealth-capital-input { width: 70px !important; font-size: 0.6rem !important; }
             .wealth-gl-display { font-size: 0.62rem !important; min-width: 50px !important; padding: 3px 5px !important; }
             .wealth-amount-input { width: 60px !important; font-size: 0.6rem !important; }
-            .wealth-date-input { width: 88px !important; font-size: 0.48rem !important; }
-            .wealth-date-arrow { padding: 2px 4px !important; font-size: 0.5rem !important; }
+            .wealth-date-input { width: 108px !important; font-size: 0.56rem !important; }
+            .wealth-date-arrow { padding: 3px 6px !important; font-size: 0.6rem !important; }
             .wealth-pm-btn { width: 20px !important; height: 20px !important; font-size: 0.6rem !important; }
             .wealth-cat-select { font-size: 0.5rem !important; padding: 3px 2px !important; max-width: 62px; }
             .wealth-enter-btn { font-size: 0.8rem !important; padding: 3px 8px !important; }
@@ -3665,7 +3677,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.82</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.89</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -5801,7 +5813,11 @@ const WealthModule = {
             delBtn.textContent = 'DEL';
             delBtn.dataset.role = 'wealth-del';
 
-            line2.append(dateWrap, pmToggle, amtWrap, catSelect, enterBtn);
+            const midGroup = document.createElement('div');
+            midGroup.className = 'wealth-line2-group';
+            midGroup.append(pmToggle, amtWrap, catSelect);
+
+            line2.append(dateWrap, midGroup, enterBtn);
 
             // ── 第三行：REPORT / 最近記錄 / DEL ──
             const line3 = document.createElement('div');
@@ -10246,7 +10262,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.82';
+    const CURRENT_VERSION = 'v3.89';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

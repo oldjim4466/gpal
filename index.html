@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.92">
+    <meta name="version" content="v3.96">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.92</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.96</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3165,7 +3165,7 @@
         .wealth-proj-name {
             flex: 1 1 120px; min-width: 90px;
             background: transparent; border: none; border-bottom: 1px solid transparent;
-            color: #fff; font-family: 'Rajdhani'; font-size: 1.15rem; font-weight: 700;
+            color: #fff; font-family: 'Rajdhani'; font-size: 1.35rem; font-weight: 700;
             outline: none; padding: 3px 0; transition: 0.2s;
         }
         .wealth-proj-name:focus { border-bottom-color: rgba(0,242,255,0.6); }
@@ -3196,9 +3196,9 @@
             margin: 0;
         }
         .wealth-gl-display {
-            font-family: 'Orbitron'; font-size: 0.75rem; font-weight: 900;
-            padding: 4px 8px; border-radius: 3px; flex-shrink: 0;
-            min-width: 70px; text-align: center;
+            font-family: 'Orbitron'; font-size: 0.95rem; font-weight: 900;
+            padding: 5px 10px; border-radius: 3px; flex-shrink: 0;
+            min-width: 80px; text-align: center;
             background: rgba(0,0,0,0.25);
         }
         .wealth-gl-display.pos { color: var(--stark-green); }
@@ -3227,19 +3227,16 @@
         .wealth-date-arrow:hover { background: rgba(0,242,255,0.12); box-shadow: 0 0 6px rgba(0,242,255,0.3); }
         .wealth-date-input {
             flex-shrink: 0;
-            width: 66px;
-            min-width: 66px;
+            width: 195px;
+            min-width: 195px;
             box-sizing: border-box;
             color-scheme: dark;
-            font-size: 0.62rem;
-            padding: 5px 6px;
+            font-size: 0.7rem;
+            padding: 6px 7px;
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,242,255,0.3);
             color: #fff; font-family: 'Orbitron'; outline: none;
         }
-        /* 隱藏年份部分（WebKit / Blink：Chrome, Safari, Edge）*/
-        .wealth-date-input::-webkit-datetime-edit-year-field { display: none; }
-        .wealth-date-input::-webkit-datetime-edit-text:last-of-type { display: none; }
 
         .wealth-pm-toggle {
             display: flex; flex-shrink: 0; gap: 2px;
@@ -3259,7 +3256,7 @@
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,242,255,0.3);
             color: #fff; font-family: 'Orbitron'; font-size: 0.7rem;
-            padding: 5px 7px; outline: none; flex-shrink: 0;
+            padding: 6px 7px; outline: none; flex-shrink: 0;
             -moz-appearance: textfield;
             appearance: textfield;
         }
@@ -3282,8 +3279,8 @@
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,242,255,0.3);
             color: var(--stark-cyan);
-            font-family: 'Orbitron'; font-size: 0.6rem; font-weight: 700;
-            padding: 4px 5px; outline: none; cursor: pointer; flex-shrink: 0;
+            font-family: 'Orbitron'; font-size: 0.7rem; font-weight: 900;
+            padding: 5px 6px; outline: none; cursor: pointer; flex-shrink: 0;
         }
         .wealth-report-cat {
             font-family: 'Orbitron'; font-size: 0.6rem;
@@ -3643,7 +3640,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.92</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.96</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -9968,7 +9965,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.92';
+    const CURRENT_VERSION = 'v3.96';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

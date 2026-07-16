@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.73">
+    <meta name="version" content="v3.74">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.73</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.74</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3172,7 +3172,7 @@
         .wealth-proj-name {
             flex: 1 1 120px; min-width: 90px;
             background: transparent; border: none; border-bottom: 1px solid transparent;
-            color: #fff; font-family: 'Rajdhani'; font-size: 0.95rem;
+            color: #fff; font-family: 'Rajdhani'; font-size: 1.15rem; font-weight: 700;
             outline: none; padding: 3px 0; transition: 0.2s;
         }
         .wealth-proj-name:focus { border-bottom-color: rgba(0,242,255,0.6); }
@@ -3565,7 +3565,7 @@
                 -webkit-overflow-scrolling: touch;
                 gap: 4px !important;
             }
-            .wealth-proj-name { min-width: 70px !important; font-size: 0.8rem !important; }
+            .wealth-proj-name { min-width: 70px !important; font-size: 0.95rem !important; }
             .wealth-capital-input { width: 70px !important; font-size: 0.6rem !important; }
             .wealth-gl-display { font-size: 0.62rem !important; min-width: 50px !important; padding: 3px 5px !important; }
             .wealth-amount-input { width: 60px !important; font-size: 0.6rem !important; }
@@ -3635,7 +3635,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.73</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.74</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -10159,7 +10159,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.73';
+    const CURRENT_VERSION = 'v3.74';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

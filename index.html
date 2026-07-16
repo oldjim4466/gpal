@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v3.56">
+    <meta name="version" content="v3.68">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v3.56</title>
+    <title>GPAL MK-VII // OPTIMIZED v3.68</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3194,6 +3194,13 @@
             border: 1px solid rgba(0,242,255,0.3);
             color: #fff; font-family: 'Orbitron'; font-size: 0.7rem;
             padding: 5px 7px; outline: none; flex-shrink: 0;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        .wealth-capital-input::-webkit-outer-spin-button,
+        .wealth-capital-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
         .wealth-gl-display {
             font-family: 'Orbitron'; font-size: 0.75rem; font-weight: 900;
@@ -3203,6 +3210,14 @@
         }
         .wealth-gl-display.pos { color: var(--stark-green); }
         .wealth-gl-display.neg { color: var(--stark-red); }
+        .wealth-value-display {
+            font-family: 'Orbitron'; font-size: 0.7rem; font-weight: 700;
+            color: #fff; padding: 5px 7px;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(0,242,255,0.3);
+            border-left: none;
+            flex-shrink: 0;
+        }
 
         .wealth-date-wrap {
             display: flex; align-items: center; gap: 3px; flex-shrink: 0;
@@ -3211,14 +3226,15 @@
             background: transparent;
             border: 1px solid rgba(0,242,255,0.35);
             color: var(--stark-cyan);
-            font-family: 'Orbitron'; font-size: 0.6rem; font-weight: 900;
-            padding: 4px 6px; cursor: pointer; border-radius: 3px;
+            font-family: 'Orbitron'; font-size: 0.55rem; font-weight: 900;
+            padding: 3px 5px; cursor: pointer; border-radius: 3px;
         }
         .wealth-date-input {
             background: rgba(0,0,0,0.35);
             border: 1px solid rgba(0,242,255,0.3);
-            color: #fff; font-family: 'Orbitron'; font-size: 0.62rem;
-            padding: 4px 5px; outline: none; color-scheme: dark;
+            color: #fff; font-family: 'Orbitron'; font-size: 0.5rem;
+            padding: 3px 2px; outline: none; color-scheme: dark;
+            width: 92px; box-sizing: border-box;
         }
 
         .wealth-pm-toggle {
@@ -3240,6 +3256,13 @@
             border: 1px solid rgba(0,242,255,0.3);
             color: #fff; font-family: 'Orbitron'; font-size: 0.7rem;
             padding: 5px 7px; outline: none; flex-shrink: 0;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        .wealth-amount-input::-webkit-outer-spin-button,
+        .wealth-amount-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
         .wealth-enter-btn {
             background: rgba(0,242,255,0.12);
@@ -3250,10 +3273,66 @@
             flex-shrink: 0; transition: 0.2s;
         }
         .wealth-enter-btn:hover { background: rgba(0,242,255,0.25); }
+        .wealth-cat-select {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(0,242,255,0.3);
+            color: var(--stark-cyan);
+            font-family: 'Orbitron'; font-size: 0.6rem; font-weight: 700;
+            padding: 4px 5px; outline: none; cursor: pointer; flex-shrink: 0;
+        }
+        .wealth-report-cat {
+            font-family: 'Orbitron'; font-size: 0.6rem;
+            color: rgba(255,255,255,0.45); flex-shrink: 0;
+        }
         .wealth-last-entry {
             font-family: 'Rajdhani'; font-size: 0.7rem;
             color: rgba(255,255,255,0.4); flex-shrink: 0;
             margin-left: auto;
+        }
+
+        .wealth-line3 {
+            width: 100%; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .wealth-report-title {
+            font-family: 'Orbitron'; font-size: 0.5rem;
+            letter-spacing: 1.5px; color: rgba(255,255,255,0.4);
+            cursor: pointer; display: flex; align-items: center; gap: 5px;
+            user-select: none; transition: color 0.2s;
+            padding-top: 4px;
+        }
+        .wealth-report-title:hover { color: rgba(255,255,255,0.6); }
+        .wealth-report-title.open .finance-cat-arrow { transform: rotate(90deg); }
+        .wealth-report-list {
+            display: flex; flex-direction: column; gap: 3px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s var(--easing-smooth), opacity 0.3s;
+        }
+        .wealth-report-list.open {
+            max-height: 300px; opacity: 1; margin-top: 6px;
+        }
+        .wealth-report-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 4px 8px; background: rgba(0,0,0,0.2);
+            border-left: 2px solid rgba(0,242,255,0.2);
+            font-family: 'Rajdhani'; font-size: 0.8rem;
+        }
+        .wealth-report-date {
+            color: rgba(255,255,255,0.55); flex-shrink: 0;
+        }
+        .wealth-report-amt {
+            font-family: 'Orbitron'; font-weight: 700; margin-left: auto;
+        }
+        .wealth-report-amt.pos { color: var(--stark-green); }
+        .wealth-report-amt.neg { color: var(--stark-red); }
+        .wealth-report-del {
+            background: transparent; border: none;
+            color: rgba(255,62,62,0.6); font-size: 0.9rem;
+            cursor: pointer; flex-shrink: 0; padding: 0 2px;
+        }
+        .wealth-report-del:hover { color: var(--stark-red); }
+        .wealth-report-empty {
+            font-family: 'Rajdhani'; font-size: 0.8rem;
+            color: rgba(255,255,255,0.3); padding: 4px 8px;
         }
 
         .finance-cat-arrow {
@@ -3472,6 +3551,20 @@
                 padding: 4px 6px !important;
                 flex-shrink: 0;
             }
+
+            /* WEALTH HUD — 手機版盡量同一行 */
+            .wealth-line1, .wealth-line2 {
+                flex-wrap: nowrap !important;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                gap: 4px !important;
+            }
+            .wealth-proj-name { min-width: 70px !important; font-size: 0.8rem !important; }
+            .wealth-capital-input { width: 70px !important; font-size: 0.6rem !important; }
+            .wealth-gl-display { font-size: 0.62rem !important; min-width: 50px !important; padding: 3px 5px !important; }
+            .wealth-amount-input { width: 60px !important; font-size: 0.6rem !important; }
+            .wealth-date-input { width: 88px !important; font-size: 0.48rem !important; }
+            .wealth-last-entry { display: none; }
         }
             @media (max-width: 768px) {
             .time-sel {
@@ -3532,7 +3625,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.56</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v3.68</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -3745,6 +3838,22 @@
                 <button class="pager-btn" id="fm-next-btn" onclick="FinanceModule.managerNextPage()">NEXT ⟩⟩</button>
             </div>
             <div class="fm-list" id="fm-list"></div>
+        </div>
+    </div>
+
+    <!-- Wealth Report Overlay -->
+    <div class="fm-overlay" id="wealth-report-overlay">
+        <div class="fm-page">
+            <div class="fm-header">
+                <button class="fm-back" onclick="WealthModule.closeReport()">← BACK</button>
+                <span class="fm-title" id="wealth-report-title">REPORT</span>
+            </div>
+            <div class="pager" id="wealth-report-pager">
+                <button class="pager-btn" id="wealth-report-prev-btn" onclick="WealthModule.reportPrevPage()">⟨⟨ PREV</button>
+                <span class="pager-info" id="wealth-report-page-info"></span>
+                <button class="pager-btn" id="wealth-report-next-btn" onclick="WealthModule.reportNextPage()">NEXT ⟩⟩</button>
+            </div>
+            <div class="fm-list" id="wealth-report-list-fm"></div>
         </div>
     </div>
 
@@ -5423,10 +5532,14 @@ function switchMember(idx) {
 // ---------- WEALTH HUD MODULE (Project Ledger) ----------
 // ---------- WEALTH HUD MODULE (Project Ledger) ----------
 // ---------- WEALTH HUD MODULE (Project Ledger) ----------
+// ---------- WEALTH HUD MODULE (Project Ledger) ----------
 const WealthModule = {
     LS_KEY: 'gpal_wealth_data',
     data: [], // [{ id, name, capital, value, entries:[{date,amount}] }]
     _saveTimer: null,
+    _reportProjId: null,
+    _reportPage: 1,
+    _reportPerPage: 20,
 
     _lsKey() { return `${WealthModule.LS_KEY}_${MemberModule.current()}`; },
 
@@ -5435,10 +5548,12 @@ const WealthModule = {
         return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
     },
 
-    // G/L = (Cap $ - Value $) + 手動記錄總和
+    // G/L = (Cap $ - Value $) + 手動記錄總和（Value 類別不計入，已反映在 Value $ 內）
     calcGl(p) {
         const base = (Number(p.capital) || 0) - (Number(p.value) || 0);
-        const manual = (p.entries || []).reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        const manual = (p.entries || [])
+            .filter(e => e.category !== 'Invest')
+            .reduce((s, e) => s + (Number(e.amount) || 0), 0);
         return base + manual;
     },
 
@@ -5478,7 +5593,7 @@ const WealthModule = {
             row.className = 'wealth-proj-row';
             row.dataset.wid = p.id;
 
-            // ── 第一行：Project Name / Capital / Value / G/L / DEL ──
+            // ── 第一行：Project Name / G/L / Capital / Value ──
             const line1 = document.createElement('div');
             line1.className = 'wealth-line1';
 
@@ -5488,6 +5603,10 @@ const WealthModule = {
             nameEl.placeholder = 'Project Name...';
             nameEl.value = p.name || '';
             nameEl.dataset.role = 'wealth-name';
+
+            const glEl = document.createElement('span');
+            glEl.className = 'wealth-gl-display ' + (gl >= 0 ? 'pos' : 'neg');
+            glEl.textContent = 'G/L ' + WealthModule.fmt(gl);
 
             const capWrap = document.createElement('div');
             capWrap.className = 'wealth-capital-wrap';
@@ -5507,29 +5626,15 @@ const WealthModule = {
             valWrap.className = 'wealth-capital-wrap';
             const valPrefix = document.createElement('span');
             valPrefix.className = 'wealth-prefix';
-            valPrefix.textContent = 'VALUE $';
-            const valInput = document.createElement('input');
-            valInput.type = 'number';
-            valInput.className = 'wealth-capital-input';
-            valInput.placeholder = '0.00';
-            valInput.step = '0.01';
-            valInput.value = p.value || '';
-            valInput.dataset.role = 'wealth-value';
-            valWrap.append(valPrefix, valInput);
+            valPrefix.textContent = 'INVEST $';
+            const valDisplay = document.createElement('span');
+            valDisplay.className = 'wealth-value-display';
+            valDisplay.textContent = (Number(p.value) || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+            valWrap.append(valPrefix, valDisplay);
 
-            const glEl = document.createElement('span');
-            glEl.className = 'wealth-gl-display ' + (gl >= 0 ? 'pos' : 'neg');
-            glEl.textContent = 'G/L ' + WealthModule.fmt(gl);
+            line1.append(nameEl, glEl, capWrap, valWrap);
 
-            const delBtn = document.createElement('button');
-            delBtn.type = 'button';
-            delBtn.className = 'del-btn';
-            delBtn.textContent = 'DEL';
-            delBtn.dataset.role = 'wealth-del';
-
-            line1.append(nameEl, capWrap, valWrap, glEl, delBtn);
-
-            // ── 第二行：手動 G/L 記錄（日期 + +/- + 金額 + Enter）──
+            // ── 第二行：手動 G/L 記錄（日期 + +/- + 金額 + Enter）+ DEL ──
             const line2 = document.createElement('div');
             line2.className = 'wealth-line2';
 
@@ -5577,6 +5682,15 @@ const WealthModule = {
             amtInput.dataset.role = 'wealth-amount';
             amtWrap.append(amtPrefix, amtInput);
 
+            const catSelect = document.createElement('select');
+            catSelect.className = 'wealth-cat-select';
+            catSelect.dataset.role = 'wealth-category';
+            ['Profit', 'Invest', 'Other'].forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c; opt.textContent = c;
+                catSelect.appendChild(opt);
+            });
+
             const enterBtn = document.createElement('button');
             enterBtn.type = 'button';
             enterBtn.className = 'wealth-enter-btn';
@@ -5587,12 +5701,28 @@ const WealthModule = {
             const historyEl = document.createElement('span');
             historyEl.className = 'wealth-last-entry';
             historyEl.textContent = lastEntry
-                ? `last: ${lastEntry.date} ${lastEntry.amount >= 0 ? '+' : ''}${WealthModule.fmt(lastEntry.amount)}`
+                ? `last: ${lastEntry.date} [${lastEntry.category || 'Other'}] ${lastEntry.amount >= 0 ? '+' : ''}${WealthModule.fmt(lastEntry.amount)}`
                 : '';
 
-            line2.append(dateWrap, pmToggle, amtWrap, enterBtn, historyEl);
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'del-btn';
+            delBtn.textContent = 'DEL';
+            delBtn.dataset.role = 'wealth-del';
 
-            row.append(line1, line2);
+            line2.append(dateWrap, pmToggle, amtWrap, catSelect, enterBtn);
+
+            // ── 第三行：REPORT / 最近記錄 / DEL ──
+            const line3 = document.createElement('div');
+            line3.className = 'wealth-line3';
+            const reportBtn = document.createElement('div');
+            reportBtn.className = 'wealth-report-title';
+            const count = (p.entries || []).length;
+            reportBtn.innerHTML = `<i class="finance-cat-arrow">▸</i> REPORT (${count})`;
+            reportBtn.dataset.role = 'wealth-report-open';
+            line3.append(reportBtn, historyEl, delBtn);
+
+            row.append(line1, line2, line3);
             listEl.appendChild(row);
         });
 
@@ -5630,9 +5760,8 @@ const WealthModule = {
         if (role === 'wealth-name') {
             proj.name = e.target.value;
         }
-        if (role === 'wealth-capital' || role === 'wealth-value') {
-            if (role === 'wealth-capital') proj.capital = parseFloat(e.target.value) || 0;
-            if (role === 'wealth-value')   proj.value   = parseFloat(e.target.value) || 0;
+        if (role === 'wealth-capital') {
+            proj.capital = parseFloat(e.target.value) || 0;
             const gl = WealthModule.calcGl(proj);
             const glEl = row.querySelector('.wealth-gl-display');
             if (glEl) {
@@ -5665,15 +5794,28 @@ const WealthModule = {
         } else if (role === 'wealth-enter') {
             const amtInput = row.querySelector('[data-role=wealth-amount]');
             const dateInput = row.querySelector('[data-role=wealth-date]');
+            const catSelect = row.querySelector('[data-role=wealth-category]');
             let amt = parseFloat(amtInput?.value) || 0;
             if (!amt) return;
             if (row.dataset.dir === '-') amt = -Math.abs(amt);
             else amt = Math.abs(amt);
+            const category = catSelect?.value || 'Other';
+            // Value 類別：同時加進 Capital 與 Value，讓 (Cap-Value) 維持不變，G/L 才不會受影響
+            if (category === 'Invest') {
+                proj.value   = (Number(proj.value)   || 0) + amt;
+                proj.capital = (Number(proj.capital) || 0) + amt;
+            }
             if (!proj.entries) proj.entries = [];
-            proj.entries.push({ date: dateInput?.value || WealthModule._todayStr(), amount: amt });
+            proj.entries.push({
+                date: dateInput?.value || WealthModule._todayStr(),
+                amount: amt,
+                category,
+            });
             if (amtInput) amtInput.value = '';
             WealthModule.triggerSave();
             WealthModule.render();
+        } else if (role === 'wealth-report-open') {
+            WealthModule.openReport(proj.id);
         } else if (role === 'wealth-del') {
             if (!t.dataset.confirming) {
                 t.dataset.confirming = '1';
@@ -5692,6 +5834,103 @@ const WealthModule = {
             WealthModule.triggerSave();
             WealthModule.render();
         }
+    },
+
+    // ── Report 全螢幕分頁列表（每頁 20 筆）──
+    openReport(projId) {
+        WealthModule._reportProjId = projId;
+        WealthModule._reportPage = 1;
+        const proj = WealthModule.data.find(p => p.id === projId);
+        const titleEl = document.getElementById('wealth-report-title');
+        if (titleEl) titleEl.textContent = `REPORT · ${proj?.name || 'Untitled'}`;
+        document.getElementById('wealth-report-overlay').classList.add('open');
+        WealthModule.renderReportPage();
+    },
+
+    closeReport() {
+        document.getElementById('wealth-report-overlay').classList.remove('open');
+        WealthModule._reportProjId = null;
+    },
+
+    reportPrevPage() {
+        if (WealthModule._reportPage > 1) { WealthModule._reportPage--; WealthModule.renderReportPage(); }
+    },
+
+    reportNextPage() {
+        WealthModule._reportPage++;
+        WealthModule.renderReportPage();
+    },
+
+    renderReportPage() {
+        const proj = WealthModule.data.find(p => p.id === WealthModule._reportProjId);
+        const listEl = document.getElementById('wealth-report-list-fm');
+        if (!proj || !listEl) return;
+
+        const entries = (proj.entries || []).slice().reverse(); // 最新在前
+        const perPage = WealthModule._reportPerPage;
+        const totalPages = Math.max(1, Math.ceil(entries.length / perPage));
+        if (WealthModule._reportPage > totalPages) WealthModule._reportPage = totalPages;
+        const start = (WealthModule._reportPage - 1) * perPage;
+        const pageItems = entries.slice(start, start + perPage);
+
+        listEl.replaceChildren();
+        if (!pageItems.length) {
+            const emptyEl = document.createElement('div');
+            emptyEl.className = 'wealth-report-empty';
+            emptyEl.textContent = '尚無記錄';
+            listEl.appendChild(emptyEl);
+        } else {
+            pageItems.forEach((entry, i) => {
+                // 換算回原始 entries 陣列的 index（因為 reverse 過）
+                const originalIdx = proj.entries.length - 1 - (start + i);
+                const erow = document.createElement('div');
+                erow.className = 'wealth-report-row';
+                erow.dataset.idx = originalIdx;
+                const edate = document.createElement('span');
+                edate.className = 'wealth-report-date';
+                edate.textContent = entry.date;
+                const ecat = document.createElement('span');
+                ecat.className = 'wealth-report-cat';
+                ecat.textContent = entry.category || 'Other';
+                const eamt = document.createElement('span');
+                eamt.className = 'wealth-report-amt ' + (entry.amount >= 0 ? 'pos' : 'neg');
+                eamt.textContent = (entry.amount >= 0 ? '+' : '') + WealthModule.fmt(entry.amount);
+                const edel = document.createElement('button');
+                edel.type = 'button';
+                edel.className = 'wealth-report-del';
+                edel.textContent = '×';
+                edel.dataset.role = 'wealth-entry-del';
+                erow.append(edate, ecat, eamt, edel);
+                listEl.appendChild(erow);
+            });
+        }
+
+        const pageInfo = document.getElementById('wealth-report-page-info');
+        if (pageInfo) pageInfo.textContent = `${WealthModule._reportPage} / ${totalPages}`;
+        const prevBtn = document.getElementById('wealth-report-prev-btn');
+        if (prevBtn) prevBtn.disabled = WealthModule._reportPage <= 1;
+        const nextBtn = document.getElementById('wealth-report-next-btn');
+        if (nextBtn) nextBtn.disabled = WealthModule._reportPage >= totalPages;
+    },
+
+    handleReportListClick(e) {
+        const t = e.target;
+        if (t.dataset.role !== 'wealth-entry-del') return;
+        const row = t.closest('.wealth-report-row');
+        if (!row) return;
+        const idx = parseInt(row.dataset.idx, 10);
+        const proj = WealthModule.data.find(p => p.id === WealthModule._reportProjId);
+        if (!proj || !Number.isInteger(idx)) return;
+        const removed = proj.entries[idx];
+        // 若刪除的是 Value 類別記錄，需把之前加進 Capital 與 Value 的部分扣回
+        if (removed && removed.category === 'Invest') {
+            proj.value   = (Number(proj.value)   || 0) - (Number(removed.amount) || 0);
+            proj.capital = (Number(proj.capital) || 0) - (Number(removed.amount) || 0);
+        }
+        proj.entries.splice(idx, 1);
+        WealthModule.triggerSave();
+        WealthModule.renderReportPage();
+        WealthModule.render(); // 同步更新主列表的 G/L、Value $ 與 REPORT (N) 數字
     },
 
     triggerSave() {
@@ -8441,6 +8680,9 @@ const Events = {
             wealthList.addEventListener('input', WealthModule.handleInput);
             wealthList.addEventListener('click', WealthModule.handleClick);
         }
+        const wealthReportList = document.getElementById('wealth-report-list-fm');
+        if (wealthReportList) wealthReportList.addEventListener('click', WealthModule.handleReportListClick);
+
         const btnWealthAdd = document.getElementById('btn-wealth-add');
         if (btnWealthAdd) btnWealthAdd.addEventListener('click', () => WealthModule.add());
 
@@ -9911,7 +10153,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v3.56';
+    const CURRENT_VERSION = 'v3.68';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

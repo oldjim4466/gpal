@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.06">
+    <meta name="version" content="v4.07">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.06</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.07</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3662,7 +3662,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.06</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.07</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -6032,10 +6032,21 @@ const WealthModule = {
     triggerSave() {
         try { localStorage.setItem(WealthModule._lsKey(), JSON.stringify(WealthModule.data)); } catch {}
         clearTimeout(WealthModule._saveTimer);
+        const targetMember = MemberModule.current(); // 立刻鎖定當下成員，避免之後切換成員造成寫錯人
+        const snapshot = WealthModule.data;
         WealthModule._saveTimer = setTimeout(async () => {
-            try { await SB.saveWealth(MemberModule.current(), WealthModule.data); }
+            try { await SB.saveWealth(targetMember, snapshot); }
             catch(e) { Utils.setStatus('WEALTH_SAVE_ERR · LOCAL_SAVED', 'error'); }
         }, 1200);
+    },
+
+    // 立即執行還未儲存的變更（跳過 debounce），在切換成員/日期前呼叫，避免資料遺失或寫錯人
+    async flushSave() {
+        if (!WealthModule._saveTimer) return;
+        clearTimeout(WealthModule._saveTimer);
+        WealthModule._saveTimer = null;
+        try { await SB.saveWealth(MemberModule.current(), WealthModule.data); }
+        catch(e) { Utils.setStatus('WEALTH_SAVE_ERR · LOCAL_SAVED', 'error'); }
     },
 };
 
@@ -6073,11 +6084,22 @@ const LongTermModule = {
         LongTermModule._dataVersion++;
         try { localStorage.setItem(LongTermModule._lsKey(), JSON.stringify(LongTermModule.data)); } catch {}
         if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
+        const targetMember = MemberModule.current(); // 立刻鎖定當下成員，避免之後切換成員造成寫錯人
+        const snapshot = LongTermModule.data;
         LongTermModule._saveTimer = setTimeout(async () => {
             try {
-                await SB.saveLongterm(MemberModule.current(), LongTermModule.data);
+                await SB.saveLongterm(targetMember, snapshot);
             } catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
         }, 3000);
+    },
+
+    // 立即執行還未儲存的變更（跳過 debounce），在切換成員/日期前呼叫，避免資料遺失或寫錯人
+    async flushSave() {
+        if (!LongTermModule._saveTimer) return;
+        clearTimeout(LongTermModule._saveTimer);
+        LongTermModule._saveTimer = null;
+        try { await SB.saveLongterm(MemberModule.current(), LongTermModule.data); }
+        catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
     },
 
     // 渲染當前成員的 LT goals（加快取，相同資料跳過重建）
@@ -7742,9 +7764,14 @@ const MemberModule = {
         return MemberModule.MEMBERS.includes(v) ? v : 'dad';
     },
 
-    select(name) {
+    async select(name) {
         if (!MemberModule.MEMBERS.includes(name)) return;
         if (name === MemberModule.current()) return; // 已經是當前成員，跳過
+
+        // 切換成員前，先把還沒存的 LongTerm / Wealth 變更立即存到「原本」的成員
+        await LongTermModule.flushSave();
+        await WealthModule.flushSave();
+
         localStorage.setItem(MemberModule.LS_KEY, name);
         MemberModule.updateUI();
 
@@ -8629,15 +8656,8 @@ const Events = {
             btn.textContent = 'UPLOADING...';
             try {
                 await Sync.save('MANUAL');
-
-                // 強制立即儲存 LongTerm Goals（跳過原本的 debounce）
-                clearTimeout(LongTermModule._saveTimer);
-                await SB.saveLongterm(MemberModule.current(), LongTermModule.data);
-
-                // 強制立即儲存 Wealth HUD（跳過原本的 debounce）
-                clearTimeout(WealthModule._saveTimer);
-                await SB.saveWealth(MemberModule.current(), WealthModule.data);
-
+                await LongTermModule.flushSave();
+                await WealthModule.flushSave();
                 btn.textContent = 'UPLOAD DONE ✓';
                 btn.style.borderColor = 'var(--stark-green)';
                 btn.style.color = 'var(--stark-green)';
@@ -8680,6 +8700,8 @@ const Events = {
             HealthModule.render(DOM.datePicker.value);
             // health 雲端載入已由 Sync.fetchData (bundle 端點) 接手
             await SaveQueue.flushImmediate();
+            await LongTermModule.flushSave();
+            await WealthModule.flushSave();
             Sync.fetchData();
         });
 
@@ -8725,6 +8747,8 @@ const Events = {
 
     async changeDate(days) {
         await SaveQueue.flushImmediate();
+        await LongTermModule.flushSave();
+        await WealthModule.flushSave();
         const d = new Date(DOM.datePicker.value + 'T12:00:00');
         d.setDate(d.getDate() + days);
         DOM.datePicker.value = `${d.getFullYear()}-${Utils.pad2(d.getMonth() + 1)}-${Utils.pad2(d.getDate())}`;
@@ -10022,7 +10046,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.06';
+    const CURRENT_VERSION = 'v4.07';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

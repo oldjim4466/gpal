@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.12">
+    <meta name="version" content="v4.13">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.12</title>
+    <title>GPAL FAMILY v4.13</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1956,7 +1956,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.12</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.13</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3372,17 +3372,18 @@ const LongTermModule = {
     _dataVersion: 0,
 
     currentGoals() {
-        const name = MemberModule.current();
-        if (!Array.isArray(LongTermModule.data[name])) LongTermModule.data[name] = [];
-        return LongTermModule.data[name];
+        if (!Array.isArray(LongTermModule.data)) LongTermModule.data = [];
+        return LongTermModule.data;
     },
+
+    _lsKey() { return 'gpal_longterm_' + MemberModule.current(); },
 
     init() { LongTermModule._loadFromLocal(); LongTermModule._loadFromCloud(); },
 
     _loadFromLocal() {
         try {
-            const cached = JSON.parse(localStorage.getItem(LongTermModule.LS_KEY) || 'null');
-            if (cached && typeof cached === 'object') LongTermModule.data = cached;
+            const cached = JSON.parse(localStorage.getItem(LongTermModule._lsKey()) || 'null');
+            if (Array.isArray(cached)) LongTermModule.data = cached;
         } catch {}
         LongTermModule.render();
     },
@@ -3401,7 +3402,7 @@ const LongTermModule = {
 
     triggerSave() {
         LongTermModule._dataVersion++;
-        try { localStorage.setItem(LongTermModule.LS_KEY, JSON.stringify(LongTermModule.data)); } catch {}
+        try { localStorage.setItem(LongTermModule._lsKey(), JSON.stringify(LongTermModule.data)); } catch {}
         if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
         const targetMember = MemberModule.current(); // 立刻鎖定當下成員，避免之後切換成員造成寫錯人
         const snapshot = LongTermModule.data;
@@ -5767,7 +5768,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.12 loaded - past dimming active');
+    console.log('[GPAL] Family v4.13 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5806,7 +5807,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.12';
+    const CURRENT_VERSION = 'v4.13';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

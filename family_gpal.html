@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.21">
+    <meta name="version" content="v4.22">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.21</title>
+    <title>GPAL FAMILY v4.22</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1972,7 +1972,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.21</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.22</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -5091,7 +5091,7 @@ const Sync = {
 
         // 先從緩存即時顯示，記錄快照供後續比對
         const cacheHit = Sync.loadFromCache(date);
-        const cacheSnapshot = cacheHit ? localStorage.getItem(`gpal_prefetch_${date}`) : null;
+        const cacheSnapshot = cacheHit ? localStorage.getItem(`gpal_prefetch_${date}_${MemberModule.current()}`) : null;
 
         try {
             const yesterday = new Date(date + 'T12:00:00');
@@ -5166,7 +5166,7 @@ const Sync = {
 
             // 將當天資料存入 prefetch cache（下次切回即時顯示）
             try {
-                localStorage.setItem(`gpal_prefetch_${date}`, JSON.stringify({ data, ts: Date.now() }));
+                localStorage.setItem(`gpal_prefetch_${date}_${MemberModule.current()}`, JSON.stringify({ data, ts: Date.now() }));
             } catch(e) {}
 
             // 背景預取 ±3 天
@@ -5816,7 +5816,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.21 loaded - past dimming active');
+    console.log('[GPAL] Family v4.22 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5842,11 +5842,9 @@ window.addEventListener('DOMContentLoaded', () => {
     // Step 2: 主資料請求
     Sync.fetchData();
 
-    // Step 3: 次要雲端請求延後
-    setTimeout(() => {
-        LongTermModule._loadFromCloud();
-        HabitModule._loadFromCloud();
-    }, 1000);
+    // Step 3: 次要雲端請求（不再延遲，避免手機上因背景化/網路慢而錯過這次更新，一直卡在舊的本地快取）
+    LongTermModule._loadFromCloud();
+    HabitModule._loadFromCloud();
     setTimeout(() => {
         GoalTemplateModule._loadFromCloud();
         PlanTemplateModule._loadFromCloud();
@@ -5855,7 +5853,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.21';
+    const CURRENT_VERSION = 'v4.22';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

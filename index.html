@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.08">
+    <meta name="version" content="v4.09">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.08</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.09</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3662,7 +3662,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.08</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.09</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4185,10 +4185,11 @@ const SB = {
     // ── Wealth HUD ────────────────────────────────────────────
     async getWealth(member) {
         const key = `wealth_${member}`;
-        if (SB._cache.has(key)) return SB._cache.get(key);
+        const cached = SB._cache.get(key);
+        if (cached && Date.now() - cached.ts < 30000) return cached.data;
         const rows = await SB.get('wealth_hud', `?member=eq.${member}&select=data`);
         const result = { data: rows.length ? rows[0].data : null, found: rows.length > 0 };
-        SB._cache.set(key, result);
+        SB._cache.set(key, { data: result, ts: Date.now() });
         return result;
     },
 
@@ -4200,10 +4201,11 @@ const SB = {
     // ── Longterm Goals ───────────────────────────────────────
     async getLongterm(member) {
         const key = `lt_${member}`;
-        if (SB._cache.has(key)) return SB._cache.get(key);
+        const cached = SB._cache.get(key);
+        if (cached && Date.now() - cached.ts < 30000) return cached.data;
         const rows = await SB.get('longterm_goals', `?member=eq.${member}&select=data`);
         const result = { data: rows.length ? rows[0].data : null, found: rows.length > 0 };
-        SB._cache.set(key, result);
+        SB._cache.set(key, { data: result, ts: Date.now() });
         return result;
     },
 
@@ -7775,8 +7777,11 @@ const MemberModule = {
         localStorage.setItem(MemberModule.LS_KEY, name);
         MemberModule.updateUI();
 
-        // 不刪快取！各成員有獨立快取（key 含 member），切換時即時顯示
-        // 立即從該成員的 localStorage 載入（零延遲）
+        // 清除目標成員的雲端快取，確保看到的是最新資料（而不是這次網頁開啟期間的舊快照）
+        SB._cache.delete(`lt_${name}`);
+        SB._cache.delete(`wealth_${name}`);
+
+        // 立即從該成員的 localStorage 載入（先秒開，稍後 fetchData 會用雲端最新資料覆蓋）
         LongTermModule._loadFromLocal();
 
         // 主資料：fetchData 會先用快取即時顯示，再背景更新
@@ -10046,7 +10051,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.08';
+    const CURRENT_VERSION = 'v4.09';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

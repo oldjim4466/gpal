@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.10">
+    <meta name="version" content="v4.12">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.10</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.12</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -941,6 +941,13 @@
         .lt-days.lt-today { color: var(--stark-gold); }
         .lt-days.lt-complete { color: var(--stark-green); }
         .lt-goal-row .del-btn { font-size: 0.68rem; font-weight: 900; letter-spacing: 0.5px; }
+        .lt-save-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 0.68rem; font-weight: 900;
+            letter-spacing: 0.5px; color: var(--stark-cyan); border: 1px solid var(--stark-cyan);
+            background: transparent; padding: 3px 8px; cursor: pointer; border-radius: 3px;
+            flex-shrink: 0; transition: 0.2s; white-space: nowrap;
+        }
+        .lt-save-btn:hover { background: rgba(0,242,255,0.12); }
         @keyframes lt-pulse { 0%,100%{opacity:0.7} 50%{opacity:1} }
         .btn-lt-add {
             margin-left: auto; background: transparent;
@@ -3662,7 +3669,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.10</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.12</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4015,7 +4022,6 @@
         <button class="nav-btn" data-action="next-day" aria-label="後一天">❯</button>
     </div>
     <div class="action-area">
-        <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
         <button class="btn-sync" id="btn-save-now" data-action="save-now">SAVE NOW</button>
         <button class="btn-refresh-icon" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())" title="Refresh page">↺</button>
     </div>
@@ -4447,7 +4453,7 @@ const DOM = {
     portfolioDisplay: $('portfolio-display'),
     connDot: $('conn-dot'),
     connText: $('conn-text'),
-    get syncBtn() { return document.querySelector('[data-action="sync"]'); },
+    get saveNowBtn() { return document.getElementById('btn-save-now'); },
 };
 
 // ---------- UTILS ----------
@@ -6217,8 +6223,14 @@ const LongTermModule = {
             delBtn.dataset.role = 'lt-del';
             delBtn.type = 'button';
 
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'lt-save-btn';
+            saveBtn.textContent = 'Save';
+            saveBtn.dataset.role = 'lt-save';
+            saveBtn.type = 'button';
+
             deadlineWrap.append(dateEl, dateIcon, daysEl);
-            row.append(cb, textContainer, deadlineWrap, delBtn);
+            row.append(cb, textContainer, deadlineWrap, saveBtn, delBtn);
             frag.appendChild(row);
         });
         listEl.appendChild(frag);
@@ -6298,6 +6310,34 @@ const LongTermModule = {
                 } else { daysEl.textContent = ''; }
             }
             LongTermModule.triggerSave();
+        } else if (role === 'lt-save') {
+            const saveEl = e.target.closest('[data-role=lt-save]') || e.target;
+            saveEl.disabled = true;
+            saveEl.textContent = '...';
+            clearTimeout(LongTermModule._saveTimer);
+            LongTermModule._saveTimer = null;
+            SB.saveLongterm(MemberModule.current(), LongTermModule.data)
+              .then(() => {
+                  saveEl.textContent = '✓ 已完成';
+                  saveEl.style.background = 'rgba(0,255,136,0.2)';
+                  saveEl.style.borderColor = 'var(--stark-green)';
+                  saveEl.style.color = 'var(--stark-green)';
+              })
+              .catch(() => {
+                  saveEl.textContent = '✗ 失敗';
+                  saveEl.style.background = 'rgba(255,62,62,0.2)';
+                  saveEl.style.borderColor = 'var(--stark-red)';
+                  saveEl.style.color = 'var(--stark-red)';
+              })
+              .finally(() => {
+                  setTimeout(() => {
+                      saveEl.disabled = false;
+                      saveEl.textContent = 'Save';
+                      saveEl.style.background = '';
+                      saveEl.style.borderColor = '';
+                      saveEl.style.color = '';
+                  }, 1500);
+              });
         } else if (role === 'lt-del') {
             const ltDelEl = e.target.closest('[data-role=lt-del]') || e.target;
             if (!ltDelEl.dataset.confirming) {
@@ -8655,33 +8695,6 @@ const Events = {
 
         // COPY PLAN 按鈕（已移至每行，此區塊保留以防舊版引用）
 
-        // UPLOAD TO CLOUD 按鈕（強制立即儲存全部：Goal/Plan/Action/Learn + LongTerm + Wealth）
-        document.querySelector('[data-action="sync"]').addEventListener('click', async (e) => {
-            const btn = e.currentTarget;
-            if (btn.disabled) return;
-            btn.disabled = true;
-            btn.textContent = 'UPLOADING...';
-            try {
-                await Sync.save('MANUAL');
-                await LongTermModule.flushSave();
-                await WealthModule.flushSave();
-                btn.textContent = 'UPLOAD DONE ✓';
-                btn.style.borderColor = 'var(--stark-green)';
-                btn.style.color = 'var(--stark-green)';
-            } catch {
-                btn.textContent = 'UPLOAD FAILED';
-                btn.style.borderColor = 'var(--stark-red)';
-                btn.style.color = 'var(--stark-red)';
-            } finally {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.textContent = 'UPLOAD TO CLOUD';
-                    btn.style.borderColor = '';
-                    btn.style.color = '';
-                }, 2500);
-            }
-        });
-
         // SAVE NOW 按鈕（保證儲存：每個部分獨立進行，其中一項失敗不影響其他項）
         const btnSaveNow = document.getElementById('btn-save-now');
         if (btnSaveNow) {
@@ -10093,7 +10106,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.10';
+    const CURRENT_VERSION = 'v4.12';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.09">
+    <meta name="version" content="v4.12">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.09</title>
+    <title>GPAL FAMILY v4.12</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -902,6 +902,13 @@
         .lt-days.lt-today { color: var(--stark-gold); }
         .lt-days.lt-complete { color: var(--stark-green); }
         .lt-goal-row .del-btn { font-size: 0.68rem; font-weight: 900; letter-spacing: 0.5px; }
+        .lt-save-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 0.68rem; font-weight: 900;
+            letter-spacing: 0.5px; color: var(--stark-cyan); border: 1px solid var(--stark-cyan);
+            background: transparent; padding: 3px 8px; cursor: pointer; border-radius: 3px;
+            flex-shrink: 0; transition: 0.2s; white-space: nowrap;
+        }
+        .lt-save-btn:hover { background: rgba(0,242,255,0.12); }
         @keyframes lt-pulse { 0%,100%{opacity:0.7} 50%{opacity:1} }
         .btn-lt-add {
             margin-left: auto; background: transparent; border: 1px solid rgba(255,204,0,0.25);
@@ -1949,7 +1956,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.09</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.12</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2102,7 +2109,7 @@
         <button class="nav-btn" data-action="next-day" aria-label="後一天">❯</button>
     </div>
     <div class="action-area">
-        <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
+        <button class="btn-sync" id="btn-save-now" data-action="save-now">SAVE NOW</button>
         <button class="btn-refresh-icon" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())" title="Refresh page">↺</button>
     </div>
 </footer>
@@ -2503,7 +2510,7 @@ const DOM = {
     progressDisplay: $('progress-display'),
     connDot: $('conn-dot'),
     connText: $('conn-text'),
-    get syncBtn() { return document.querySelector('[data-action="sync"]'); },
+    get saveNowBtn() { return document.getElementById('btn-save-now'); },
 };
 
 // ---------- UTILS ----------
@@ -3488,8 +3495,10 @@ const LongTermModule = {
             }
             const delBtn = document.createElement('button');
             delBtn.className = 'del-btn'; delBtn.textContent = 'X'; delBtn.dataset.role = 'lt-del'; delBtn.type = 'button';
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'lt-save-btn'; saveBtn.textContent = 'Save'; saveBtn.dataset.role = 'lt-save'; saveBtn.type = 'button';
             deadlineWrap.append(dateEl, dateIcon, daysEl);
-            row.append(cb, textContainer, deadlineWrap, delBtn);
+            row.append(cb, textContainer, deadlineWrap, saveBtn, delBtn);
             frag.appendChild(row);
         });
         listEl.appendChild(frag);
@@ -3560,6 +3569,34 @@ const LongTermModule = {
                 } else { daysEl.textContent = ''; }
             }
             LongTermModule.triggerSave();
+        } else if (e.target.dataset.role === 'lt-save') {
+            const saveEl = e.target;
+            saveEl.disabled = true;
+            saveEl.textContent = '...';
+            clearTimeout(LongTermModule._saveTimer);
+            LongTermModule._saveTimer = null;
+            SB.saveLongterm(MemberModule.current(), LongTermModule.data)
+              .then(() => {
+                  saveEl.textContent = '✓ 已完成';
+                  saveEl.style.background = 'rgba(0,255,136,0.2)';
+                  saveEl.style.borderColor = 'var(--stark-green)';
+                  saveEl.style.color = 'var(--stark-green)';
+              })
+              .catch(() => {
+                  saveEl.textContent = '✗ 失敗';
+                  saveEl.style.background = 'rgba(255,62,62,0.2)';
+                  saveEl.style.borderColor = 'var(--stark-red)';
+                  saveEl.style.color = 'var(--stark-red)';
+              })
+              .finally(() => {
+                  setTimeout(() => {
+                      saveEl.disabled = false;
+                      saveEl.textContent = 'Save';
+                      saveEl.style.background = '';
+                      saveEl.style.borderColor = '';
+                      saveEl.style.color = '';
+                  }, 1500);
+              });
         } else if (e.target.dataset.role === 'lt-del') {
             row.remove();                  // 即時 DOM 移除
             goals.splice(idx, 1);
@@ -5142,18 +5179,18 @@ const Sync = {
         if (State.isSyncing) return;
         State.isSyncing = true;
 
-        const payload = {
-            date: DOM.datePicker.value,
-            goal:   GoalModule.serializeAll(),
-            plan:   PlanModule.serializeAll(),
-            action: ActionModule.serializeAll(),
-            learn:  LearnModule.serializeAll(),
-        };
-
-        // 先寫本地備份，再嘗試雲端
-        Utils.backupToLocal(payload.date, payload);
-
         try {
+            const payload = {
+                date: DOM.datePicker.value,
+                goal:   GoalModule.serializeAll(),
+                plan:   PlanModule.serializeAll(),
+                action: ActionModule.serializeAll(),
+                learn:  LearnModule.serializeAll(),
+            };
+
+            // 先寫本地備份，再嘗試雲端
+            Utils.backupToLocal(payload.date, payload);
+
             Utils.setStatus('>> UPLOADING...', 'warn');
             Utils.setConnState('syncing');
 
@@ -5176,6 +5213,7 @@ const Sync = {
             Utils.setStatus('UPLOAD_ERROR · LOCAL_SAVED', 'error');
             Utils.setConnState('offline');
             State.isOnline = false;
+            console.error('[Sync.save] failed:', e);
         } finally {
             State.isSyncing = false;
         }
@@ -5581,32 +5619,45 @@ const Events = {
             });
         }
 
-        // UPLOAD TO CLOUD 按鈕（強制立即儲存全部：Goal/Plan/Action/Learn + LongTerm + Habit）
-        document.querySelector('[data-action="sync"]').addEventListener('click', async (e) => {
-            const btn = e.currentTarget;
-            if (btn.disabled) return;
-            btn.disabled = true;
-            btn.textContent = 'UPLOADING...';
-            try {
-                await Sync.save('MANUAL');
-                await LongTermModule.flushSave();
-                await HabitModule.flushSave();
-                btn.textContent = 'UPLOAD DONE ✓';
-                btn.style.borderColor = 'var(--stark-green)';
-                btn.style.color = 'var(--stark-green)';
-            } catch {
-                btn.textContent = 'UPLOAD FAILED';
-                btn.style.borderColor = 'var(--stark-red)';
-                btn.style.color = 'var(--stark-red)';
-            } finally {
+        // SAVE NOW 按鈕（保證儲存：每個部分獨立進行，其中一項失敗不影響其他項）
+        const btnSaveNow = document.getElementById('btn-save-now');
+        if (btnSaveNow) {
+            btnSaveNow.addEventListener('click', async () => {
+                if (btnSaveNow.disabled) return;
+                btnSaveNow.disabled = true;
+                btnSaveNow.textContent = 'SAVING...';
+
+                // 保險：萬一之前卡住了，強制解除鎖定，確保這次一定能存
+                State.isSyncing = false;
+
+                const tasks = [
+                    { name: 'Daily',    fn: () => Sync.save('MANUAL') },
+                    { name: 'LongTerm', fn: () => LongTermModule.flushSave() },
+                    { name: 'Habit',    fn: () => HabitModule.flushSave() },
+                ];
+                const results = await Promise.allSettled(tasks.map(t => t.fn()));
+                const failed = results
+                    .map((r, i) => ({ r, name: tasks[i].name }))
+                    .filter(x => x.r.status === 'rejected');
+
+                if (failed.length === 0) {
+                    btnSaveNow.textContent = 'SAVED ✓';
+                    btnSaveNow.style.borderColor = 'var(--stark-green)';
+                    btnSaveNow.style.color = 'var(--stark-green)';
+                } else {
+                    btnSaveNow.textContent = `FAILED: ${failed.map(f => f.name).join(', ')}`;
+                    btnSaveNow.style.borderColor = 'var(--stark-red)';
+                    btnSaveNow.style.color = 'var(--stark-red)';
+                    console.error('[SAVE NOW] failures:', failed.map(f => ({ name: f.name, reason: f.r.reason })));
+                }
                 setTimeout(() => {
-                    btn.disabled = false;
-                    btn.textContent = 'UPLOAD TO CLOUD';
-                    btn.style.borderColor = '';
-                    btn.style.color = '';
-                }, 2500);
-            }
-        });
+                    btnSaveNow.disabled = false;
+                    btnSaveNow.textContent = 'SAVE NOW';
+                    btnSaveNow.style.borderColor = '';
+                    btnSaveNow.style.color = '';
+                }, 3000);
+            });
+        }
 
         // 導覽
         document.querySelector('[data-action="prev-day"]').addEventListener('click', () => Events.changeDate(-1));
@@ -5716,7 +5767,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.09 loaded - past dimming active');
+    console.log('[GPAL] Family v4.12 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5755,7 +5806,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.09';
+    const CURRENT_VERSION = 'v4.12';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

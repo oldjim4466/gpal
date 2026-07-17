@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.16">
+    <meta name="version" content="v4.17">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.16</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.17</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -942,9 +942,9 @@
         .lt-days.lt-complete { color: var(--stark-green); }
         .lt-goal-row .del-btn { font-size: 0.68rem; font-weight: 900; letter-spacing: 0.5px; }
         .lt-save-btn {
-            font-family: 'Orbitron', sans-serif; font-size: 0.68rem; font-weight: 900;
-            letter-spacing: 0.5px; color: var(--stark-cyan); border: 1px solid var(--stark-cyan);
-            background: transparent; padding: 3px 8px; cursor: pointer; border-radius: 3px;
+            font-family: 'Orbitron', sans-serif; font-size: 0.62rem; font-weight: 900;
+            color: var(--stark-cyan); border: 1px solid var(--stark-cyan);
+            background: transparent; padding: 3px 7px; cursor: pointer; border-radius: 3px;
             flex-shrink: 0; transition: 0.2s; white-space: nowrap;
         }
         .lt-save-btn:hover { background: rgba(0,242,255,0.12); }
@@ -3609,6 +3609,8 @@
                 letter-spacing: 0.1px !important;
             }
             .lt-category-select { font-size: 0.55rem !important; }
+            .lt-save-btn { font-size: 0.55rem !important; padding: 3px 6px !important; }
+            .lt-goal-row { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
             .wealth-capital-input { width: 70px !important; font-size: 0.6rem !important; }
             .wealth-cap-update-btn { font-size: 0.5rem !important; padding: 4px 7px !important; }
             .wealth-gl-display { font-size: 0.8rem !important; min-width: 60px !important; padding: 4px 7px !important; }
@@ -3680,7 +3682,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.16</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.17</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -6237,7 +6239,8 @@ const LongTermModule = {
 
             const saveBtn = document.createElement('button');
             saveBtn.className = 'lt-save-btn';
-            saveBtn.textContent = 'Save';
+            saveBtn.textContent = 'S';
+            saveBtn.title = 'Save';
             saveBtn.dataset.role = 'lt-save';
             saveBtn.type = 'button';
 
@@ -6344,7 +6347,7 @@ const LongTermModule = {
               .finally(() => {
                   setTimeout(() => {
                       saveEl.disabled = false;
-                      saveEl.textContent = 'Save';
+                      saveEl.textContent = 'S';
                       saveEl.style.background = '';
                       saveEl.style.borderColor = '';
                       saveEl.style.color = '';
@@ -10128,7 +10131,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.16';
+    const CURRENT_VERSION = 'v4.17';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

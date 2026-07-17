@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.09">
+    <meta name="version" content="v4.10">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.09</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.10</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3662,7 +3662,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.09</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.10</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4016,6 +4016,7 @@
     </div>
     <div class="action-area">
         <button class="btn-sync" data-action="sync">UPLOAD TO CLOUD</button>
+        <button class="btn-sync" id="btn-save-now" data-action="save-now">SAVE NOW</button>
         <button class="btn-refresh-icon" id="btn-refresh" onclick="location.replace(location.pathname + '?v=' + Date.now())" title="Refresh page">↺</button>
     </div>
 </footer>
@@ -8081,18 +8082,18 @@ const Sync = {
         if (State.isSyncing) return;
         State.isSyncing = true;
 
-        const payload = {
-            date: DOM.datePicker.value,
-            goal:   GoalModule.serializeAll(),
-            plan:   PlanModule.serializeAll(),
-            action: ActionModule.serializeAll(),
-            learn:  LearnModule.serializeAll(),
-        };
-
-        // 先寫本地備份，再嘗試雲端
-        Utils.backupToLocal(payload.date, payload);
-
         try {
+            const payload = {
+                date: DOM.datePicker.value,
+                goal:   GoalModule.serializeAll(),
+                plan:   PlanModule.serializeAll(),
+                action: ActionModule.serializeAll(),
+                learn:  LearnModule.serializeAll(),
+            };
+
+            // 先寫本地備份，再嘗試雲端
+            Utils.backupToLocal(payload.date, payload);
+
             Utils.setStatus('>> UPLOADING...', 'warn');
             Utils.setConnState('syncing');
 
@@ -8128,6 +8129,7 @@ const Sync = {
             Utils.setStatus('UPLOAD_ERROR · LOCAL_SAVED', 'error');
             Utils.setConnState('offline');
             State.isOnline = false;
+            console.error('[Sync.save] failed:', e);
         } finally {
             State.isSyncing = false;
         }
@@ -8679,6 +8681,46 @@ const Events = {
                 }, 2500);
             }
         });
+
+        // SAVE NOW 按鈕（保證儲存：每個部分獨立進行，其中一項失敗不影響其他項）
+        const btnSaveNow = document.getElementById('btn-save-now');
+        if (btnSaveNow) {
+            btnSaveNow.addEventListener('click', async () => {
+                if (btnSaveNow.disabled) return;
+                btnSaveNow.disabled = true;
+                btnSaveNow.textContent = 'SAVING...';
+
+                // 保險：萬一之前卡住了，強制解除鎖定，確保這次一定能存
+                State.isSyncing = false;
+
+                const tasks = [
+                    { name: 'Daily',    fn: () => Sync.save('MANUAL') },
+                    { name: 'LongTerm', fn: () => LongTermModule.flushSave() },
+                    { name: 'Wealth',   fn: () => WealthModule.flushSave() },
+                ];
+                const results = await Promise.allSettled(tasks.map(t => t.fn()));
+                const failed = results
+                    .map((r, i) => ({ r, name: tasks[i].name }))
+                    .filter(x => x.r.status === 'rejected');
+
+                if (failed.length === 0) {
+                    btnSaveNow.textContent = 'SAVED ✓';
+                    btnSaveNow.style.borderColor = 'var(--stark-green)';
+                    btnSaveNow.style.color = 'var(--stark-green)';
+                } else {
+                    btnSaveNow.textContent = `FAILED: ${failed.map(f => f.name).join(', ')}`;
+                    btnSaveNow.style.borderColor = 'var(--stark-red)';
+                    btnSaveNow.style.color = 'var(--stark-red)';
+                    console.error('[SAVE NOW] failures:', failed.map(f => ({ name: f.name, reason: f.r.reason })));
+                }
+                setTimeout(() => {
+                    btnSaveNow.disabled = false;
+                    btnSaveNow.textContent = 'SAVE NOW';
+                    btnSaveNow.style.borderColor = '';
+                    btnSaveNow.style.color = '';
+                }, 3000);
+            });
+        }
 
         // 導覽
         document.querySelector('[data-action="prev-day"]').addEventListener('click', () => Events.changeDate(-1));
@@ -10051,7 +10093,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.09';
+    const CURRENT_VERSION = 'v4.10';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

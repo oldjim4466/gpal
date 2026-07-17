@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.22">
+    <meta name="version" content="v4.23">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.22</title>
+    <title>GPAL FAMILY v4.23</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1972,7 +1972,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.22</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.23</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -5100,13 +5100,38 @@ const Sync = {
             const isToday = date === Utils.todayISO();
 
             const [res, yRes] = await Promise.all([
-                SB.getBundle(MemberModule.current(), date),
+                SB.getInit(MemberModule.current(), date),
                 isToday ? SB.getBundle(MemberModule.current(), yDate) : Promise.resolve(null),
             ]);
 
             const data = res;
             if (token !== State.fetchToken) return;
             State.currentData = data;
+
+            // 一次性打包回來的 LongTerm / Habit / Templates 直接更新各模組（不需要額外請求）
+            if (Array.isArray(data.longterm)) {
+                LongTermModule.data = data.longterm;
+                LongTermModule._dataVersion++;
+                try { localStorage.setItem(LongTermModule._lsKey(), JSON.stringify(data.longterm)); } catch {}
+                LongTermModule.render();
+            }
+            if (Array.isArray(data.habits)) {
+                HabitModule.data = data.habits;
+                try { localStorage.setItem(HabitModule._lsKey(), JSON.stringify(data.habits)); } catch {}
+                HabitModule.render();
+            }
+            if (Array.isArray(data.templates)) {
+                const goalTmpls = data.templates.filter(t => t.type === 'goal');
+                const planTmpls = data.templates.filter(t => t.type === 'plan');
+                if (goalTmpls.length) {
+                    GoalTemplateModule.templates = goalTmpls.map(t => ({ id: 'tmpl_' + Date.now() + Math.random(), name: t.name, goals: t.data || [] }));
+                    GoalTemplateModule._saveLocal();
+                }
+                if (planTmpls.length) {
+                    PlanTemplateModule.templates = planTmpls.map(t => ({ id: 'ptmpl_' + Date.now() + Math.random(), name: t.name, rows: t.data || [] }));
+                    PlanTemplateModule._saveLocal();
+                }
+            }
 
             let goalRaw = data.goal || '';
             if (isToday && yRes) {
@@ -5816,7 +5841,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.22 loaded - past dimming active');
+    console.log('[GPAL] Family v4.23 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5839,21 +5864,13 @@ window.addEventListener('DOMContentLoaded', () => {
     // Spotify 連接/斷開後 footer 高度改變，重新計算
     const _origSpRender = SpotifyModule.render.bind(SpotifyModule);
     SpotifyModule.render = function() { _origSpRender(); setTimeout(setFooterH, 100); };
-    // Step 2: 主資料請求
+    // Step 2: 主資料請求（一次打包：Goal/Plan/Action/Learn + LongTerm + Habit + Templates）
     Sync.fetchData();
-
-    // Step 3: 次要雲端請求（不再延遲，避免手機上因背景化/網路慢而錯過這次更新，一直卡在舊的本地快取）
-    LongTermModule._loadFromCloud();
-    HabitModule._loadFromCloud();
-    setTimeout(() => {
-        GoalTemplateModule._loadFromCloud();
-        PlanTemplateModule._loadFromCloud();
-    }, 2000);
 
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.22';
+    const CURRENT_VERSION = 'v4.23';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

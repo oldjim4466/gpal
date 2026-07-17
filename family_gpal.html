@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.12">
+    <meta name="version" content="v4.16">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.12</title>
+    <title>GPAL FAMILY v4.16</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1967,7 +1967,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.12</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.16</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -5713,7 +5713,7 @@ const Events = {
             Utils.setStatus('OFFLINE — saving locally', 'warn');
         });
 
-        // 離頁前確保儲存
+        // 離頁前確保儲存（桌面版 beforeunload 較可靠的情境）
         window.addEventListener('beforeunload', (e) => {
             if (State.dirty) {
                 SaveQueue.flushImmediate();
@@ -5722,9 +5722,22 @@ const Events = {
             }
         });
 
-        // 頁面回到前景時刷新時間 highlight、同步 MissionClock 及 Spotify
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) return;
+        // 頁面切到背景/前景時的處理
+        // 手機瀏覽器（尤其 iOS Safari）切 App、鎖螢幕、滑掉分頁時，beforeunload 幾乎不會觸發，
+        // 這是手機上「編輯完沒存到雲端」的主因。visibilitychange 在這些情境下才是可靠的訊號。
+        document.addEventListener('visibilitychange', async () => {
+            if (document.hidden) {
+                // 切到背景：立刻強制儲存所有還沒存的內容，不等原本的 debounce
+                try {
+                    await SaveQueue.flushImmediate();
+                    await LongTermModule.flushSave();
+                    await HabitModule.flushSave();
+                } catch (e) {
+                    console.error('[visibilitychange] flush failed:', e);
+                }
+                return;
+            }
+            // 回到前景
             PlanModule.checkTimeHighlight();
             MissionClockModule.onVisibilityChange();
         });
@@ -5779,7 +5792,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.12 loaded - past dimming active');
+    console.log('[GPAL] Family v4.16 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5818,7 +5831,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.12';
+    const CURRENT_VERSION = 'v4.16';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

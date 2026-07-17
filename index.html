@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.20">
+    <meta name="version" content="v4.21">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.20</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.21</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3685,7 +3685,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.20</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.21</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -8811,6 +8811,16 @@ const Events = {
             }
         });
 
+        // 手機瀏覽器（尤其 iOS Safari）從「上滑分頁切換」、home 鍵返回、或桌面圖示重新開啟時，
+        // 常常是直接從 bfcache（背景快取）復原整個頁面，完全不會重新執行任何 JS 初始化。
+        // 這代表畫面會停留在「上次離開當下」的舊記憶體狀態，不會有任何一次重新抓雲端資料的機會。
+        // pageshow 事件搭配 event.persisted 是偵測這種情況並強制補抓最新資料的標準做法。
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                Sync.fetchData();
+            }
+        });
+
         // 頁面切到背景/前景時的處理
         // 手機瀏覽器（尤其 iOS Safari）切 App、鎖螢幕、滑掉分頁時，beforeunload 幾乎不會觸發，
         // 這是手機上「編輯完沒存到雲端」的主因。visibilitychange 在這些情境下才是可靠的訊號。
@@ -10151,7 +10161,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.20';
+    const CURRENT_VERSION = 'v4.21';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

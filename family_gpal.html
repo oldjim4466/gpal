@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.18">
+    <meta name="version" content="v4.19">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.18</title>
+    <title>GPAL FAMILY v4.19</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1972,7 +1972,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.18</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.19</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2287,7 +2287,7 @@ const SB = {
     async getLongterm(member) {
         const key = `lt_${member}`;
         const cached = SB._cache.get(key);
-        if (cached && Date.now() - cached.ts < 30000) return cached.data;
+        if (cached && Date.now() - cached.ts < 10000) return cached.data;
         const rows = await SB.get('longterm_goals', `?member=eq.${member}&select=data`);
         const result = { data: rows.length ? rows[0].data : null, found: rows.length > 0 };
         SB._cache.set(key, { data: result, ts: Date.now() });
@@ -2303,7 +2303,7 @@ const SB = {
     async getHabit(member) {
         const key = `habit_${member}`;
         const cached = SB._cache.get(key);
-        if (cached && Date.now() - cached.ts < 30000) return cached.data;
+        if (cached && Date.now() - cached.ts < 10000) return cached.data;
         const rows = await SB.get('habit_data', `?member=eq.${member}&select=data`);
         const result = { habits: rows.length ? rows[0].data : null, found: rows.length > 0 };
         SB._cache.set(key, { data: result, ts: Date.now() });
@@ -5244,12 +5244,17 @@ const Sync = {
     },
 };
 
-// 自動同步：每 2 分鐘重新載入 plan/goal
-setInterval(() => {
-    if (!State.isSyncing && State.isOnline) {
-        Sync.fetchData();
-    }
-}, 120_000);
+// 自動同步：每 15 秒重新載入，讓桌面版的新增/修改能較快同步到手機版
+// 先強制存檔任何還沒存的內容，避免自動刷新蓋掉正在編輯中的東西
+setInterval(async () => {
+    if (State.isSyncing || !State.isOnline || document.hidden) return;
+    try {
+        await SaveQueue.flushImmediate();
+        await LongTermModule.flushSave();
+        await HabitModule.flushSave();
+    } catch {}
+    Sync.fetchData();
+}, 15_000);
 
 // ---------- EVENT DELEGATION ----------
 const Events = {
@@ -5800,7 +5805,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.18 loaded - past dimming active');
+    console.log('[GPAL] Family v4.19 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5839,7 +5844,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.18';
+    const CURRENT_VERSION = 'v4.19';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

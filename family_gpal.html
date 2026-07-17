@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.13">
+    <meta name="version" content="v4.12">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.13</title>
+    <title>GPAL FAMILY v4.12</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1932,6 +1932,17 @@
             .portfolio-hud::after { animation: none !important; }
             .mc-time.urgent { animation: none !important; }
 
+            /* LONGTERM GOAL — 手機版日期變細，顯示更多內容 */
+            .lt-date-icon {
+                font-size: 0.5rem !important; font-weight: 300 !important;
+                padding: 2px 4px !important; letter-spacing: 0.1px !important;
+            }
+            .lt-days {
+                font-size: 0.46rem !important; font-weight: 300 !important;
+                letter-spacing: 0.1px !important;
+            }
+            .lt-category-select { font-size: 0.55rem !important; }
+
             /* 手機版 Plan 時間及時長加大 */
             .time-sel {
                 font-size: 0.75rem !important;
@@ -1956,7 +1967,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.13</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.12</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3370,6 +3381,7 @@ const LongTermModule = {
     _saveTimer: null,
     _lastRenderedKey: null,
     _dataVersion: 0,
+    CATEGORIES: ['', 'Spiritual', 'Health', 'Wealth', 'Relationship', 'Growth', 'Experience'],
 
     currentGoals() {
         if (!Array.isArray(LongTermModule.data)) LongTermModule.data = [];
@@ -3456,12 +3468,11 @@ const LongTermModule = {
             cb.type = 'checkbox'; cb.className = 'stark-checkbox'; cb.checked = g.done; cb.dataset.role = 'lt-check';
             const textContainer = document.createElement('div');
             textContainer.className = 'lt-text-container' + (g.done ? ' completed' : '');
+            const gCat = g.category || '';
             const catSelect = document.createElement('select');
             catSelect.className = 'lt-category-select';
             catSelect.dataset.role = 'lt-category';
-            const LT_CATEGORIES = ['', 'Spiritual', 'Health', 'Wealth', 'Relationship', 'Growth', 'Experience'];
-            const gCat = g.category || '';
-            const catList = LT_CATEGORIES.includes(gCat) ? LT_CATEGORIES : [...LT_CATEGORIES, gCat];
+            const catList = LongTermModule.CATEGORIES.includes(gCat) ? LongTermModule.CATEGORIES : [...LongTermModule.CATEGORIES, gCat];
             catList.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c;
@@ -5768,7 +5779,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.13 loaded - past dimming active');
+    console.log('[GPAL] Family v4.12 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5807,7 +5818,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.13';
+    const CURRENT_VERSION = 'v4.12';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {
@@ -5826,5 +5837,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 });
 </script>
+
 </body>
 </html>

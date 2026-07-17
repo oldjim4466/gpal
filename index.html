@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.17">
+    <meta name="version" content="v4.18">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.17</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.18</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -914,7 +914,8 @@
         .lt-goal-input:focus { border-bottom-color: rgba(255,204,0,0.6); }
         .lt-goal-input.completed { color: #fff; text-shadow: 0 0 8px rgba(255,204,0,0.8); opacity: 0.9; }
         .lt-goal-input::placeholder { color: rgba(255,255,255,0.25); font-size: 0.72rem; }
-        .lt-deadline-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; position: relative; }
+        .lt-deadline-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+        .lt-date-icon-wrap { position: relative; display: inline-flex; flex-shrink: 0; }
         .lt-deadline-input {
             position: absolute; left: 0; top: 0;
             width: 100%; height: 100%;
@@ -946,6 +947,8 @@
             color: var(--stark-cyan); border: 1px solid var(--stark-cyan);
             background: transparent; padding: 3px 7px; cursor: pointer; border-radius: 3px;
             flex-shrink: 0; transition: 0.2s; white-space: nowrap;
+            margin-left: 4px;
+            position: relative; z-index: 5;
         }
         .lt-save-btn:hover { background: rgba(0,242,255,0.12); }
         @keyframes lt-pulse { 0%,100%{opacity:0.7} 50%{opacity:1} }
@@ -3682,7 +3685,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.17</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.18</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -6244,7 +6247,11 @@ const LongTermModule = {
             saveBtn.dataset.role = 'lt-save';
             saveBtn.type = 'button';
 
-            deadlineWrap.append(dateEl, dateIcon, daysEl);
+            const dateIconWrap = document.createElement('span');
+            dateIconWrap.className = 'lt-date-icon-wrap';
+            dateIconWrap.append(dateIcon, dateEl);
+
+            deadlineWrap.append(dateIconWrap, daysEl);
             row.append(cb, textContainer, deadlineWrap, saveBtn, delBtn);
             frag.appendChild(row);
         });
@@ -10131,7 +10138,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.17';
+    const CURRENT_VERSION = 'v4.18';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

@@ -3598,6 +3598,17 @@
                 gap: 4px !important;
             }
             .wealth-proj-name { min-width: 70px !important; font-size: 1.15rem !important; color: #ff9f40 !important; }
+
+            /* LONGTERM GOAL — 手機版日期變細，顯示更多內容 */
+            .lt-date-icon {
+                font-size: 0.5rem !important; font-weight: 300 !important;
+                padding: 2px 4px !important; letter-spacing: 0.1px !important;
+            }
+            .lt-days {
+                font-size: 0.46rem !important; font-weight: 300 !important;
+                letter-spacing: 0.1px !important;
+            }
+            .lt-category-select { font-size: 0.55rem !important; }
             .wealth-capital-input { width: 70px !important; font-size: 0.6rem !important; }
             .wealth-cap-update-btn { font-size: 0.5rem !important; padding: 4px 7px !important; }
             .wealth-gl-display { font-size: 0.8rem !important; min-width: 60px !important; padding: 4px 7px !important; }
@@ -6064,6 +6075,7 @@ const LongTermModule = {
     _saveTimer: null,
     _lastRenderedKey: null,  // 快取：memberIdx|version，避免重複重建
     _dataVersion: 0,         // 每次資料改動時遞增
+    CATEGORIES: ['', 'Spiritual', 'Health', 'Wealth', 'Relationship', 'Growth', 'Experience'],
 
     currentGoals() { return LongTermModule.data; },
     _lsKey() { return 'gpal_longterm_' + MemberModule.current(); },
@@ -6165,13 +6177,12 @@ const LongTermModule = {
             const textContainer = document.createElement('div');
             textContainer.className = 'lt-text-container' + (g.done ? ' completed' : '');
 
+            const gCat = g.category || '';
+
             const catSelect = document.createElement('select');
             catSelect.className = 'lt-category-select';
             catSelect.dataset.role = 'lt-category';
-            const LT_CATEGORIES = ['', 'Spiritual', 'Health', 'Wealth', 'Relationship', 'Growth', 'Experience'];
-            const gCat = g.category || '';
-            // 若舊資料的 category 不在預設清單中，仍保留該選項避免資料遺失
-            const catList = LT_CATEGORIES.includes(gCat) ? LT_CATEGORIES : [...LT_CATEGORIES, gCat];
+            const catList = LongTermModule.CATEGORIES.includes(gCat) ? LongTermModule.CATEGORIES : [...LongTermModule.CATEGORIES, gCat];
             catList.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c;
@@ -6179,6 +6190,7 @@ const LongTermModule = {
                 if (gCat === c) opt.selected = true;
                 catSelect.appendChild(opt);
             });
+
             textContainer.appendChild(catSelect);
 
             const textEl = document.createElement('input');

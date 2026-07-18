@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.23">
+    <meta name="version" content="v4.24">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.23</title>
+    <title>GPAL FAMILY v4.24</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1972,7 +1972,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.23</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.24</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2699,8 +2699,9 @@ const SaveQueue = {
     trigger() {
         State.dirty = true;
         clearTimeout(State.autoSaveTimer);
-        Utils.setStatus('>> RECORDING...', 'warn');
-        State.autoSaveTimer = setTimeout(() => Sync.save('AUTO'), CONFIG.AUTO_SAVE_DELAY);
+        Utils.setStatus('>> UNSAVED · Press SAVE NOW', 'warn');
+        // 不再自動排程雲端儲存——只標記「有未存內容」，實際上傳交給 SAVE NOW 按鈕
+        // （背景/離頁時的安全機制仍會呼叫 flushImmediate() 防止真正遺失資料）
     },
     flushImmediate() {
         clearTimeout(State.autoSaveTimer);
@@ -3421,23 +3422,14 @@ const LongTermModule = {
     triggerSave() {
         LongTermModule._dataVersion++;
         try { localStorage.setItem(LongTermModule._lsKey(), JSON.stringify(LongTermModule.data)); } catch {}
-        if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
-        const targetMember = MemberModule.current(); // 立刻鎖定當下成員，避免之後切換成員造成寫錯人
-        const snapshot = LongTermModule.data;
-        LongTermModule._saveTimer = setTimeout(async () => {
-            try {
-                await SB.saveLongterm(targetMember, snapshot);
-            } catch(e) {
-                Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error');
-            }
-        }, 3000);
+        LongTermModule._dirty = true;
+        // 不再自動排程雲端儲存，改由 SAVE NOW / 離頁背景等安全機制呼叫 flushSave() 才真正上傳
     },
 
-    // 立即執行還未儲存的變更（跳過 debounce），在切換成員/日期前呼叫，避免資料遺失或寫錯人
+    // 立即執行還未儲存的變更，在 SAVE NOW / 切換成員/日期 / 背景化前呼叫
     async flushSave() {
-        if (!LongTermModule._saveTimer) return;
-        clearTimeout(LongTermModule._saveTimer);
-        LongTermModule._saveTimer = null;
+        if (!LongTermModule._dirty) return;
+        LongTermModule._dirty = false;
         try { await SB.saveLongterm(MemberModule.current(), LongTermModule.data); }
         catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
     },
@@ -3453,10 +3445,7 @@ const LongTermModule = {
             goals.forEach(g => { if (!g.done && g.deadline && g.deadline <= today) g.done = true; });
             LongTermModule._dataVersion++;
             try { localStorage.setItem(LongTermModule._lsKey(), JSON.stringify(LongTermModule.data)); } catch {}
-            if (LongTermModule._saveTimer) clearTimeout(LongTermModule._saveTimer);
-            LongTermModule._saveTimer = setTimeout(async () => {
-                try { await SB.saveLongterm(MemberModule.current(), LongTermModule.data); } catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
-            }, 3000);
+            LongTermModule._dirty = true; // 交給 SAVE NOW / 背景化等安全機制實際上傳
         }
 
         const cacheKey = `${MemberModule.current()}|${LongTermModule._dataVersion}`;
@@ -3594,8 +3583,7 @@ const LongTermModule = {
             const saveEl = e.target;
             saveEl.disabled = true;
             saveEl.textContent = '...';
-            clearTimeout(LongTermModule._saveTimer);
-            LongTermModule._saveTimer = null;
+            LongTermModule._dirty = false;
             SB.saveLongterm(MemberModule.current(), LongTermModule.data)
               .then(() => {
                   saveEl.textContent = '✓ 已完成';
@@ -4308,21 +4296,14 @@ const HabitModule = {
 
     _scheduleSave() {
         try { localStorage.setItem(HabitModule._lsKey(), JSON.stringify(HabitModule.data)); } catch {}
-        if (HabitModule._saveTimer) clearTimeout(HabitModule._saveTimer);
-        const targetMember = MemberModule.current(); // 立刻鎖定當下成員，避免之後切換成員造成寫錯人
-        const snapshot = HabitModule.data;
-        HabitModule._saveTimer = setTimeout(async () => {
-            try {
-                await SB.saveHabit(targetMember, snapshot);
-            } catch { Utils.setStatus('HABIT_SAVE_ERR · LOCAL_SAVED', 'error'); }
-        }, 3000);
+        HabitModule._dirty = true;
+        // 不再自動排程雲端儲存，改由 SAVE NOW / 離頁背景等安全機制呼叫 flushSave() 才真正上傳
     },
 
-    // 立即執行還未儲存的變更（跳過 debounce），在切換成員/日期前呼叫，避免資料遺失或寫錯人
+    // 立即執行還未儲存的變更，在 SAVE NOW / 切換成員/日期 / 背景化前呼叫
     async flushSave() {
-        if (!HabitModule._saveTimer) return;
-        clearTimeout(HabitModule._saveTimer);
-        HabitModule._saveTimer = null;
+        if (!HabitModule._dirty) return;
+        HabitModule._dirty = false;
         try { await SB.saveHabit(MemberModule.current(), HabitModule.data); }
         catch(e) { Utils.setStatus('HABIT_SAVE_ERR · LOCAL_SAVED', 'error'); }
     },
@@ -5841,7 +5822,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.23 loaded - past dimming active');
+    console.log('[GPAL] Family v4.24 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5870,7 +5851,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.23';
+    const CURRENT_VERSION = 'v4.24';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

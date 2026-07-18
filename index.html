@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.27">
+    <meta name="version" content="v4.28">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.27</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.28</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3685,7 +3685,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.27</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.28</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4129,11 +4129,13 @@ const SB = {
             'Authorization': `Bearer ${CONFIG.SB_KEY}`,
             'Prefer':        'resolution=merge-duplicates,return=representation',
         };
+        const body = JSON.stringify(data);
         const res = await fetch(url, {
             method:  'POST',
             headers,
-            body:    JSON.stringify(data),
-            keepalive: true,
+            body,
+            // keepalive 的 fetch 有 64KB body 硬上限，超過會直接 TypeError 導致存檔永遠失敗
+            keepalive: document.hidden && body.length < 60000,
             cache: 'no-store',
         });
         if (!res.ok) throw new Error(`SB UPSERT ${table} ${res.status}: ${await res.text()}`);
@@ -4247,11 +4249,12 @@ const SB = {
     // ── Templates ────────────────────────────────────────────
     async getTemplates(type) {
         const key = `tmpl_${type || 'all'}`;
-        if (SB._cache.has(key)) return SB._cache.get(key);
+        const cached = SB._cache.get(key);
+        if (cached && cached.ts && Date.now() - cached.ts < 10000) return cached.data;
         const q = type ? `?type=eq.${type}&select=type,name,data` : `?select=type,name,data`;
         const rows = await SB.get('templates', q);
         const result = { templates: rows };
-        SB._cache.set(key, result);
+        SB._cache.set(key, { data: result, ts: Date.now() });
         return result;
     },
 
@@ -8160,7 +8163,10 @@ const Sync = {
     },
 
     async save(mode = 'MANUAL') {
-        if (State.isSyncing) return;
+        if (State.isSyncing) {
+            if (mode === 'MANUAL') throw new Error('SYNC_BUSY');
+            return; // AUTO：dirty 未清，下一輪會重試
+        }
         State.isSyncing = true;
 
         try {
@@ -8211,6 +8217,7 @@ const Sync = {
             Utils.setConnState('offline');
             State.isOnline = false;
             console.error('[Sync.save] failed:', e);
+            throw e; // 讓呼叫端（SAVE NOW / flush）知道失敗，不再假成功
         } finally {
             State.isSyncing = false;
         }
@@ -8812,7 +8819,7 @@ const Events = {
             Utils.setConnState('online');
             Utils.setStatus('NETWORK_RESTORED', 'success');
             // 自動推上本地暫存
-            if (State.dirty) Sync.save('AUTO');
+            if (State.dirty) Sync.save('AUTO').catch(() => {});
         });
         window.addEventListener('offline', () => {
             State.isOnline = false;
@@ -8823,7 +8830,7 @@ const Events = {
         // 離頁前確保儲存
         window.addEventListener('beforeunload', (e) => {
             if (State.dirty) {
-                SaveQueue.flushImmediate();
+                Promise.resolve(SaveQueue.flushImmediate()).catch(() => {});
                 e.preventDefault();
                 e.returnValue = '';
             }
@@ -10179,7 +10186,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.27';
+    const CURRENT_VERSION = 'v4.28';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

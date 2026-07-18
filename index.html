@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.26">
+    <meta name="version" content="v4.27">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.26</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.27</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3685,7 +3685,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.26</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.27</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -6809,6 +6809,15 @@ const StreakModule = {
 };
 
 // ---------- GOAL TEMPLATE MODULE ----------
+// 使用者編輯偵測：焦點在輸入欄位、或 20 秒內有輸入動作，就暫停自動刷新
+let _lastEditTs = 0;
+document.addEventListener('input', () => { _lastEditTs = Date.now(); }, true);
+function isUserEditing() {
+    const el = document.activeElement;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return true;
+    return Date.now() - _lastEditTs < 20000;
+}
+
 function tmplDataArr(v) {
     if (Array.isArray(v)) return v;
     if (typeof v === 'string') { try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; } }
@@ -10155,13 +10164,13 @@ window.addEventListener('DOMContentLoaded', () => {
     // 自動同步：每 15 秒重新載入，讓桌面版的新增/修改能較快同步到手機版
     // 先強制存檔任何還沒存的內容，避免自動刷新蓋掉正在編輯中的東西
     setInterval(async () => {
-        if (State.isSyncing || !State.isOnline || document.hidden) return;
+        if (State.isSyncing || !State.isOnline || document.hidden || isUserEditing()) return;
         try {
             await SaveQueue.flushImmediate();
             await LongTermModule.flushSave();
             await WealthModule.flushSave();
+            Sync.fetchData(); // flush 全部成功才刷新，失敗不蓋掉未存資料
         } catch {}
-        Sync.fetchData();
     }, 15000);
 
     // Finance：init 端點已載入當月資料，僅需設定 UI 標籤
@@ -10170,7 +10179,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.26';
+    const CURRENT_VERSION = 'v4.27';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

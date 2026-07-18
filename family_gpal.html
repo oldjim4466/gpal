@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.24">
+    <meta name="version" content="v4.25">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.24</title>
+    <title>GPAL FAMILY v4.25</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1972,7 +1972,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.24</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.25</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2206,13 +2206,19 @@ const SB = {
         const url = onConflict
             ? `${CONFIG.SB_URL}/rest/v1/${table}?on_conflict=${onConflict}`
             : `${CONFIG.SB_URL}/rest/v1/${table}`;
-        const prefer = onConflict
-            ? `resolution=merge-duplicates,return=representation`
-            : `return=representation`;
+        // 一律加 resolution=merge-duplicates，避免對已存在的列做 insert 造成 409 衝突而存檔失敗
+        const headers = {
+            'Content-Type':  'application/json',
+            'apikey':        CONFIG.SB_KEY,
+            'Authorization': `Bearer ${CONFIG.SB_KEY}`,
+            'Prefer':        'resolution=merge-duplicates,return=representation',
+        };
         const res = await fetch(url, {
             method:  'POST',
-            headers: { ...SB._h(), 'Prefer': prefer },
+            headers,
             body:    JSON.stringify(data),
+            keepalive: true,
+            cache: 'no-store',
         });
         if (!res.ok) throw new Error(`SB UPSERT ${table} ${res.status}: ${await res.text()}`);
         return res.json();
@@ -3429,9 +3435,13 @@ const LongTermModule = {
     // 立即執行還未儲存的變更，在 SAVE NOW / 切換成員/日期 / 背景化前呼叫
     async flushSave() {
         if (!LongTermModule._dirty) return;
-        LongTermModule._dirty = false;
-        try { await SB.saveLongterm(MemberModule.current(), LongTermModule.data); }
-        catch(e) { Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error'); }
+        try {
+            await SB.saveLongterm(MemberModule.current(), LongTermModule.data);
+            LongTermModule._dirty = false; // 只有真的存成功才清除，失敗保留 dirty 讓下次重試
+        } catch(e) {
+            Utils.setStatus('LONGTERM_SAVE_ERR · LOCAL_SAVED', 'error');
+            throw e;
+        }
     },
 
     render() {
@@ -4303,9 +4313,13 @@ const HabitModule = {
     // 立即執行還未儲存的變更，在 SAVE NOW / 切換成員/日期 / 背景化前呼叫
     async flushSave() {
         if (!HabitModule._dirty) return;
-        HabitModule._dirty = false;
-        try { await SB.saveHabit(MemberModule.current(), HabitModule.data); }
-        catch(e) { Utils.setStatus('HABIT_SAVE_ERR · LOCAL_SAVED', 'error'); }
+        try {
+            await SB.saveHabit(MemberModule.current(), HabitModule.data);
+            HabitModule._dirty = false; // 只有真的存成功才清除，失敗保留 dirty 讓下次重試
+        } catch(e) {
+            Utils.setStatus('HABIT_SAVE_ERR · LOCAL_SAVED', 'error');
+            throw e;
+        }
     },
 
     render() {
@@ -4948,8 +4962,9 @@ const MemberModule = {
         if (name === MemberModule.current()) return; // 已是當前成員
 
         // 切換成員前，先把還沒存的 LongTerm / Habit 變更立即存到「原本」的成員
-        await LongTermModule.flushSave();
-        await HabitModule.flushSave();
+        // 包 try/catch：就算存失敗（dirty 會保留供下次重試），也不擋切換
+        try { await LongTermModule.flushSave(); } catch {}
+        try { await HabitModule.flushSave(); } catch {}
 
         localStorage.setItem(MemberModule.LS_KEY, name);
         MemberModule.updateUI();
@@ -5713,9 +5728,9 @@ const Events = {
         DOM.datePicker.addEventListener('change', async () => {
             Utils.updateDateLabel(DOM.datePicker.value);
             applyDayTheme(DOM.datePicker.value, true);
-                            await SaveQueue.flushImmediate();
-            await LongTermModule.flushSave();
-            await HabitModule.flushSave();
+                            try { await SaveQueue.flushImmediate(); } catch {}
+            try { await LongTermModule.flushSave(); } catch {}
+            try { await HabitModule.flushSave(); } catch {}
             Sync.fetchData();
         });
 
@@ -5774,9 +5789,9 @@ const Events = {
     },
 
     async changeDate(days) {
-        await SaveQueue.flushImmediate();
-        await LongTermModule.flushSave();
-        await HabitModule.flushSave();
+        try { await SaveQueue.flushImmediate(); } catch {}
+        try { await LongTermModule.flushSave(); } catch {}
+        try { await HabitModule.flushSave(); } catch {}
         const d = new Date(DOM.datePicker.value + 'T12:00:00');
         d.setDate(d.getDate() + days);
         DOM.datePicker.value = `${d.getFullYear()}-${Utils.pad2(d.getMonth() + 1)}-${Utils.pad2(d.getDate())}`;
@@ -5822,7 +5837,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.24 loaded - past dimming active');
+    console.log('[GPAL] Family v4.25 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5851,7 +5866,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.24';
+    const CURRENT_VERSION = 'v4.25';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

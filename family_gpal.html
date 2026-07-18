@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.25">
+    <meta name="version" content="v4.26">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.25</title>
+    <title>GPAL FAMILY v4.26</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1972,7 +1972,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.25</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.26</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -3656,6 +3656,12 @@ const LongTermModule = {
 };
 
 // ---------- GOAL TEMPLATE MODULE ----------
+function tmplDataArr(v) {
+    if (Array.isArray(v)) return v;
+    if (typeof v === 'string') { try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; } }
+    return [];
+}
+
 const GoalTemplateModule = {
     LS_KEY: 'gpal_goal_templates',
     templates: [],
@@ -3666,7 +3672,7 @@ const GoalTemplateModule = {
         try {
             const data = await SB.getTemplates('goal');
             if (Array.isArray(data.templates) && data.templates.length > 0) {
-                this.templates = data.templates.map(t => ({ id: 'tmpl_' + Date.now() + '_' + Math.floor(Math.random()*9999), name: t.name, goals: Array.isArray(t.data) ? t.data : [] }));
+                this.templates = data.templates.map(t => ({ id: 'tmpl_' + t.name, name: t.name, goals: tmplDataArr(t.data) }));
                 this._saveLocal();
             }
         } catch {}
@@ -3694,7 +3700,7 @@ const GoalTemplateModule = {
         const goals = this._extractGoals();
         if (!goals.length) { Utils.setStatus('NO_GOALS_TO_SAVE', 'warn'); return; }
         const existIdx = this.templates.findIndex(t => t.name === n);
-        const tmpl = { id: 'tmpl_' + Date.now(), name: n, goals };
+        const tmpl = { id: 'tmpl_' + n, name: n, goals };
         if (existIdx >= 0) this.templates[existIdx] = tmpl; else this.templates.push(tmpl);
         this._saveLocal();
         this._saveCloud(n, goals);
@@ -3705,12 +3711,15 @@ const GoalTemplateModule = {
     applyTemplate(id) {
         const tmpl = this.templates.find(t => t.id === id);
         if (!tmpl || !confirm(`Apply "${tmpl.name}"? Current goals will be replaced.`)) return;
-        const raw = tmpl.goals.map(g => `[ ] (${g.prio}) ${g.text}`).join('\n');
+        try {
+        const goals = tmplDataArr(tmpl.goals);
+        const raw = goals.map(g => `[ ] (${g.prio || 'NONE'}) ${g.text || ''}`).join('\n');
         GoalModule.parseSingle(raw);
         GoalModule.saveCurrent();
         SaveQueue.trigger();
         GoalTemplateModule.closePanel();
         Utils.setStatus(`TEMPLATE_APPLIED · ${tmpl.name}`, 'success');
+        } catch (err) { Utils.setStatus('TMPL_APPLY_FAILED: ' + err.message, 'error'); }
     },
 
     deleteTemplate(id) {
@@ -3778,7 +3787,7 @@ const PlanTemplateModule = {
         try {
             const data = await SB.getTemplates('plan');
             if (Array.isArray(data.templates) && data.templates.length > 0) {
-                this.templates = data.templates.map(t => ({ id: 'ptmpl_' + Date.now() + '_' + Math.floor(Math.random()*9999), name: t.name, rows: Array.isArray(t.data) ? t.data : [] }));
+                this.templates = data.templates.map(t => ({ id: 'ptmpl_' + t.name, name: t.name, rows: tmplDataArr(t.data) }));
                 this._saveLocal();
             }
         } catch {}
@@ -3809,7 +3818,7 @@ const PlanTemplateModule = {
         const rows = this._extractPlan();
         if (!rows.length) { Utils.setStatus('NO_TASKS_TO_SAVE', 'warn'); return; }
         const existIdx = this.templates.findIndex(t => t.name === n);
-        const tmpl = { id: 'ptmpl_' + Date.now(), name: n, rows };
+        const tmpl = { id: 'ptmpl_' + n, name: n, rows };
         if (existIdx >= 0) this.templates[existIdx] = tmpl;
         else this.templates.push(tmpl);
         this._saveLocal();
@@ -3824,14 +3833,16 @@ const PlanTemplateModule = {
         if (!confirm(`Apply "${tmpl.name}"? Current plan will be replaced.`)) return;
         const listEl = document.getElementById('plan-list-0');
         if (!listEl) return;
+        try {
         listEl.replaceChildren();
-        tmpl.rows.forEach(r => PlanModule.create(r.start, r.end, r.text, r.location || '', listEl));
+        tmplDataArr(tmpl.rows).forEach(r => PlanModule.create(r.start, r.end, r.text, r.location || '', listEl));
         PlanModule.ensureTrailingEmpty();
         if (PlanModule._rendered) PlanModule._rendered[0] = true;
         PlanModule.saveCurrent();
         SaveQueue.trigger();
         PlanTemplateModule.closePanel();
         Utils.setStatus(`PLAN_TMPL_APPLIED · ${tmpl.name}`, 'success');
+        } catch (err) { Utils.setStatus('PLAN_TMPL_APPLY_FAILED: ' + err.message, 'error'); }
     },
 
     deleteTemplate(id) {
@@ -5120,12 +5131,14 @@ const Sync = {
                 const goalTmpls = data.templates.filter(t => t.type === 'goal');
                 const planTmpls = data.templates.filter(t => t.type === 'plan');
                 if (goalTmpls.length) {
-                    GoalTemplateModule.templates = goalTmpls.map(t => ({ id: 'tmpl_' + Date.now() + Math.random(), name: t.name, goals: t.data || [] }));
+                    GoalTemplateModule.templates = goalTmpls.map(t => ({ id: 'tmpl_' + t.name, name: t.name, goals: tmplDataArr(t.data) }));
                     GoalTemplateModule._saveLocal();
+                    GoalTemplateModule.renderPanel();
                 }
                 if (planTmpls.length) {
-                    PlanTemplateModule.templates = planTmpls.map(t => ({ id: 'ptmpl_' + Date.now() + Math.random(), name: t.name, rows: t.data || [] }));
+                    PlanTemplateModule.templates = planTmpls.map(t => ({ id: 'ptmpl_' + t.name, name: t.name, rows: tmplDataArr(t.data) }));
                     PlanTemplateModule._saveLocal();
+                    PlanTemplateModule.renderPanel();
                 }
             }
 
@@ -5837,7 +5850,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.25 loaded - past dimming active');
+    console.log('[GPAL] Family v4.26 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5866,7 +5879,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.25';
+    const CURRENT_VERSION = 'v4.26';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

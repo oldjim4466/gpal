@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.28">
+    <meta name="version" content="v4.29">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL MK-VII // OPTIMIZED v4.28</title>
+    <title>GPAL MK-VII // OPTIMIZED v4.29</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -3685,7 +3685,7 @@
 <div class="sticky-header">
 <nav>
     <div class="nav-row">
-        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.28</span></div>
+        <div class="brand-bold">GPAL MK-VII // OPTIMIZED <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.29</span></div>
         <div class="conn-indicator">
             <span class="conn-dot" id="conn-dot"></span>
             <span id="conn-text">ONLINE</span>
@@ -4195,7 +4195,9 @@ const SB = {
 
     // ── Init（一次取得所有資料）──────────────────────────────
     async getInit(member, date) {
-        const [bundle, longterm, templates, portfolio, expense, wealth] = await Promise.all([
+        // bundle（每日資料）是關鍵，失敗才讓整個 init 失敗；
+        // 其餘資源各自失敗只記 log 並回 null，避免單一資料表問題造成整個 App 永遠 offline
+        const [bundle, longterm, templates, portfolio, expense, wealth] = await Promise.allSettled([
             SB.getBundle(member, date),
             SB.getLongterm(member),
             SB.getTemplates(),
@@ -4203,13 +4205,22 @@ const SB = {
             SB.getExpense(date.slice(0,7)),
             SB.getWealth(member),
         ]);
+        if (bundle.status === 'rejected') throw bundle.reason;
+        const pick = (r, name) => {
+            if (r.status === 'fulfilled') return r.value;
+            console.warn(`[getInit] ${name} failed:`, r.reason);
+            return null;
+        };
+        const lt = pick(longterm, 'longterm'), tm = pick(templates, 'templates');
+        const pf = pick(portfolio, 'portfolio'), ex = pick(expense, 'expense');
+        const wl = pick(wealth, 'wealth');
         return {
-            ...bundle,
-            longterm:  longterm.data,
-            templates: templates.templates,
-            portfolio,
-            expense,
-            wealth: wealth.data,
+            ...bundle.value,
+            longterm:  lt ? lt.data : null,
+            templates: tm ? tm.templates : null,
+            portfolio: pf,
+            expense:   ex,
+            wealth:    wl ? wl.data : null,
             success: true,
         };
     },
@@ -8140,7 +8151,7 @@ const Sync = {
 
         } catch (e) {
             if (token !== State.fetchToken) return;
-            Utils.setStatus('LINK_FAILURE — using local', 'error');
+            Utils.setStatus('LINK_FAILURE: ' + ((e && e.message) || e) + ' — using local', 'error');
             Utils.setConnState('offline');
             State.isOnline = false;
             const backup = Utils.loadLocalBackup(date);
@@ -8773,6 +8784,8 @@ const Events = {
                     btnSaveNow.style.borderColor = 'var(--stark-red)';
                     btnSaveNow.style.color = 'var(--stark-red)';
                     console.error('[SAVE NOW] failures:', failed.map(f => ({ name: f.name, reason: f.r.reason })));
+                    const r0 = failed[0].r.reason;
+                    Utils.setStatus('SAVE_FAIL: ' + ((r0 && r0.message) || r0), 'error');
                 }
                 setTimeout(() => {
                     btnSaveNow.disabled = false;
@@ -10186,7 +10199,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查：每 10 分鐘檢查一次，有新版本提示用戶
-    const CURRENT_VERSION = 'v4.28';
+    const CURRENT_VERSION = 'v4.29';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {

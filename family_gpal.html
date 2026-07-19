@@ -5,9 +5,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="version" content="v4.28">
+    <meta name="version" content="v4.29">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPAL FAMILY v4.28</title>
+    <title>GPAL FAMILY v4.29</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://script.google.com" crossorigin>
     <link rel="preconnect" href="https://wbsassmpynuxqlpxcbcd.supabase.co" crossorigin>
@@ -1972,7 +1972,7 @@
 <div id="day-overlay"></div>
 
 <nav>
-    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.28</span></div>
+    <div class="brand-bold">GPAL FAMILY <span style="font-size:0.55em;opacity:0.6;letter-spacing:1px;">v4.29</span></div>
     <div class="conn-indicator">
         <span class="conn-dot" id="conn-dot"></span>
         <span id="conn-text">ONLINE</span>
@@ -2273,7 +2273,9 @@ const SB = {
 
     // ── Init（一次取得所有資料）──────────────────────────────
     async getInit(member, date) {
-        const [bundle, longterm, habit, templates, portfolio, expense] = await Promise.all([
+        // bundle（每日資料）是關鍵，失敗才讓整個 init 失敗；
+        // 其餘資源各自失敗只記 log 並回 null，避免單一資料表問題造成整個 App 永遠 offline
+        const [bundle, longterm, habit, templates, portfolio, expense] = await Promise.allSettled([
             SB.getBundle(member, date),
             SB.getLongterm(member),
             SB.getHabit(member),
@@ -2281,13 +2283,22 @@ const SB = {
             SB.getPortfolio(),
             SB.getExpense(date.slice(0,7)),
         ]);
+        if (bundle.status === 'rejected') throw bundle.reason;
+        const pick = (r, name) => {
+            if (r.status === 'fulfilled') return r.value;
+            console.warn(`[getInit] ${name} failed:`, r.reason);
+            return null;
+        };
+        const lt = pick(longterm, 'longterm'), hb = pick(habit, 'habit');
+        const tm = pick(templates, 'templates'), pf = pick(portfolio, 'portfolio');
+        const ex = pick(expense, 'expense');
         return {
-            ...bundle,
-            longterm:  longterm.data,
-            habits:    habit.habits,
-            templates: templates.templates,
-            portfolio,
-            expense,
+            ...bundle.value,
+            longterm:  lt ? lt.data : null,
+            habits:    hb ? hb.habits : null,
+            templates: tm ? tm.templates : null,
+            portfolio: pf,
+            expense:   ex,
             success: true,
         };
     },
@@ -5219,7 +5230,7 @@ const Sync = {
             Sync.prefetchDays(date);
         } catch (e) {
             if (token !== State.fetchToken) return;
-            Utils.setStatus('LINK_FAILURE — using local', 'error');
+            Utils.setStatus('LINK_FAILURE: ' + ((e && e.message) || e) + ' — using local', 'error');
             Utils.setConnState('offline');
             State.isOnline = false;
 
@@ -5725,6 +5736,8 @@ const Events = {
                     btnSaveNow.style.borderColor = 'var(--stark-red)';
                     btnSaveNow.style.color = 'var(--stark-red)';
                     console.error('[SAVE NOW] failures:', failed.map(f => ({ name: f.name, reason: f.r.reason })));
+                    const r0 = failed[0].r.reason;
+                    Utils.setStatus('SAVE_FAIL: ' + ((r0 && r0.message) || r0), 'error');
                 }
                 setTimeout(() => {
                     btnSaveNow.disabled = false;
@@ -5866,7 +5879,7 @@ window.addEventListener('DOMContentLoaded', () => {
     applyDayTheme(DOM.datePicker.value);
     Utils.setConnState(navigator.onLine ? 'online' : 'offline');
 
-    console.log('[GPAL] Family v4.28 loaded - past dimming active');
+    console.log('[GPAL] Family v4.29 loaded - past dimming active');
     MemberModule.init();
 
     // Step 1: 立即從 localStorage 載入
@@ -5895,7 +5908,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setInterval(() => PlanModule.checkTimeHighlight(), CONFIG.TIME_CHECK_INTERVAL);
 
     // 版本檢查
-    const CURRENT_VERSION = 'v4.28';
+    const CURRENT_VERSION = 'v4.29';
     async function checkVersion() {
         try {
             const res = await fetch(location.pathname + '?v=' + Date.now(), {
